@@ -9,13 +9,23 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
-    {
-        Schema::create('products', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
-    }
+   public function up()
+{
+    Schema::create('products', function (Blueprint $table) {
+        $table->id();
+        $table->string('name');
+        $table->string('sku')->unique();
+        $table->text('description');
+        $table->string('category');
+        $table->decimal('price', 10, 2);
+        $table->string('package_size');
+        $table->integer('shelf_life_days');
+        $table->json('ingredients'); // Raw material IDs and quantities
+        $table->string('barcode')->nullable();
+        $table->boolean('is_active')->default(true);
+        $table->timestamps();
+    });
+}
 
     /**
      * Reverse the migrations.

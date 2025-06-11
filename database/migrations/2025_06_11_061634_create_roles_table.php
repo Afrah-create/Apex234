@@ -9,13 +9,16 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
-    {
-        Schema::create('roles', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
-    }
+    public function up()
+{
+    Schema::create('roles', function (Blueprint $table) {
+        $table->id();
+        $table->string('name')->unique(); // Admin, Supplier, Distributor, Retailer, Customer
+        $table->string('description');
+        $table->json('permissions'); // Store permissions as JSON
+        $table->timestamps();
+    });
+}
 
     /**
      * Reverse the migrations.
