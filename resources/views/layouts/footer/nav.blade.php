@@ -1,4 +1,6 @@
-<footer class="footer">
+
+<div class="footer-border">
+    <footer class="footer">
     <div class="container @auth-fluid @endauth">
         <nav>
             <ul class="footer-menu">
@@ -23,3 +25,4 @@
         </nav>
     </div>
 </footer>
+</div>

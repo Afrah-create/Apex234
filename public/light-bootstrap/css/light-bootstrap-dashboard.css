@@ -354,7 +354,7 @@ body>.navbar-collapse .sidebar-wrapper {
     max-height: calc(100vh - 75px);
     min-height: 100%;
     overflow: auto;
-    width: 260px;
+    width: 100%;
     z-index: 4;
     padding-bottom: 100px;
 }
@@ -2369,9 +2369,6 @@ fieldset[disabled] .form-control {
     background-color: transparent;
 }
 
-.footer {
-    background-color: #FFFFFF;
-}
 
 .footer .footer-menu {
     height: 41px;
@@ -2434,11 +2431,11 @@ fieldset[disabled] .form-control {
 .footer .title {
     color: #777777;
 }
-
+/*
 .footer-default {
     background-color: #F5F5F5;
 }
-
+*/
 .footer:not(.footer-big) nav>ul {
     font-size: 14px;
 }
@@ -3946,9 +3943,11 @@ Copyright (c) 2015 Daniel Eden
         -ms-transform-origin: 29px -50px;
         transform-origin: 29px -50px;
     }
+    
     .footer {
         height: 60px;
     }
+        
     .footer .footer-menu {
         float: left;
     }
@@ -5373,21 +5372,21 @@ License - nucleoapp.com/license/
 .wrapper-full-page .navbar .navbar-nav .nav-item .nav-link {
     padding: 3px 15px;
 }
-
+/*
 .wrapper-full-page .footer {
     position: relative;
     z-index: 2;
     background: transparent;
 }
-
+*/
 .wrapper-full-page .footer .copyright {
     color: rgba(255, 255, 255, 0.7);
 }
-
+/*
 .wrapper-full-page .footer .copyright a {
     opacity: 1;
 }
-
+*/
 .full-page .full-page-background {
     position: absolute;
     z-index: 1;
@@ -5437,11 +5436,11 @@ License - nucleoapp.com/license/
     font-size: 21px;
     color: #FFFFFF;
 }
-
+/*
 .full-page>.content .card-register .footer {
     background-color: transparent;
 }
-
+*/
 .full-page>.content .card-register .content {
     padding-top: 5%;
 }
@@ -5589,7 +5588,11 @@ License - nucleoapp.com/license/
     -ms-transition: all 300ms linear;
     transition: all 300ms linear;
 }
-
-
-
-
+.footer-border {
+    background-color: blue;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    padding-top: 10px;
+    padding-bottom: 10px;
+    width: 100%;
+    height: fit-content;
+}

@@ -9,7 +9,7 @@
                         @csrf
                         <div class="card card-login card-hidden">
                             <div class="card-header ">
-                                <h3 class="header text-center">{{ __('Login') }}</h3>
+                                <h3 class="header text-center">{{ __('Login to Caramel Yoghurt') }}</h3>
                             </div>
                             <div class="card-body ">
                                 <div class="card-body">
@@ -58,7 +58,7 @@
                                         {{ __('Forgot password?') }}
                                         </a>
                                         <a class="btn btn-link" style="color:#23CCEF" href="{{ route('register') }}">
-                                            {{ __('Create account') }}
+                                            {{ __('Sign up') }}
                                         </a>
                                     </div>
                                     
