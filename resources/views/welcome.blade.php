@@ -7,6 +7,7 @@
                 <div class="row justify-content-center">
                     <div class="col-lg-7 col-md-8">
                         <h1 class="text-white text-center">{{ __('Welcome to Caramel Yoghurt') }}</h1>
+                        <p class="text-white text-center">{{ __('Indulge in the creamy goodness of our caramel yoghurt, a perfect blend of flavor and texture.') }}</p>
                     </div>
                 </div>
             </div>

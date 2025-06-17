@@ -1,7 +1,7 @@
-@extends('layouts.app', ['activePage' => 'register', 'title' => 'Create Account'])
+@extends('layouts.app', ['activePage' => 'register', 'title' => 'Light Bootstrap Dashboard Laravel by Creative Tim & UPDIVISION'])
 
 @section('content')
-    <div class="full-page register-page section-image" data-color="blue" data-image="{{ asset('light-bootstrap/img/yg-bk.jpg') }}">
+    <div class="full-page register-page section-image" data-color="orange" data-image="{{ asset('light-bootstrap/img/bg5.jpg') }}">
         <div class="content">
             <div class="container">
                 <div class="card card-register card-plain text-center">
@@ -15,8 +15,8 @@
                                         </div>
                                     </div>
                                     <div class="media-body">
-                                        <h4 style="color: rgba(4, 0, 4, 0.957)">{{ __('Create Your Account') }}</h4>
-                                        <p>{{ __('Discover our artisanal collection of caramel-infused yoghurts, crafted with the finest ingredients and traditional techniques. By creating an account, you\'ll gain access to exclusive products, personalized recommendations, and be the first to know about our latest creamy creations.') }}</p>
+                                        <h4>{{ __('Free Account') }}</h4>
+                                        <p>{{ __('Here you can write a feature description for your dashboard, let the users know what is the value that you give them.') }}</p>
                                     </div>
                                 </div>
                                 <div class="media">
@@ -26,14 +26,21 @@
                                         </div>
                                     </div>
                                     <div class="media-body">
-                                        <h4 style="color: rgba(0, 0, 0, 0.957)">{{ __('Awesome Performances') }}</h4>
-                                        <p>{{ __('Here you can discover all the delicious benefits of joining our caramel yogurt community. Let us show you the creamy value we bring to your dairy experience.') }}</p>
+                                        <h4>{{ __('Awesome Performances') }}</h4>
+                                        <p>{{ __('Here you can write a feature description for your dashboard, let the users know what is the value that you give them.') }}</p>
                                     </div>
                                 </div>
-                                
-                              
-                                
-                            
+                                <div class="media">
+                                    <div class="media-left">
+                                        <div class="icon">
+                                            <i class="nc-icon nc-planet"></i>
+                                        </div>
+                                    </div>
+                                    <div class="media-body">
+                                        <h4>{{ __('Global Support') }}</h4>
+                                        <p>{{ __('Here you can write a feature description for your dashboard, let the users know what is the value that you give them.') }}</p>
+                                    </div>
+                                </div>
                             </div>
                             <div class="col-md-4 mr-auto">
                                 <form method="POST" action="{{ route('register') }}">
