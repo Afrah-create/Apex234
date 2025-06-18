@@ -8,8 +8,12 @@
                     <form class="form" method="POST" action="{{ route('login') }}">
                         @csrf
                         <div class="card card-login card-hidden">
+                            <div class="caramel-logo">
+                                <img src="{{ asset('light-bootstrap/img/yg-bk.jpg') }}" alt="Caramel Yoghurt Logo">
+                            </div>
                             <div class="card-header ">
-                                <h3 class="header text-center">{{ __('Login') }}</h3>
+                                <h3 class="header text-center-login">{{ __('Login to Caramel Yoghurt') }}</h3>
+                                <p class="text-message">{{ __('Creamy Perfection in Every Spoonful') }}</p>
                             </div>
                             <div class="card-body ">
                                 <div class="card-body">
@@ -54,11 +58,11 @@
                                         <button type="submit" class="btn btn-warning btn-wd">{{ __('Login') }}</button>
                                     </div>
                                     <div class="d-flex justify-content-between">
-                                        <a class="btn btn-link"  style="color:#23CCEF" href="{{ route('password.request') }}">
+                                        <a class="btn btn-link"  style="color:#3419de" href="{{ route('password.request') }}">
                                         {{ __('Forgot password?') }}
                                         </a>
-                                        <a class="btn btn-link" style="color:#23CCEF" href="{{ route('register') }}">
-                                            {{ __('Create account') }}
+                                        <a class="btn btn-link" style="color:#3419de" href="{{ route('register') }}">
+                                            {{ __('Sign Up') }}
                                         </a>
                                     </div>
                                     

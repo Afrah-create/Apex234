@@ -1,7 +1,10 @@
 <nav class="navbar navbar-expand-lg navbar-transparent navbar-absolute">
     <div class="container">
+        <div class="icon-logo">
+            <img src="{{ asset('light-bootstrap/img/Apex-Logo.png') }}" alt="Apex Developers icon">
+        </div>
         <div class="navbar-wrapper">
-            <a class="navbar-brand" href="#pablo">{{ __('Apex Developers') }}</a>
+            <a class="navbar-brand" href="#pablo" style="color: rgba(230, 136, 136, 0.996)">{{ __('Apex Developers') }}</a>
             <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" aria-controls="navigation-index" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-bar burger-lines"></span>
                 <span class="navbar-toggler-bar burger-lines"></span>
