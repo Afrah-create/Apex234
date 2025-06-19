@@ -1,7 +1,7 @@
 @extends('layouts/app', ['activePage' => 'welcome', 'title' => 'Caramel Yoghurt'])
 
 @section('content')
-    <div class="full-page section-image" data-color="black" data-image="{{asset('light-bootstrap/img/yoghurtbg.jpg')}}">
+    <div class="full-page section-image" data-color="black" data-image="{{asset('light-bootstrap/img/yg-bk.jpg')}}">
         <div class="content">
             <div class="container">
                 <div class="row justify-content-center">

@@ -18,6 +18,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('profile', ['as' => 'profile.edit', 'uses' => 'App\Http\Controllers\ProfileController@edit']);
     Route::patch('profile', ['as' => 'profile.update', 'uses' => 'App\Http\Controllers\ProfileController@update']);
     Route::patch('profile/password', ['as' => 'profile.password', 'uses' => 'App\Http\Controllers\ProfileController@password']);
-    Route::get('{page}', ['as' => 'page.index', 'uses' => 'App\Http\Controllers\PageController@index']);
+    Route::get('/supplier-dashboard', [App\Http\Controllers\SupplierDashboardController::class, 'index'])->name('supplier.dashboard');
 });
+//Catch all route (moved outside middleware group)
+ Route::get('{page}', ['as' => 'page.index', 'uses' => 'App\Http\Controllers\PageController@index']);
 
