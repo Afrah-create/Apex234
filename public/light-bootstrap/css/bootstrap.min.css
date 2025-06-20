@@ -542,6 +542,7 @@ pre code {
     padding-right: 15px;
     padding-left: 15px;
     width: 100%;
+   
 }
 @media (min-width: 576px) {
     .container {
@@ -2967,6 +2968,7 @@ tbody.collapse.show {
     background-color: #fff;
     border-color: #ddd #ddd #fff;
 }
+
 .nav-tabs .dropdown-menu {
     margin-top: -1px;
     border-top-left-radius: 0;
@@ -3172,6 +3174,7 @@ tbody.collapse.show {
         display: none;
     }
 }
+
 @media (max-width: 991px) {
     .navbar-expand-lg > .container,
     .navbar-expand-lg > .container-fluid {

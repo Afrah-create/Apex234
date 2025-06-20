@@ -6,6 +6,12 @@
             </a>
         </div>
         <ul class="nav">
+            <li class="nav-item @if($activePage == 'admin') active @endif">
+                <a class="nav-link" href="{{ route('admin.dashboard') }}">
+                    <i class="nc-icon nc-bank"></i>
+                    <p>{{ __("Admin Dashboard") }}</p>
+                </a>
+            </li>
             <li class="nav-item @if($activePage == 'dashboard') active @endif">
                 <a class="nav-link" href="{{route('dashboard')}}">
                     <i class="nc-icon nc-chart-pie-35"></i>

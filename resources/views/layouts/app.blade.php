@@ -15,6 +15,78 @@
         <link href="{{ asset('light-bootstrap/css/bootstrap.min.css') }}" rel="stylesheet" />
         <link href="{{ asset('light-bootstrap/css/light-bootstrap-dashboard.css?v=2.0.0') }} " rel="stylesheet" />
         <link href="{{ asset('light-bootstrap/css/demo.css') }}" rel="stylesheet" />
+        <style>
+            body {
+                background: linear-gradient(135deg, #f8fafc 0%, #e3e6ed 100%) !important;
+                font-family: 'Montserrat', Arial, sans-serif;
+                color: #2c3e50;
+            }
+            .main-panel {
+                background: transparent !important;
+            }
+            .card {
+                border-radius: 1.5rem !important;
+                box-shadow: 0 4px 24px rgba(44,62,80,0.08) !important;
+                border: none !important;
+            }
+            .card-header, .card-title {
+                background: #fff !important;
+                border-radius: 1.5rem 1.5rem 0 0 !important;
+                border-bottom: none !important;
+            }
+            .navbar {
+                background: transparent !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+            }
+            .sidebar {
+                background: #34495e !important;
+                border-radius: 1.5rem 0 0 1.5rem !important;
+                box-shadow: 2px 0 16px rgba(44,62,80,0.06) !important;
+            }
+            .sidebar .nav > li > a {
+                color: #fff !important;
+                font-weight: 500;
+                border-radius: 1rem !important;
+                margin: 0.25rem 0;
+                transition: background 0.2s;
+            }
+            .sidebar .nav > li.active > a, .sidebar .nav > li > a:hover {
+                background: #2c3e50 !important;
+                color: #f1c40f !important;
+            }
+            .btn-primary, .btn-success {
+                border-radius: 2rem !important;
+                font-weight: 500;
+                letter-spacing: 1px;
+                box-shadow: 0 2px 8px rgba(44,62,80,0.08);
+            }
+            .btn-primary {
+                background: #f1c40f !important;
+                color: #2c3e50 !important;
+                border: none !important;
+            }
+            .btn-success {
+                background: #27ae60 !important;
+                color: #fff !important;
+                border: none !important;
+            }
+            .card-body {
+                padding: 2rem 2rem 2rem 2rem !important;
+            }
+            .display-5, h1, h2, h3, h4, h5, h6 {
+                font-family: 'Montserrat', Arial, sans-serif;
+                font-weight: 700;
+            }
+            .lead {
+                font-size: 1.15rem;
+                color: #6c757d;
+            }
+            .table {
+                border-radius: 1rem !important;
+                overflow: hidden;
+            }
+        </style>
     </head>
 
     <body>
@@ -30,7 +102,6 @@
                 @yield('content')
                 @include('layouts.footer.nav')
             </div>
-
         </div>
        
 
