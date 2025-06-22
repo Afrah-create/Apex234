@@ -41,6 +41,9 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        // Assign default role
+        $user->roles()->syncWithoutDetaching([\App\Models\Role::where('name', 'retailer')->first()->id]);
+
         event(new Registered($user));
 
         Auth::login($user);

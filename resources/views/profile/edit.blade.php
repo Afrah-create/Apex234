@@ -24,6 +24,23 @@
                     @include('profile.partials.delete-user-form')
                 </div>
             </div>
+
+            <div class="mt-4">
+                <h2 class="font-semibold">Roles</h2>
+                <ul>
+                    @foreach($user->roles as $role)
+                        <li>{{ $role->name }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            <div class="mt-4">
+                <h2 class="font-semibold">Permissions</h2>
+                <ul>
+                    @foreach($user->permissions() as $permission)
+                        <li>{{ $permission->name }}</li>
+                    @endforeach
+                </ul>
+            </div>
         </div>
     </div>
 </x-app-layout>
