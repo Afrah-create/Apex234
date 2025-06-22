@@ -11,6 +11,9 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
+        <!-- Custom CSS and JS -->
+        <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
@@ -26,5 +29,8 @@
                 {{ $slot }}
             </div>
         </div>
+        
+        <!-- Custom JavaScript -->
+        <script src="{{ asset('js/carousel.js') }}"></script>
     </body>
 </html>
