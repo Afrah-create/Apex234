@@ -1,0 +1,12 @@
+/* Admin Dashboard Custom Styles */
+.admin-dashboard-image {
+    display: block;
+    margin: 0 auto 20px auto;
+    max-width: 200px;
+}
+.admin-dashboard-chart {
+    margin-top: 30px;
+    background: #f9fafb;
+    border-radius: 8px;
+    padding: 20px;
+} 
