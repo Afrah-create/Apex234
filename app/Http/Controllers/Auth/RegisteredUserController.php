@@ -33,6 +33,7 @@ class RegisteredUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'role' => ['required', 'in:retailer,supplier,vendor'],
         ]);
 
         $user = User::create([
@@ -41,13 +42,26 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        // Assign default role
-        $user->roles()->syncWithoutDetaching([\App\Models\Role::where('name', 'retailer')->first()->id]);
+        // Assign selected role
+        $role = \App\Models\Role::where('name', $request->role)->first();
+        if ($role) {
+            $user->roles()->syncWithoutDetaching([$role->id]);
+        }
 
         event(new Registered($user));
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        // Redirect to role-specific dashboard
+        switch ($request->role) {
+            case 'retailer':
+                return redirect()->route('dashboard.retailer');
+            case 'supplier':
+                return redirect()->route('dashboard.supplier');
+            case 'vendor':
+                return redirect()->route('dashboard.vendor');
+            default:
+                return redirect(route('dashboard', absolute: false));
+        }
     }
 }
