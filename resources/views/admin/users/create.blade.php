@@ -32,6 +32,10 @@
                 <label for="photo_url" class="block font-semibold mb-1">Photo URL</label>
                 <input type="url" id="photo_url" name="photo_url" value="{{ old('photo_url') }}" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
+            <div>
+                <label for="password" class="block font-semibold mb-1">Password</label>
+                <input type="password" id="password" name="password" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
             <div class="flex justify-between items-center mt-6">
                 <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 font-semibold">Create User</button>
                 <a href="{{ route('admin.users.index') }}" class="text-gray-600 hover:underline">Cancel</a>

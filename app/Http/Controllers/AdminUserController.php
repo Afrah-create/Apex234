@@ -11,6 +11,7 @@ class AdminUserController extends Controller
 {
     public function index(Request $request)
     {
+        $priority = ['admin', 'supplier', 'vendor', 'retailer'];
         $query = User::with('roles');
         if ($request->filled('search')) {
             $search = $request->input('search');
@@ -19,8 +20,25 @@ class AdminUserController extends Controller
                   ->orWhere('email', 'like', "%{$search}%");
             });
         }
-        $users = $query->paginate(10)->withQueryString();
-        return view('admin.users.index', compact('users'));
+        $users = $query->get()->sortBy(function($user) use ($priority) {
+            $userRoles = $user->roles->pluck('name')->toArray();
+            foreach ($priority as $index => $role) {
+                if (in_array($role, $userRoles)) {
+                    return $index;
+                }
+            }
+            return count($priority);
+        })->values();
+        $perPage = 10;
+        $page = $request->input('page', 1);
+        $paginatedUsers = new \Illuminate\Pagination\LengthAwarePaginator(
+            $users->forPage($page, $perPage),
+            $users->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+        return view('admin.users.index', ['users' => $paginatedUsers]);
     }
 
     public function create()
@@ -33,11 +51,13 @@ class AdminUserController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:8',
             'mobile' => 'nullable|string|max:20',
             'is_active' => 'boolean',
             'photo_url' => 'nullable|url',
         ]);
         $validated['is_active'] = $request->has('is_active');
+        $validated['password'] = bcrypt($validated['password']);
         User::create($validated);
         return Redirect::route('admin.users.index')->with('status', 'User created!');
     }
