@@ -34,6 +34,8 @@ Route::middleware('auth')->group(function () {
 // Admin user management
 Route::middleware(['auth', 'verified'])->prefix('admin/users')->name('admin.users.')->group(function () {
     Route::get('/', [AdminUserController::class, 'index'])->name('index');
+    Route::get('/create', [AdminUserController::class, 'create'])->name('create');
+    Route::post('/', [AdminUserController::class, 'store'])->name('store');
     Route::get('/{id}/edit', [AdminUserController::class, 'edit'])->name('edit');
     Route::post('/{id}/update', [AdminUserController::class, 'update'])->name('update');
     Route::delete('/{id}', [AdminUserController::class, 'destroy'])->name('destroy');

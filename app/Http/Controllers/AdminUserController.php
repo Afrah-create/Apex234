@@ -9,9 +9,17 @@ use Illuminate\Support\Facades\Auth;
 
 class AdminUserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::all();
+        $query = User::with('roles');
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+        $users = $query->paginate(10)->withQueryString();
         return view('admin.users.index', compact('users'));
     }
 
@@ -37,7 +45,8 @@ class AdminUserController extends Controller
     public function edit($id)
     {
         $user = User::findOrFail($id);
-        return view('admin.users.edit', compact('user'));
+        $roles = \App\Models\Role::all();
+        return view('admin.users.edit', compact('user', 'roles'));
     }
 
     public function update(Request $request, $id)
@@ -52,6 +61,11 @@ class AdminUserController extends Controller
         ]);
         $validated['is_active'] = $request->has('is_active');
         $user->update($validated);
+        if ($request->has('roles')) {
+            $user->roles()->sync($request->input('roles'));
+        } else {
+            $user->roles()->detach();
+        }
         return Redirect::route('admin.users.index')->with('status', 'User updated!');
     }
 
