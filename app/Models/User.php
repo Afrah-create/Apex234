@@ -55,4 +55,9 @@ class User extends Authenticatable
     {
         return $this->roles()->with('permissions')->get()->pluck('permissions')->flatten()->unique('id');
     }
+
+    public function getPrimaryRoleName()
+    {
+        return $this->roles()->first()?->name;
+    }
 }
