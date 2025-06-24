@@ -80,5 +80,57 @@ class DatabaseSeeder extends Seeder
         // Optionally, assign direct permissions to a user (example)
         $vendor->roles()->syncWithoutDetaching([$vendorRole->id]);
         // $vendor->permissions()->attach($manageOrders->id); // Uncomment if you want direct user-permission
+
+        // Seed users
+        $users = \App\Models\User::factory(30)->create();
+
+        // Seed production facilities
+        $productionFacilities = \App\Models\ProductionFacility::factory(30)->create();
+
+        // Seed distribution centers
+        $distributionCenters = \App\Models\DistributionCenter::factory(30)->create();
+
+        // Seed yogurt products (each linked to a production facility)
+        $yogurtProducts = \App\Models\YogurtProduct::factory(30)->create([
+            'production_facility_id' => $productionFacilities->random()->id,
+        ]);
+
+        // Seed retailers (each linked to a user)
+        $retailers = \App\Models\Retailer::factory(30)->create([
+            'user_id' => $users->random()->id,
+        ]);
+
+        // Seed suppliers (each linked to a user)
+        $suppliers = \App\Models\Supplier::factory(30)->create([
+            'user_id' => $users->random()->id,
+        ]);
+
+        // Seed vendors (no foreign keys)
+        $vendors = \App\Models\Vendor::factory(30)->create();
+
+        // Seed orders (each linked to a retailer and distribution center)
+        $orders = \App\Models\Order::factory(30)->create([
+            'retailer_id' => $retailers->random()->id,
+            'distribution_center_id' => $distributionCenters->random()->id,
+        ]);
+
+        // Seed inventory (each linked to a yogurt product and distribution center)
+        $inventory = \App\Models\Inventory::factory(30)->create([
+            'yogurt_product_id' => $yogurtProducts->random()->id,
+            'distribution_center_id' => $distributionCenters->random()->id,
+        ]);
+
+        // Seed quality checks (each linked to a yogurt product and production facility)
+        $qualityChecks = \App\Models\QualityCheck::factory(30)->create([
+            'yogurt_product_id' => $yogurtProducts->random()->id,
+            'production_facility_id' => $productionFacilities->random()->id,
+        ]);
+
+        // Seed deliveries (each linked to an order, distribution center, and retailer)
+        $deliveries = \App\Models\Delivery::factory(30)->create([
+            'order_id' => $orders->random()->id,
+            'distribution_center_id' => $distributionCenters->random()->id,
+            'retailer_id' => $retailers->random()->id,
+        ]);
     }
 }
