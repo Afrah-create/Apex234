@@ -68,7 +68,7 @@
         <div x-show="$store.sidebarOpen.open" @click="$store.sidebarOpen.open = false" class="fixed inset-0 bg-black bg-opacity-40 z-30 md:hidden" x-cloak></div>
         <!-- Main Content -->
         <main class="flex-1 p-8 bg-gray-50 w-full">
-            <h1 class="text-2xl font-bold mb-6">Administrator Dashboard</h1>
+            <h1 class="text-2xl font-bold mb-6">Administrator</h1>
             <p class="mb-4">Welcome, Admin! Use the sidebar to manage users, suppliers, retailers, vendors, and more.</p>
             <!-- Add more dashboard widgets or content as needed -->
         </main>
