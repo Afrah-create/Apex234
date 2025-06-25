@@ -9,4 +9,9 @@ class Inventory extends Model
 {
     use HasFactory;
     protected $guarded = [];
+    
+    public function yogurtProduct()
+    {
+        return $this->belongsTo(YogurtProduct::class);
+    }
 } 
