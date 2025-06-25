@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\AdminOrderController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminUserController;
 
@@ -40,6 +41,20 @@ Route::middleware(['auth', 'verified'])->prefix('admin/users')->name('admin.user
     Route::get('/{id}/edit', [AdminUserController::class, 'edit'])->name('edit');
     Route::post('/{id}/update', [AdminUserController::class, 'update'])->name('update');
     Route::delete('/{id}', [AdminUserController::class, 'destroy'])->name('destroy');
+});
+
+// Admin order management
+Route::middleware(['auth', 'verified'])->prefix('admin/orders')->name('admin.orders.')->group(function () {
+    Route::get('/', [AdminOrderController::class, 'index'])->name('index');
+    Route::get('/{id}', [AdminOrderController::class, 'show'])->name('show');
+    Route::get('/{id}/edit', [AdminOrderController::class, 'edit'])->name('edit');
+    Route::put('/{id}', [AdminOrderController::class, 'update'])->name('update');
+    Route::delete('/{id}', [AdminOrderController::class, 'destroy'])->name('destroy');
+    Route::patch('/{id}/status', [AdminOrderController::class, 'updateStatus'])->name('update-status');
+    
+    // API routes for data
+    Route::get('/api/orders-data', [AdminOrderController::class, 'getOrdersData'])->name('api.orders-data');
+    Route::get('/api/order-statistics', [AdminOrderController::class, 'getOrderStatistics'])->name('api.order-statistics');
 });
 
 // Inventory API routes for charts

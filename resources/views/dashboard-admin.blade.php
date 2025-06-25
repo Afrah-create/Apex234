@@ -18,7 +18,7 @@
                
                 
                 
-                <a href="#" class="hover:bg-gray-800 px-4 py-2 rounded transition flex items-center">
+                <a href="{{ route('admin.orders.index') }}" class="hover:bg-gray-800 px-4 py-2 rounded transition flex items-center">
                     <svg class="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h2l1 2h13l1-2h2M5 6h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z"/></svg>
                     Order Management
                 </a>
