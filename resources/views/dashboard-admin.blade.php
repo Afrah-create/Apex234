@@ -125,6 +125,37 @@
                 </div>
             </div>
             
+            <!-- User Statistics Chart -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl font-semibold text-gray-900">User Distribution by Role</h2>
+                        <button onclick="refreshUserChart()" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition duration-200 flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            Refresh
+                        </button>
+                    </div>
+                    <div class="relative" style="height: 300px;">
+                        <canvas id="userChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-6">User Statistics Summary</h2>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                            <span class="text-sm font-medium text-gray-600">Total System Users</span>
+                            <span class="text-lg font-semibold text-gray-900" id="total-users">-</span>
+                        </div>
+                        <div id="role-breakdown" class="space-y-3">
+                            <!-- Role breakdown will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Additional dashboard content can go here -->
         </main>
     </div>
@@ -134,8 +165,9 @@
     
     <script>
         let inventoryChart;
+        let userChart;
         
-        // Initialize chart
+        // Initialize inventory chart
         function initChart() {
             const ctx = document.getElementById('inventoryChart').getContext('2d');
             inventoryChart = new Chart(ctx, {
@@ -175,7 +207,58 @@
             });
         }
         
-        // Load chart data
+        // Initialize user chart
+        function initUserChart() {
+            const ctx = document.getElementById('userChart').getContext('2d');
+            userChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.8)',   // Blue for Admin
+                            'rgba(34, 197, 94, 0.8)',    // Green for Vendor
+                            'rgba(245, 158, 11, 0.8)',   // Orange for Retailer
+                            'rgba(168, 85, 247, 0.8)',   // Purple for Supplier
+                        ],
+                        borderColor: [
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(34, 197, 94, 1)',
+                            'rgba(245, 158, 11, 1)',
+                            'rgba(168, 85, 247, 1)',
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        title: {
+                            display: true,
+                            text: 'User Distribution by Role'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ${value} users (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Load inventory chart data
         async function loadChartData() {
             try {
                 const response = await fetch('{{ route("api.inventory.chart-data") }}');
@@ -188,6 +271,42 @@
                 }
             } catch (error) {
                 console.error('Error loading chart data:', error);
+            }
+        }
+        
+        // Load user statistics data
+        async function loadUserStatistics() {
+            try {
+                const response = await fetch('{{ route("api.inventory.user-statistics") }}');
+                const data = await response.json();
+                
+                if (userChart) {
+                    userChart.data.labels = data.chart_data.labels;
+                    userChart.data.datasets[0].data = data.chart_data.datasets[0].data;
+                    userChart.update();
+                }
+                
+                // Update summary statistics
+                document.getElementById('total-users').textContent = data.summary.total_users || 0;
+                
+                // Update role breakdown
+                const roleBreakdown = document.getElementById('role-breakdown');
+                roleBreakdown.innerHTML = '';
+                
+                data.summary.role_breakdown.forEach(role => {
+                    const roleElement = document.createElement('div');
+                    roleElement.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg';
+                    roleElement.innerHTML = `
+                        <span class="text-sm font-medium text-gray-600">${role.role}</span>
+                        <div class="text-right">
+                            <span class="text-lg font-semibold text-gray-900">${role.count}</span>
+                            <span class="text-sm text-gray-500 ml-2">(${role.percentage}%)</span>
+                        </div>
+                    `;
+                    roleBreakdown.appendChild(roleElement);
+                });
+            } catch (error) {
+                console.error('Error loading user statistics:', error);
             }
         }
         
@@ -206,10 +325,15 @@
             }
         }
         
-        // Refresh chart and summary
+        // Refresh inventory chart and summary
         function refreshChart() {
             loadChartData();
             loadSummaryData();
+        }
+        
+        // Refresh user chart
+        function refreshUserChart() {
+            loadUserStatistics();
         }
         
         // Auto-refresh every 30 seconds
@@ -217,14 +341,17 @@
             setInterval(() => {
                 loadChartData();
                 loadSummaryData();
+                loadUserStatistics();
             }, 30000);
         }
         
         // Initialize everything when page loads
         document.addEventListener('DOMContentLoaded', function() {
             initChart();
+            initUserChart();
             loadChartData();
             loadSummaryData();
+            loadUserStatistics();
             startAutoRefresh();
         });
     </script>

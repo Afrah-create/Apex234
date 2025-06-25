@@ -46,6 +46,7 @@ Route::middleware(['auth', 'verified'])->prefix('admin/users')->name('admin.user
 Route::middleware(['auth', 'verified'])->prefix('api/inventory')->name('api.inventory.')->group(function () {
     Route::get('/chart-data', [InventoryController::class, 'getInventoryChartData'])->name('chart-data');
     Route::get('/summary', [InventoryController::class, 'getInventorySummary'])->name('summary');
+    Route::get('/user-statistics', [InventoryController::class, 'getUserStatistics'])->name('user-statistics');
 });
 
 // Temporary test route (remove in production)
