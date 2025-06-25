@@ -55,4 +55,16 @@ class User extends Authenticatable
     {
         return $this->roles()->with('permissions')->get()->pluck('permissions')->flatten()->unique('id');
     }
+
+    public function getPrimaryRoleName()
+    {
+        $roles = $this->roles()->pluck('name')->toArray();
+        $priority = ['admin', 'supplier', 'vendor', 'retailer'];
+        foreach ($priority as $role) {
+            if (in_array($role, $roles)) {
+                return $role;
+            }
+        }
+        return null;
+    }
 }
