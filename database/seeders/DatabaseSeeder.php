@@ -17,10 +17,10 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+    //    User::factory()->create([
+      //      'name' => 'Test User',
+       //     'email' => 'test@example.com',
+       // ]);
 
         // Create roles
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
@@ -91,9 +91,94 @@ class DatabaseSeeder extends Seeder
         $distributionCenters = \App\Models\DistributionCenter::factory(30)->create();
 
         // Seed yogurt products (each linked to a production facility)
-        $yogurtProducts = \App\Models\YogurtProduct::factory(30)->create([
-            'production_facility_id' => $productionFacilities->random()->id,
+        // $yogurtProducts = \App\Models\YogurtProduct::factory(30)->create([
+        //     'production_facility_id' => $productionFacilities->random()->id,
+        // ]);
+
+        // Manually seed the three yogurt products
+        $firstFacility = $productionFacilities->first();
+
+        $yogurtProductsData = collect([
+            [
+                'production_facility_id' => $firstFacility->id,
+                'product_name' => 'Greek Vanilla Yoghurt',
+                'product_code' => 'YOG-GREEK-VAN',
+                'description' => 'Thick, creamy Greek yoghurt with natural vanilla flavor.',
+                'product_type' => 'greek',
+                'flavor' => 'vanilla',
+                'fat_content' => 8.0,
+                'protein_content' => 6.0,
+                'sugar_content' => 5.0,
+                'calories_per_100g' => 120,
+                'package_size' => '150g',
+                'package_type' => 'cup',
+                'shelf_life_days' => 21,
+                'storage_temperature' => 4.0,
+                'ingredients' => json_encode(['milk', 'vanilla', 'yogurt cultures']),
+                'nutritional_info' => null,
+                'allergens' => json_encode(['milk']),
+                'production_cost' => 0.80,
+                'selling_price' => 1.50,
+                'status' => 'active',
+                'notes' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'production_facility_id' => $firstFacility->id,
+                'product_name' => 'Low Fat Blueberry Yoghurt',
+                'product_code' => 'YOG-LOWFAT-BLUE',
+                'description' => 'Low fat yoghurt with real blueberry pieces.',
+                'product_type' => 'low_fat',
+                'flavor' => 'blueberry',
+                'fat_content' => 2.0,
+                'protein_content' => 4.0,
+                'sugar_content' => 7.0,
+                'calories_per_100g' => 90,
+                'package_size' => '150g',
+                'package_type' => 'cup',
+                'shelf_life_days' => 18,
+                'storage_temperature' => 4.0,
+                'ingredients' => json_encode(['milk', 'blueberry', 'yogurt cultures']),
+                'nutritional_info' => null,
+                'allergens' => json_encode(['milk']),
+                'production_cost' => 0.70,
+                'selling_price' => 1.40,
+                'status' => 'active',
+                'notes' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'production_facility_id' => $firstFacility->id,
+                'product_name' => 'Organic Strawberry Yoghurt',
+                'product_code' => 'YOG-ORG-STRAW',
+                'description' => 'Organic yoghurt made with fresh strawberries.',
+                'product_type' => 'organic',
+                'flavor' => 'strawberry',
+                'fat_content' => 4.0,
+                'protein_content' => 5.0,
+                'sugar_content' => 6.0,
+                'calories_per_100g' => 100,
+                'package_size' => '150g',
+                'package_type' => 'cup',
+                'shelf_life_days' => 16,
+                'storage_temperature' => 4.0,
+                'ingredients' => json_encode(['organic milk', 'strawberry', 'yogurt cultures']),
+                'nutritional_info' => null,
+                'allergens' => json_encode(['milk']),
+                'production_cost' => 0.90,
+                'selling_price' => 1.60,
+                'status' => 'active',
+                'notes' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
         ]);
+        foreach ($yogurtProductsData as $product) {
+            \App\Models\YogurtProduct::create($product);
+        }
+        $yogurtProducts = \App\Models\YogurtProduct::all(); // Now this is a collection of models
 
         // Seed retailers (each linked to a user)
         $retailers = \App\Models\Retailer::factory(30)->create([

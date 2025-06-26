@@ -51,6 +51,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard/vendor', function () {
         return view('dashboard-vendor');
     })->name('dashboard.vendor');
+    Route::get('/vendor/manage-orders', function () {
+        return view('vendor.manage-orders');
+    })->name('vendor.manage-orders');
+    Route::get('/vendor/manage-products', function () {
+        return view('vendor.manage-products');
+    })->name('vendor.manage-products');
 });
 
 Route::middleware('auth')->group(function () {
@@ -104,6 +110,33 @@ Route::get('/test-inventory', function() {
         ->get();
     
     return response()->json($inventoryData);
+});
+
+// Vendor dashboard API routes
+Route::middleware(['auth', 'verified'])->prefix('api/vendor')->name('api.vendor.')->group(function () {
+    Route::get('/inventory-summary', [\App\Http\Controllers\VendorDashboardController::class, 'inventorySummary']);
+    Route::get('/inventory-chart', [\App\Http\Controllers\VendorDashboardController::class, 'inventoryChart']);
+    Route::get('/order-status', [\App\Http\Controllers\VendorDashboardController::class, 'orderStatus']);
+    Route::get('/raw-material-stats', [\App\Http\Controllers\VendorDashboardController::class, 'rawMaterialStats']);
+    Route::get('/production-summary', [\App\Http\Controllers\VendorDashboardController::class, 'productionSummary']);
+});
+
+// Vendor order management API routes
+Route::middleware(['auth', 'verified'])->prefix('api/vendor')->group(function () {
+    Route::get('/suppliers', [\App\Http\Controllers\VendorOrderController::class, 'suppliers']);
+    Route::post('/raw-material-orders', [\App\Http\Controllers\VendorOrderController::class, 'placeRawMaterialOrder']);
+    Route::get('/raw-material-orders', [\App\Http\Controllers\VendorOrderController::class, 'listRawMaterialOrders']);
+    Route::get('/product-orders', [\App\Http\Controllers\VendorOrderController::class, 'listProductOrders']);
+    Route::post('/product-orders/{id}/confirm', [\App\Http\Controllers\VendorOrderController::class, 'confirmProductOrder']);
+});
+
+// Vendor product management API routes
+Route::middleware(['auth', 'verified'])->prefix('api/vendor')->group(function () {
+    Route::get('/products', [\App\Http\Controllers\VendorProductController::class, 'index']);
+    Route::post('/products', [\App\Http\Controllers\VendorProductController::class, 'store']);
+    Route::post('/products/{id}', [\App\Http\Controllers\VendorProductController::class, 'update']);
+    Route::delete('/products/{id}', [\App\Http\Controllers\VendorProductController::class, 'destroy']);
+    Route::post('/products/{id}/toggle-status', [\App\Http\Controllers\VendorProductController::class, 'toggleStatus']);
 });
 
 require __DIR__.'/auth.php';

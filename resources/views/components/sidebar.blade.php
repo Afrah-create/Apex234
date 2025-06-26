@@ -36,9 +36,21 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7m-9 2v8m4-8v8m5 0h2a2 2 0 002-2v-7a2 2 0 00-.586-1.414l-8-8a2 2 0 00-2.828 0l-8 8A2 2 0 003 10v7a2 2 0 002 2h2"/></svg>
                     Dashboard Home
                 </a>
-                <a href="#" class="sidebar-link flex items-center gap-2 px-4 py-2 rounded-lg transition hover:bg-blue-800">
+                <a href="{{ route('vendor.manage-orders') }}" class="sidebar-link flex items-center gap-2 px-4 py-2 rounded-lg transition hover:bg-blue-800">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V7a2 2 0 00-2-2H6a2 2 0 00-2 2v6m16 0v6a2 2 0 01-2 2H6a2 2 0 01-2-2v-6m16 0H4"/></svg>
                     Manage Orders
+                </a>
+                <a href="{{ route('vendor.manage-products') }}" class="sidebar-link flex items-center gap-2 px-4 py-2 rounded-lg transition hover:bg-blue-800">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"/></svg>
+                    Manage Products
+                </a>
+                <a href="#" class="sidebar-link flex items-center gap-2 px-4 py-2 rounded-lg transition hover:bg-blue-800">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg>
+                    View Transactions
+                </a>
+                <a href="#" class="sidebar-link flex items-center gap-2 px-4 py-2 rounded-lg transition hover:bg-blue-800">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg>
+                    Analytics
                 </a>
             @elseif($role === 'retailer')
                 <a href="{{ route('dashboard.retailer') }}" class="sidebar-link flex items-center gap-2 px-4 py-2 rounded-lg transition hover:bg-blue-800">
