@@ -5,13 +5,39 @@ use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\AdminOrderController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminUserController;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 Route::get('/', function () {
+    if (Auth::check()) {
+        return redirect()->route('dashboard');
+    }
     return view('welcome');
 });
 
+// Test route for middleware
+Route::get('/test-middleware', function () {
+    return 'Middleware test successful!';
+})->middleware('test');
+
 Route::get('/dashboard', function () {
-    return view('dashboard-admin');
+    $user = Auth::user();
+    if ($user instanceof User) {
+        $role = $user->getPrimaryRoleName();
+        switch ($role) {
+            case 'admin':
+                return view('dashboard-admin');
+            case 'retailer':
+                return redirect()->route('dashboard.retailer');
+            case 'supplier':
+                return redirect()->route('dashboard.supplier');
+            case 'vendor':
+                return redirect()->route('dashboard.vendor');
+            default:
+                return view('dashboard-admin');
+        }
+    }
+    return redirect()->route('login');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 // Role-specific dashboards
@@ -34,7 +60,7 @@ Route::middleware('auth')->group(function () {
 });
 
 // Admin user management
-Route::middleware(['auth', 'verified'])->prefix('admin/users')->name('admin.users.')->group(function () {
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/users')->name('admin.users.')->group(function () {
     Route::get('/', [AdminUserController::class, 'index'])->name('index');
     Route::get('/create', [AdminUserController::class, 'create'])->name('create');
     Route::post('/', [AdminUserController::class, 'store'])->name('store');
@@ -44,7 +70,7 @@ Route::middleware(['auth', 'verified'])->prefix('admin/users')->name('admin.user
 });
 
 // Admin order management
-Route::middleware(['auth', 'verified'])->prefix('admin/orders')->name('admin.orders.')->group(function () {
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/orders')->name('admin.orders.')->group(function () {
     Route::get('/', [AdminOrderController::class, 'index'])->name('index');
     Route::get('/{id}', [AdminOrderController::class, 'show'])->name('show');
     Route::get('/{id}/edit', [AdminOrderController::class, 'edit'])->name('edit');
@@ -58,7 +84,7 @@ Route::middleware(['auth', 'verified'])->prefix('admin/orders')->name('admin.ord
 });
 
 // Inventory API routes for charts
-Route::middleware(['auth', 'verified'])->prefix('api/inventory')->name('api.inventory.')->group(function () {
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('api/inventory')->name('api.inventory.')->group(function () {
     Route::get('/chart-data', [InventoryController::class, 'getInventoryChartData'])->name('chart-data');
     Route::get('/summary', [InventoryController::class, 'getInventorySummary'])->name('summary');
     Route::get('/user-statistics', [InventoryController::class, 'getUserStatistics'])->name('user-statistics');

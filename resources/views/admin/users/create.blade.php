@@ -1,5 +1,8 @@
-<x-app-layout>
-    <div class="max-w-xl mx-auto bg-white p-8 rounded-lg shadow mt-10">
+@extends('layouts.app')
+
+@section('content')
+<main class="main-content flex justify-center items-center">
+    <div class="max-w-xl w-full bg-white p-8 rounded-lg shadow mt-10">
         <h2 class="text-2xl font-bold mb-6 text-center">Add New User</h2>
         @if ($errors->any())
             <div class="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
@@ -42,4 +45,5 @@
             </div>
         </form>
     </div>
-</x-app-layout> 
+</main>
+@endsection 

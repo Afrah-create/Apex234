@@ -1,8 +1,9 @@
-<x-app-layout>
-    <div class="min-h-screen bg-gray-50">
+@extends('layouts.app')
+
+@section('content')
+<main class="main-content">
         <!-- Header -->
-        <div class="bg-white shadow-sm border-b">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="bg-white shadow-sm border-b mb-6">
                 <div class="flex justify-between items-center py-6">
                     <div>
                         <h1 class="text-2xl font-bold text-gray-900">Order Management</h1>
@@ -15,14 +16,13 @@
                             </svg>
                             Refresh Data
                         </button>
-                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="order-management-container">
             <!-- Statistics Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="summary-cards">
                 <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
                     <div class="flex items-center">
                         <div class="p-3 rounded-full bg-blue-100 text-blue-600">
@@ -87,8 +87,7 @@
                 </div>
                 
                 <!-- Filters -->
-                <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                    <div class="flex flex-wrap items-center gap-4">
+            <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 order-filters">
                         <div class="flex-1 min-w-0">
                             <input type="text" id="search-input" placeholder="Search orders..." 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -109,7 +108,6 @@
                             <option value="failed">Failed</option>
                             <option value="refunded">Refunded</option>
                         </select>
-                    </div>
                 </div>
 
                 <div class="overflow-x-auto">
@@ -145,7 +143,7 @@
                 </div>
             </div>
         </div>
-    </div>
+</main>
 
     <!-- Status Update Modal -->
     <div id="status-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
@@ -399,9 +397,6 @@
 
             // Set up status form
             document.getElementById('status-form').addEventListener('submit', updateOrderStatus);
-
-            // Auto-refresh every 30 seconds
-            setInterval(refreshData, 30000);
         });
     </script>
-</x-app-layout> 
+@endsection 
