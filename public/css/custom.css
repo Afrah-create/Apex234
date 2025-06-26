@@ -737,4 +737,9 @@
     .sidebar-meta-subtitle {
         font-size: 0.75rem;
     }
+}
+
+/* Ensure navbar content stays horizontal on all screen sizes */
+.navbar.flex {
+  flex-direction: row !important;
 } 
