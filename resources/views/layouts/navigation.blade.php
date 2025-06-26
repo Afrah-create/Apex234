@@ -1,88 +1,47 @@
-<nav x-data="{}" class="bg-blue-900 border-b border-blue-800">
-    <!-- Primary Navigation Menu -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16 items-center">
-            <div class="flex items-center">
-                <!-- Logo -->
-                <a href="/" class="flex items-center">
-                    <img src="{{ asset('images/apex-logo.png') }}" alt="Logo" class="h-10 w-auto mr-4 rounded-full shadow" />
-                    <span class="text-white text-xl font-bold tracking-wide hidden sm:inline">Caramel Yogurt</span>
-                </a>
-                <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="text-white hover:text-blue-200">
-                        {{ __('Dashboard') }}
-                    </x-nav-link>
-                </div>
-            </div>
-
-            <!-- Settings Dropdown -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
-                <x-dropdown align="right" width="48">
-                    <x-slot name="trigger">
-                        <button class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-800 hover:bg-blue-700 focus:outline-none transition ease-in-out duration-150" title="User menu">
-                            <!-- User Icon SVG -->
-                            <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z"/>
-                            </svg>
-                        </button>
-                    </x-slot>
-
-                    <x-slot name="content">
-                        <x-dropdown-link :href="route('profile.edit')">
-                            {{ __('Profile') }}
-                        </x-dropdown-link>
-
-                        <!-- Authentication -->
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-
-                            <x-dropdown-link :href="route('logout')"
-                                    onclick="event.preventDefault();
-                                                this.closest('form').submit();">
-                                {{ __('Log Out') }}
-                            </x-dropdown-link>
-                        </form>
-                    </x-slot>
-                </x-dropdown>
-            </div>
-
-            <!-- Hamburger -->
-            <div class="-me-2 flex items-center sm:hidden">
-                <button @click="$store.sidebarOpen.open = true" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out">
-                    <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                </button>
-            </div>
-        </div>
+<nav class="navbar flex items-center justify-between w-full px-4 py-2">
+    <div class="navbar-logo flex items-center">
+        <a href="/">
+            <img src="{{ asset('images/apex-logo.png') }}" alt="Logo" />
+        </a>
+        <span class="navbar-title ml-2">Caramel Yogurt</span>
     </div>
-
-    <!-- Responsive Navigation Menu -->
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
-        <div class="pt-2 pb-2 space-y-1 text-base">
-            <!-- Removed Dashboard link -->
-        </div>
-        <!-- Responsive Settings Options -->
-        <div class="pt-2 pb-1 border-t border-gray-200">
-            <div class="px-3">
-                <div class="font-semibold text-base text-white">{{ Auth::user()->name }}</div>
-                <div class="font-medium text-xs text-blue-100">{{ Auth::user()->email }}</div>
-            </div>
-            <div class="mt-2 space-y-1 px-3">
-                <x-responsive-nav-link :href="route('profile.edit')" class="text-sm text-white font-medium">
-                    {{ __('Profile') }}
-                </x-responsive-nav-link>
-                <!-- Authentication -->
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <x-responsive-nav-link :href="route('logout')" class="text-sm text-white font-medium"
-                            onclick="event.preventDefault();
-                                        this.closest('form').submit();">
-                        {{ __('Log Out') }}
-                    </x-responsive-nav-link>
-                </form>
-            </div>
-        </div>
+    <div class="flex flex-row items-center gap-4 ml-auto">
+        @auth
+            <!-- Notification Bell -->
+            <button class="relative inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-800 hover:bg-blue-700 focus:outline-none transition ease-in-out duration-150 mr-1" title="Notifications">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                <!-- Notification dot (optional, for unread notifications) -->
+                <!-- <span class="absolute top-2 right-2 block h-2 w-2 rounded-full bg-red-500"></span> -->
+            </button>
+            <x-dropdown align="right" width="48">
+                <x-slot name="trigger">
+                    <button class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-800 hover:bg-blue-700 focus:outline-none transition ease-in-out duration-150 text-white font-bold text-lg uppercase" title="User menu">
+                        {{ collect(explode(' ', auth()->user()->name))->map(fn($part) => strtoupper(substr($part,0,1)))->join('') }}
+                    </button>
+                </x-slot>
+                <x-slot name="content">
+                    <x-dropdown-link :href="route('profile.edit')">
+                        {{ __('Profile') }}
+                    </x-dropdown-link>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <x-dropdown-link :href="route('logout')"
+                            onclick="event.preventDefault(); this.closest('form').submit();">
+                            {{ __('Log Out') }}
+                        </x-dropdown-link>
+                    </form>
+                </x-slot>
+            </x-dropdown>
+        @endauth
+        @guest
+            <x-nav-link :href="route('login')" :active="request()->routeIs('login')" class="text-white hover:text-blue-200">
+                {{ __('Login') }}
+            </x-nav-link>
+            <x-nav-link :href="route('register')" :active="request()->routeIs('register')" class="text-white hover:text-blue-200">
+                {{ __('Register') }}
+            </x-nav-link>
+        @endguest
     </div>
 </nav>

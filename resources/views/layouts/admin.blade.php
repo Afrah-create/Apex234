@@ -7,6 +7,7 @@
     <title>{{ config('app.name', 'Caramel Yogurt Admin') }}</title>
     <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="font-sans antialiased bg-gray-100">
@@ -41,11 +42,11 @@
         <!-- Main Content -->
         <main class="flex-1 p-8 bg-gray-50 w-full">
             <div class="flex justify-end mb-4">
-                <a href="{{ route('notifications.index') }}" class="relative group mr-2">
+                <a href="{{ route('profile.edit') }}" class="relative group mr-2">
                     <svg class="w-7 h-7 text-gray-600 hover:text-blue-600 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                     </svg>
-                    <span class="sr-only">Notifications</span>
+                    <span class="sr-only">Profile</span>
                 </a>
             </div>
             {{ $slot }}

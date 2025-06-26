@@ -9,7 +9,7 @@ class AdminMiddleware
 {
     public function handle($request, Closure $next)
     {
-        if (!Auth::check() || !Auth::user()->is_admin) {
+        if (!Auth::check() || !Auth::user()->roles()->where('name', 'admin')->exists()) {
             abort(403, 'Unauthorized');
         }
         return $next($request);
