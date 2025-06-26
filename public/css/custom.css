@@ -606,6 +606,8 @@
     line-height: 1.2;
     word-break:normal;
     text-align: left;
+    background: linear-gradient(90deg, #70237c 0%, #962e5f 100%);
+
 }
 .sidebar-horizontal .sidebar-link:hover,
 .sidebar-horizontal .sidebar-link.active {
