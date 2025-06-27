@@ -9,6 +9,24 @@
                 <span class="sidebar-meta-subtitle">System Administrator</span>
             </div>
         @endif
+        @if($role === 'vendor')
+            <div class="sidebar-meta mb-2 md:mb-0 md:mr-6 flex flex-col md:flex-col items-start">
+                <span class="sidebar-meta-title">Vendor Panel</span>
+                <span class="sidebar-meta-subtitle">Product &amp; Order Management</span>
+            </div>
+        @endif
+        @if($role === 'supplier')
+            <div class="sidebar-meta mb-2 md:mb-0 md:mr-6 flex flex-col md:flex-col items-start">
+                <span class="sidebar-meta-title">Supplier Panel</span>
+                <span class="sidebar-meta-subtitle">Supply &amp; Delivery Management</span>
+            </div>
+        @endif
+        @if($role === 'retailer')
+            <div class="sidebar-meta mb-2 md:mb-0 md:mr-6 flex flex-col md:flex-col items-start">
+                <span class="sidebar-meta-title">Retailer Panel</span>
+                <span class="sidebar-meta-subtitle">Stock &amp; Sales Management</span>
+            </div>
+        @endif
         <div id="sidebar-links" class="flex flex-row md:flex-row items-center gap-2 md:gap-6 w-full md:w-auto sidebar-links">
             @if($role === 'admin')
                 <a href="{{ route('dashboard') }}" class="sidebar-link flex items-center gap-2 px-4 py-2 rounded-lg transition hover:bg-blue-800">

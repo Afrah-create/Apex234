@@ -55,46 +55,6 @@
                     </tr>
                 </thead>
                 <tbody id="vendor-products-list">
-                    <!-- Example row with images -->
-                    <tr>
-                        <td><img src="/images/greek.jpeg" alt="Greek Yoghurt" class="h-16 w-16 object-cover rounded" /></td>
-                        <td>Greek Vanilla Yoghurt</td>
-                        <td>Greek</td>
-                        <td><span class="text-green-600 font-bold">Active</span></td>
-                        <td>$1.50</td>
-                        <td>120</td>
-                        <td>
-                            <button class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded mr-2">Edit</button>
-                            <button class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded mr-2">Delete</button>
-                            <button class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded">Deactivate</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><img src="/images/strawbeery.jpeg" alt="Organic Strawberry Yoghurt" class="h-16 w-16 object-cover rounded" /></td>
-                        <td>Organic Strawberry Yoghurt</td>
-                        <td>Organic</td>
-                        <td><span class="text-green-600 font-bold">Active</span></td>
-                        <td>$1.60</td>
-                        <td>80</td>
-                        <td>
-                            <button class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded mr-2">Edit</button>
-                            <button class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded mr-2">Delete</button>
-                            <button class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded">Deactivate</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><img src="/images/mango (2).jpeg" alt="Low Fat Blueberry Yoghurt" class="h-16 w-16 object-cover rounded" /></td>
-                        <td>Low Fat Blueberry Yoghurt</td>
-                        <td>Low Fat</td>
-                        <td><span class="text-green-600 font-bold">Active</span></td>
-                        <td>$1.40</td>
-                        <td>100</td>
-                        <td>
-                            <button class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded mr-2">Edit</button>
-                            <button class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded mr-2">Delete</button>
-                            <button class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded">Deactivate</button>
-                        </td>
-                    </tr>
                     <!-- Populated by JS -->
                 </tbody>
             </table>

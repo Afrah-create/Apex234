@@ -7,6 +7,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Models\YogurtProduct;
+use App\Models\Inventory;
 
 class VendorProductController extends Controller
 {
@@ -40,6 +41,26 @@ class VendorProductController extends Controller
             'image_path' => $imagePath,
             'production_facility_id' => 1, // Placeholder, adjust as needed
             'product_code' => uniqid('YOG-'),
+        ]);
+        // Create inventory record for the new product
+        Inventory::create([
+            'yogurt_product_id' => $product->id,
+            'distribution_center_id' => 1, // Placeholder, adjust as needed
+            'batch_number' => uniqid('BATCH-'),
+            'quantity_available' => $request->stock,
+            'quantity_reserved' => 0,
+            'quantity_damaged' => 0,
+            'quantity_expired' => 0,
+            'production_date' => now()->toDateString(),
+            'expiry_date' => now()->addDays(30)->toDateString(),
+            'storage_temperature' => 4.0,
+            'storage_location' => 'refrigerator',
+            'shelf_location' => null,
+            'inventory_status' => 'available',
+            'unit_cost' => $request->price,
+            'total_value' => $request->price * $request->stock,
+            'last_updated' => now()->toDateString(),
+            'notes' => null,
         ]);
         return response()->json(['success' => true, 'product' => $product]);
     }

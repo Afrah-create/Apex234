@@ -606,4 +606,117 @@ canvas {
 /* Ensure navbar content stays horizontal on all screen sizes */
 .navbar.flex {
   flex-direction: row !important;
+}
+
+/* User Table Styles */
+.user-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5rem;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    font-size: 1rem;
+}
+.user-table th, .user-table td {
+    padding: 0.75rem 1rem;
+    border: 1px solid #e2e8f0;
+    text-align: left;
+}
+.user-table th {
+    background: #f1f5f9;
+    font-weight: bold;
+    color: #051c4b;
+}
+.user-table tr:nth-child(even) {
+    background: #f9fafb;
+}
+.user-table tr:hover {
+    background: #e0e7ef;
+}
+.user-table .action-btn {
+    padding: 0.3rem 0.8rem;
+    border-radius: 0.4rem;
+    font-size: 0.95em;
+    margin-right: 0.3rem;
+    text-decoration: none;
+    color: #fff;
+    background: #2563eb;
+    transition: background 0.2s;
+    border: none;
+    cursor: pointer;
+    display: inline-block;
+}
+.user-table .action-btn.edit-btn {
+    background: #2563eb;
+}
+.user-table .action-btn.delete-btn {
+    background: #ab1616;
+}
+.user-table .action-btn:hover {
+    opacity: 0.85;
+}
+
+/* User Management Search Bar Styles */
+.user-management-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    background: #f1f5f9;
+    padding: 1rem 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.user-management-bar form {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.user-management-bar input[type="text"] {
+    padding: 0.5rem 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    background: #fff;
+    transition: border 0.2s, box-shadow 0.2s;
+    outline: none;
+}
+.user-management-bar input[type="text"]:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px #2563eb22;
+}
+.user-management-bar button[type="submit"] {
+    padding: 0.45rem 1.1rem;
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.user-management-bar button[type="submit"]:hover {
+    background: #1746a2;
+}
+.user-management-bar a {
+    color: #2563eb;
+    text-decoration: underline;
+    margin-left: 0.5rem;
+    font-size: 0.98em;
+}
+.user-management-bar a:hover {
+    color: #ab1616;
+}
+.user-management-bar .inline-block {
+    margin-left: auto;
+    background: #ab1616;
+    color: #fff;
+    padding: 0.45rem 1.1rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    font-size: 1rem;
+    transition: background 0.2s;
+}
+.user-management-bar .inline-block:hover {
+    background: #2563eb;
 } 
