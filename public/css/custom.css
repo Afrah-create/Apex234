@@ -719,4 +719,152 @@ canvas {
 }
 .user-management-bar .inline-block:hover {
     background: #2563eb;
+}
+
+/* Password Reset Email Styles */
+body.email-bg {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    padding: 0;
+    margin: 0;
+}
+.email-container {
+    max-width: 520px;
+    margin: 48px auto;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 8px 32px rgba(44, 62, 80, 0.12), 0 1.5px 4px rgba(44, 62, 80, 0.08);
+    padding: 40px 36px 32px 36px;
+    border: 1.5px solid #e3e8ee;
+}
+.email-logo {
+    max-width: 90px;
+    margin-bottom: 18px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(49,130,206,0.08);
+}
+.email-heading {
+    margin: 0;
+    color: #2d3748;
+    font-size: 2.1rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+.email-subheading {
+    color: #4a5568;
+    font-size: 1.1rem;
+    margin-bottom: 24px;
+    font-weight: 500;
+}
+.email-greeting {
+    font-size: 1.1rem;
+    color: #222;
+    margin-bottom: 12px;
+    font-weight: 500;
+}
+.email-body {
+    font-size: 1.05rem;
+    color: #444;
+    margin-bottom: 28px;
+    line-height: 1.7;
+}
+.email-button-container {
+    text-align: center;
+    margin: 36px 0 28px 0;
+}
+.email-button {
+    background: linear-gradient(90deg, #3182ce 0%, #6b47dc 100%);
+    color: #fff !important;
+    padding: 15px 38px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 1.1rem;
+    font-weight: 700;
+    display: inline-block;
+    box-shadow: 0 2px 8px rgba(49,130,206,0.13);
+    transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+    border: none;
+}
+.email-button:hover {
+    background: linear-gradient(90deg, #2563eb 0%, #6b47dc 100%);
+    box-shadow: 0 4px 16px rgba(49,130,206,0.18);
+    transform: translateY(-2px) scale(1.03);
+}
+.email-expiry {
+    font-size: 0.98rem;
+    color: #6b7280;
+    margin-bottom: 18px;
+}
+.email-hr {
+    margin: 36px 0 24px 0;
+    border: none;
+    border-top: 1.5px solid #e3e8ee;
+}
+.email-footer {
+    font-size: 0.93rem;
+    color: #a0aec0;
+    text-align: center;
+    letter-spacing: 0.5px;
+    margin-top: 10px;
+}
+
+/* Reset Token Form Styles */
+.reset-form-container {
+    max-width: 410px;
+    margin: 60px auto 0 auto;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 8px 32px rgba(44, 62, 80, 0.10);
+    padding: 32px 28px 24px 28px;
+}
+.reset-logo {
+    display: block;
+    margin: 0 auto 12px auto;
+    max-width: 70px;
+    border-radius: 10px;
+}
+.reset-title {
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 8px;
+}
+.reset-label {
+    font-size: 1rem;
+    color: #444;
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+.reset-btn {
+    width: 100%;
+    margin-top: 18px;
+}
+.reset-footer {
+    text-align: center;
+    font-size: 0.93rem;
+    color: #a0aec0;
+    margin-top: 18px;
+}
+.token-inputs {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+.token-inputs input {
+    width: 38px;
+    height: 48px;
+    font-size: 1.5rem;
+    text-align: center;
+    border-radius: 8px;
+    border: 1.5px solid #e3e8ee;
+    background: #f9fafb;
+    box-shadow: 0 1px 4px rgba(44,62,80,0.06);
+    outline: none;
+    transition: border 0.2s;
+}
+.token-inputs input:focus {
+    border: 1.5px solid #3182ce;
+    background: #fff;
 } 

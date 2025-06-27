@@ -139,4 +139,8 @@ Route::middleware(['auth', 'verified'])->prefix('api/vendor')->group(function ()
     Route::post('/products/{id}/toggle-status', [\App\Http\Controllers\VendorProductController::class, 'toggleStatus']);
 });
 
+// Password reset by token (code) form
+Route::get('/password/token', [\App\Http\Controllers\PasswordResetByTokenController::class, 'showForm'])->name('password.token.form');
+Route::post('/password/token', [\App\Http\Controllers\PasswordResetByTokenController::class, 'reset'])->name('password.token.reset');
+
 require __DIR__.'/auth.php';

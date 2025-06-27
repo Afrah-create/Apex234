@@ -104,6 +104,14 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"/></svg>
                     Manage Supplies
                 </a>
+                <a href="#" class="sidebar-link flex items-center gap-2 px-4 py-2 rounded-lg transition hover:bg-blue-800">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"/></svg>
+                    Track Deliveries
+                </a>
+                <a href="#" class="sidebar-link flex items-center gap-2 px-4 py-2 rounded-lg transition hover:bg-blue-800">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"/></svg>
+                    Raw Material Management
+                </a>
             @endif
         </div>
         <button class="sidebar-menu-btn md:hidden block absolute left-2 top-1/2 -translate-y-1/2" aria-label="Toggle menu" onclick="document.getElementById('sidebar-links').classList.toggle('open')">
