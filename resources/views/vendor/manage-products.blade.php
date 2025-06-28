@@ -122,7 +122,7 @@ async function loadVendorProducts() {
             <td>${product.product_name}</td>
             <td>${product.product_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</td>
             <td><span class="${product.status === 'active' ? 'text-green-600' : 'text-gray-600'} font-bold">${product.status.charAt(0).toUpperCase() + product.status.slice(1)}</span></td>
-            <td>$${parseFloat(product.selling_price).toFixed(2)}</td>
+            <td>${parseFloat(product.selling_price).toLocaleString()} UGX</td>
             <td>${product.stock ?? '-'}</td>
             <td>
                 <button class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded mr-2" onclick="openEditProductModal(${product.id})">Edit</button>

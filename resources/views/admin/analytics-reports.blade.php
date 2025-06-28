@@ -79,15 +79,15 @@
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Sales Prediction (Next 30 Days)</h3>
             <div class="space-y-4">
                 <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                    <span class="text-sm font-medium text-green-800">Greek Yogurt</span>
+                    <span class="text-sm font-medium text-green-800">Greek Vanilla Yoghurt</span>
                     <span class="text-lg font-bold text-green-900">2,450 units</span>
                 </div>
                 <div class="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-                    <span class="text-sm font-medium text-blue-800">Strawberry</span>
+                    <span class="text-sm font-medium text-blue-800">Low Fat Blueberry Yoghurt</span>
                     <span class="text-lg font-bold text-blue-900">1,890 units</span>
                 </div>
                 <div class="flex justify-between items-center p-3 bg-yellow-50 rounded-lg">
-                    <span class="text-sm font-medium text-yellow-800">Mango</span>
+                    <span class="text-sm font-medium text-yellow-800">Organic Strawberry Yoghurt</span>
                     <span class="text-lg font-bold text-yellow-900">1,230 units</span>
                 </div>
             </div>
@@ -105,7 +105,7 @@
                         <span class="text-sm font-medium text-red-800">Low Stock Alert</span>
                         <span class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">3 items</span>
                     </div>
-                    <p class="text-xs text-red-700">Greek Yogurt, Mango, Vanilla</p>
+                    <p class="text-xs text-red-700">Greek Vanilla, Low Fat Blueberry, Organic Strawberry</p>
                 </div>
                 <div class="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
                     <div class="flex justify-between items-center mb-2">
@@ -182,14 +182,14 @@
                         <p class="text-sm font-medium text-gray-700">Customer Acquisition Cost</p>
                         <p class="text-xs text-gray-500">Last 30 days</p>
                     </div>
-                    <span class="text-lg font-bold text-gray-900">$24.50</span>
+                    <span class="text-lg font-bold text-gray-900">85,750 UGX</span>
                 </div>
                 <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                     <div>
                         <p class="text-sm font-medium text-gray-700">Customer Lifetime Value</p>
                         <p class="text-xs text-gray-500">Average per customer</p>
                     </div>
-                    <span class="text-lg font-bold text-gray-900">$156.80</span>
+                    <span class="text-lg font-bold text-gray-900">548,800 UGX</span>
                 </div>
                 <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                     <div>
@@ -235,8 +235,8 @@
                         <input type="number" id="priceChange" class="w-full p-2 border border-gray-300 rounded text-sm" placeholder="0">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Marketing Budget ($)</label>
-                        <input type="number" id="marketingBudget" class="w-full p-2 border border-gray-300 rounded text-sm" placeholder="10000">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Marketing Budget (UGX)</label>
+                        <input type="number" id="marketingBudget" class="w-full p-2 border border-gray-300 rounded text-sm" placeholder="35000000">
                     </div>
                     <button onclick="runWhatIfAnalysis()" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded text-sm">
                         Analyze Impact
@@ -247,13 +247,13 @@
                 <h3 class="font-semibold text-gray-900 mb-3">Recommendations</h3>
                 <div id="recommendations" class="space-y-2">
                     <div class="p-2 bg-blue-50 rounded text-sm">
-                        <strong>Inventory:</strong> Increase Greek yogurt stock by 25%
+                        <strong>Inventory:</strong> Increase Greek Vanilla Yoghurt stock by 25%
                     </div>
                     <div class="p-2 bg-green-50 rounded text-sm">
                         <strong>Pricing:</strong> Consider 5% price increase for premium products
                     </div>
                     <div class="p-2 bg-yellow-50 rounded text-sm">
-                        <strong>Marketing:</strong> Focus on summer campaign for mango flavor
+                        <strong>Marketing:</strong> Focus on Low Fat Blueberry Yoghurt promotions
                     </div>
                 </div>
             </div>
@@ -436,7 +436,7 @@
                         beginAtZero: true,
                         title: {
                             display: true,
-                            text: 'Amount ($)'
+                            text: 'Amount (UGX)'
                         }
                     }
                 }
@@ -485,9 +485,9 @@
     function runScenario(type) {
         // Simulate scenario analysis
         const scenarios = {
-            optimistic: { growth: '+20%', revenue: '$75,000', risk: 'Low' },
-            realistic: { growth: '+10%', revenue: '$65,000', risk: 'Medium' },
-            pessimistic: { growth: '-5%', revenue: '$55,000', risk: 'High' }
+            optimistic: { growth: '+20%', revenue: '262,500,000 UGX', risk: 'Low' },
+            realistic: { growth: '+10%', revenue: '227,500,000 UGX', risk: 'Medium' },
+            pessimistic: { growth: '-5%', revenue: '192,500,000 UGX', risk: 'High' }
         };
         
         const scenario = scenarios[type];
@@ -501,7 +501,7 @@
         if (priceChange || marketingBudget) {
             // Simulate what-if analysis
             const impact = Math.random() * 20 - 10; // Random impact between -10% and +10%
-            alert(`What-If Analysis Results:\nPrice Change: ${priceChange}%\nMarketing Budget: $${marketingBudget}\nPredicted Impact: ${impact.toFixed(1)}%`);
+            alert(`What-If Analysis Results:\nPrice Change: ${priceChange}%\nMarketing Budget: ${marketingBudget} UGX\nPredicted Impact: ${impact.toFixed(1)}%`);
         } else {
             alert('Please enter values for analysis');
         }

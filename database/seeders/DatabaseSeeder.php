@@ -90,95 +90,11 @@ class DatabaseSeeder extends Seeder
         // Seed distribution centers
         $distributionCenters = \App\Models\DistributionCenter::factory(30)->create();
 
-        // Seed yogurt products (each linked to a production facility)
-        // $yogurtProducts = \App\Models\YogurtProduct::factory(30)->create([
-        //     'production_facility_id' => $productionFacilities->random()->id,
-        // ]);
-
-        // Manually seed the three yogurt products
-        $firstFacility = $productionFacilities->first();
-
-        $yogurtProductsData = collect([
-            [
-                'production_facility_id' => $firstFacility->id,
-                'product_name' => 'Greek Vanilla Yoghurt',
-                'product_code' => 'YOG-GREEK-VAN',
-                'description' => 'Thick, creamy Greek yoghurt with natural vanilla flavor.',
-                'product_type' => 'greek',
-                'flavor' => 'vanilla',
-                'fat_content' => 8.0,
-                'protein_content' => 6.0,
-                'sugar_content' => 5.0,
-                'calories_per_100g' => 120,
-                'package_size' => '150g',
-                'package_type' => 'cup',
-                'shelf_life_days' => 21,
-                'storage_temperature' => 4.0,
-                'ingredients' => json_encode(['milk', 'vanilla', 'yogurt cultures']),
-                'nutritional_info' => null,
-                'allergens' => json_encode(['milk']),
-                'production_cost' => 0.80,
-                'selling_price' => 1.50,
-                'status' => 'active',
-                'notes' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'production_facility_id' => $firstFacility->id,
-                'product_name' => 'Low Fat Blueberry Yoghurt',
-                'product_code' => 'YOG-LOWFAT-BLUE',
-                'description' => 'Low fat yoghurt with real blueberry pieces.',
-                'product_type' => 'low_fat',
-                'flavor' => 'blueberry',
-                'fat_content' => 2.0,
-                'protein_content' => 4.0,
-                'sugar_content' => 7.0,
-                'calories_per_100g' => 90,
-                'package_size' => '150g',
-                'package_type' => 'cup',
-                'shelf_life_days' => 18,
-                'storage_temperature' => 4.0,
-                'ingredients' => json_encode(['milk', 'blueberry', 'yogurt cultures']),
-                'nutritional_info' => null,
-                'allergens' => json_encode(['milk']),
-                'production_cost' => 0.70,
-                'selling_price' => 1.40,
-                'status' => 'active',
-                'notes' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'production_facility_id' => $firstFacility->id,
-                'product_name' => 'Organic Strawberry Yoghurt',
-                'product_code' => 'YOG-ORG-STRAW',
-                'description' => 'Organic yoghurt made with fresh strawberries.',
-                'product_type' => 'organic',
-                'flavor' => 'strawberry',
-                'fat_content' => 4.0,
-                'protein_content' => 5.0,
-                'sugar_content' => 6.0,
-                'calories_per_100g' => 100,
-                'package_size' => '150g',
-                'package_type' => 'cup',
-                'shelf_life_days' => 16,
-                'storage_temperature' => 4.0,
-                'ingredients' => json_encode(['organic milk', 'strawberry', 'yogurt cultures']),
-                'nutritional_info' => null,
-                'allergens' => json_encode(['milk']),
-                'production_cost' => 0.90,
-                'selling_price' => 1.60,
-                'status' => 'active',
-                'notes' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
+        // Seed yogurt products using the new seeder with UGX pricing
+        $this->call([
+            YogurtProductSeeder::class
         ]);
-        foreach ($yogurtProductsData as $product) {
-            \App\Models\YogurtProduct::create($product);
-        }
-        $yogurtProducts = \App\Models\YogurtProduct::all(); // Now this is a collection of models
+        $yogurtProducts = \App\Models\YogurtProduct::all(); // Get the seeded products
 
         // Seed retailers (each linked to a user)
         $retailers = \App\Models\Retailer::factory(30)->create([
@@ -199,11 +115,21 @@ class DatabaseSeeder extends Seeder
             'distribution_center_id' => $distributionCenters->random()->id,
         ]);
 
-        // Seed inventory (each linked to a yogurt product and distribution center)
-        $inventory = \App\Models\Inventory::factory(30)->create([
-            'yogurt_product_id' => $yogurtProducts->random()->id,
-            'distribution_center_id' => $distributionCenters->random()->id,
-        ]);
+        // Seed inventory: ensure the three main products are present in every distribution center
+        foreach ($distributionCenters as $center) {
+            foreach ($yogurtProducts as $product) {
+                \App\Models\Inventory::factory()->create([
+                    'yogurt_product_id' => $product->id,
+                    'distribution_center_id' => $center->id,
+                ]);
+            }
+        }
+
+        // (Optional) Seed additional random inventory for vendor-added products
+        // $inventory = \App\Models\Inventory::factory(30)->create([
+        //     'yogurt_product_id' => $yogurtProducts->random()->id,
+        //     'distribution_center_id' => $distributionCenters->random()->id,
+        // ]);
 
         // Seed quality checks (each linked to a yogurt product and production facility)
         $qualityChecks = \App\Models\QualityCheck::factory(30)->create([

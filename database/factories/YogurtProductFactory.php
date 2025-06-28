@@ -10,13 +10,36 @@ class YogurtProductFactory extends Factory
 
     public function definition(): array
     {
-        return [
-            'production_facility_id' => 1, // Should be set to a real facility in seeder
-            'product_name' => $this->faker->word() . ' Yogurt',
-            'product_code' => $this->faker->unique()->bothify('YOG-#####'),
+        $products = [
+            [
+                'product_name' => 'Greek Vanilla Yoghurt',
+                'product_code' => 'P0001',
+                'flavor' => 'vanilla',
+                'product_type' => 'greek',
+                'selling_price' => 3500.00,
+                'production_cost' => 2800.00,
+            ],
+            [
+                'product_name' => 'Low Fat Blueberry Yoghurt',
+                'product_code' => 'P0002',
+                'flavor' => 'blueberry',
+                'product_type' => 'low_fat',
+                'selling_price' => 3000.00,
+                'production_cost' => 2400.00,
+            ],
+            [
+                'product_name' => 'Organic Strawberry Yoghurt',
+                'product_code' => 'P0003',
+                'flavor' => 'strawberry',
+                'product_type' => 'organic',
+                'selling_price' => 2500.00,
+                'production_cost' => 2000.00,
+            ],
+        ];
+        $product = $this->faker->randomElement($products);
+        return array_merge([
+            'production_facility_id' => 1,
             'description' => $this->faker->optional()->sentence(),
-            'product_type' => $this->faker->randomElement(['plain', 'flavored', 'greek', 'low_fat', 'organic', 'probiotic']),
-            'flavor' => $this->faker->optional()->randomElement(['strawberry', 'vanilla', 'mango', 'blueberry']),
             'fat_content' => $this->faker->randomFloat(2, 0, 10),
             'protein_content' => $this->faker->randomFloat(2, 0, 10),
             'sugar_content' => $this->faker->randomFloat(2, 0, 20),
@@ -28,12 +51,10 @@ class YogurtProductFactory extends Factory
             'ingredients' => json_encode(['milk', 'bacterial culture', 'sugar']),
             'nutritional_info' => json_encode(['fat' => 3.5, 'protein' => 4.2]),
             'allergens' => json_encode(['milk']),
-            'production_cost' => $this->faker->randomFloat(2, 0.5, 5),
-            'selling_price' => $this->faker->randomFloat(2, 1, 10),
-            'status' => $this->faker->randomElement(['active', 'discontinued', 'seasonal', 'out_of_stock']),
+            'status' => 'active',
             'notes' => $this->faker->optional()->sentence(),
             'created_at' => now(),
             'updated_at' => now(),
-        ];
+        ], $product);
     }
 } 

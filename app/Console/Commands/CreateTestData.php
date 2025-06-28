@@ -135,56 +135,57 @@ class CreateTestData extends Command
             ])
         ];
 
-        // Create yogurt products
+        // Create yogurt products (using the three main products from demand forecasting)
         $products = [
             [
-                'product_name' => 'Plain Greek Yogurt',
-                'product_code' => 'PGY001',
+                'product_name' => 'Greek Vanilla Yoghurt',
+                'product_code' => 'P0001',
                 'product_type' => 'greek',
+                'flavor' => 'vanilla',
                 'fat_content' => 5.0,
-                'protein_content' => 15.0,
-                'sugar_content' => 3.0,
+                'protein_content' => 8.5,
+                'sugar_content' => 4.2,
                 'calories_per_100g' => 120,
                 'package_size' => '500g',
                 'package_type' => 'cup',
                 'shelf_life_days' => 21,
                 'storage_temperature' => 4.0,
-                'production_cost' => 2.50,
-                'selling_price' => 4.99,
+                'production_cost' => 2800.00,
+                'selling_price' => 3500.00, // UGX
                 'status' => 'active'
             ],
             [
-                'product_name' => 'Strawberry Yogurt',
-                'product_code' => 'SY002',
-                'product_type' => 'flavored',
-                'flavor' => 'strawberry',
-                'fat_content' => 3.5,
-                'protein_content' => 12.0,
-                'sugar_content' => 8.0,
-                'calories_per_100g' => 110,
-                'package_size' => '150g',
-                'package_type' => 'cup',
-                'shelf_life_days' => 14,
-                'storage_temperature' => 4.0,
-                'production_cost' => 1.80,
-                'selling_price' => 2.99,
-                'status' => 'active'
-            ],
-            [
-                'product_name' => 'Vanilla Low-Fat Yogurt',
-                'product_code' => 'VLY003',
+                'product_name' => 'Low Fat Blueberry Yoghurt',
+                'product_code' => 'P0002',
                 'product_type' => 'low_fat',
-                'flavor' => 'vanilla',
-                'fat_content' => 2.0,
-                'protein_content' => 10.0,
-                'sugar_content' => 6.0,
-                'calories_per_100g' => 90,
-                'package_size' => '200g',
+                'flavor' => 'blueberry',
+                'fat_content' => 1.5,
+                'protein_content' => 6.8,
+                'sugar_content' => 8.5,
+                'calories_per_100g' => 95,
+                'package_size' => '500g',
                 'package_type' => 'cup',
                 'shelf_life_days' => 18,
                 'storage_temperature' => 4.0,
-                'production_cost' => 1.60,
-                'selling_price' => 3.49,
+                'production_cost' => 2400.00,
+                'selling_price' => 3000.00, // UGX
+                'status' => 'active'
+            ],
+            [
+                'product_name' => 'Organic Strawberry Yoghurt',
+                'product_code' => 'P0003',
+                'product_type' => 'organic',
+                'flavor' => 'strawberry',
+                'fat_content' => 3.2,
+                'protein_content' => 7.2,
+                'sugar_content' => 6.8,
+                'calories_per_100g' => 110,
+                'package_size' => '500g',
+                'package_type' => 'cup',
+                'shelf_life_days' => 15,
+                'storage_temperature' => 4.0,
+                'production_cost' => 2000.00,
+                'selling_price' => 2500.00, // UGX
                 'status' => 'active'
             ]
         ];

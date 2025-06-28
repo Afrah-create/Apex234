@@ -319,13 +319,26 @@
     }
 
     function loadInventoryTable() {
-        fetch('/test-inventory')
+        fetch('{{ route("api.inventory.chart-data") }}')
             .then(response => response.json())
             .then(data => {
                 const tbody = document.getElementById('inventoryTableBody');
                 tbody.innerHTML = '';
                 
-                data.forEach(item => {
+                // Create a map of product names to their data
+                const productMap = {};
+                data.labels.forEach((productName, index) => {
+                    productMap[productName] = {
+                        product_name: productName,
+                        total_available: data.datasets[0].data[index] || 0,
+                        total_reserved: data.datasets[1].data[index] || 0,
+                        total_damaged: data.datasets[2].data[index] || 0,
+                        total_expired: data.datasets[3].data[index] || 0
+                    };
+                });
+                
+                // Convert map to array and display
+                Object.values(productMap).forEach(item => {
                     const total = item.total_available + item.total_reserved + item.total_damaged + item.total_expired;
                     let status = 'Normal';
                     let statusClass = 'bg-green-100 text-green-800';

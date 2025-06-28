@@ -11,6 +11,13 @@ use App\Models\Inventory;
 
 class VendorProductController extends Controller
 {
+    // Only allow the three products
+    private $allowedProducts = [
+        ['product_name' => 'Greek Vanilla Yoghurt', 'product_code' => 'P0001'],
+        ['product_name' => 'Low Fat Blueberry Yoghurt', 'product_code' => 'P0002'],
+        ['product_name' => 'Organic Strawberry Yoghurt', 'product_code' => 'P0003'],
+    ];
+
     // List vendor's products
     public function index(): JsonResponse
     {
@@ -28,6 +35,10 @@ class VendorProductController extends Controller
             'stock' => 'required|integer|min:0',
             'image' => 'nullable|image|max:2048',
         ]);
+        // Check if product_name and product_code are in allowedProducts
+        if (!in_array($request->name, array_column($this->allowedProducts, 'product_name'))) {
+            abort(403, 'Only the three main products are allowed.');
+        }
         $imagePath = null;
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('products', 'public');
@@ -76,6 +87,10 @@ class VendorProductController extends Controller
             'stock' => 'required|integer|min:0',
             'image' => 'nullable|image|max:2048',
         ]);
+        // Check if product_name and product_code are in allowedProducts
+        if (!in_array($request->name, array_column($this->allowedProducts, 'product_name'))) {
+            abort(403, 'Only the three main products are allowed.');
+        }
         if ($request->hasFile('image')) {
             if ($product->image_path) Storage::disk('public')->delete($product->image_path);
             $product->image_path = $request->file('image')->store('products', 'public');

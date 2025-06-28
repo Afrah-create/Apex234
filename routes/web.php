@@ -102,22 +102,6 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::get('/user-statistics', [InventoryController::class, 'getUserStatistics'])->name('user-statistics');
 });
 
-// Temporary test route (remove in production)
-Route::get('/test-inventory', function() {
-    $inventoryData = \App\Models\Inventory::join('yogurt_products', 'inventories.yogurt_product_id', '=', 'yogurt_products.id')
-        ->select(
-            'yogurt_products.product_name as product_name',
-            \Illuminate\Support\Facades\DB::raw('SUM(inventories.quantity_available) as total_available'),
-            \Illuminate\Support\Facades\DB::raw('SUM(inventories.quantity_reserved) as total_reserved'),
-            \Illuminate\Support\Facades\DB::raw('SUM(inventories.quantity_damaged) as total_damaged'),
-            \Illuminate\Support\Facades\DB::raw('SUM(inventories.quantity_expired) as total_expired')
-        )
-        ->groupBy('yogurt_products.id', 'yogurt_products.product_name')
-        ->get();
-    
-    return response()->json($inventoryData);
-});
-
 // Vendor dashboard API routes
 Route::middleware(['auth', 'verified'])->prefix('api/vendor')->name('api.vendor.')->group(function () {
     Route::get('/inventory-summary', [\App\Http\Controllers\VendorDashboardController::class, 'inventorySummary']);

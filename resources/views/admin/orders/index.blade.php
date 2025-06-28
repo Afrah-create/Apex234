@@ -201,7 +201,7 @@
                 document.getElementById('total-orders').textContent = data.stats.total_orders || 0;
                 document.getElementById('pending-orders').textContent = data.stats.pending_orders || 0;
                 document.getElementById('delivered-orders').textContent = data.stats.delivered_orders || 0;
-                document.getElementById('total-revenue').textContent = '$' + (data.stats.total_revenue || 0).toLocaleString();
+                document.getElementById('total-revenue').textContent = (data.stats.total_revenue || 0).toLocaleString() + ' UGX';
             } catch (error) {
                 console.error('Error loading order statistics:', error);
             }
@@ -235,7 +235,7 @@
                         ${new Date(order.order_date).toLocaleDateString()}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        $${parseFloat(order.total_amount).toLocaleString()}
+                        ${parseFloat(order.total_amount).toLocaleString()} UGX
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.order_status)}">
