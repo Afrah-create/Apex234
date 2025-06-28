@@ -40,7 +40,7 @@
                 <span class="sidebar-icon"><!-- <i class='fas fa-user-cog'></i> --></span>
                 <span>Profile</span>
             </a>
-            <a href="#" class="flex items-center gap-3 px-4 py-2 rounded-lg transition bg-opacity-0 hover:bg-blue-900/80 hover:bg-opacity-80 focus:bg-blue-900/90 sidebar-link">
+            <a href="{{ route('admin.analytics.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg transition bg-opacity-0 hover:bg-blue-900/80 hover:bg-opacity-80 focus:bg-blue-900/90 sidebar-link">
                 <span class="sidebar-icon"><!-- <i class='fas fa-chart-bar'></i> --></span>
                 <span>Analytics & Reports</span>
             </a>

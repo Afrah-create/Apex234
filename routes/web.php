@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\AdminOrderController;
+use App\Http\Controllers\AnalyticsController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminUserController;
 use Illuminate\Support\Facades\Auth;
@@ -147,5 +148,28 @@ Route::middleware(['auth', 'verified'])->prefix('api/vendor')->group(function ()
 // Password reset by token (code) form
 Route::get('/password/token', [\App\Http\Controllers\PasswordResetByTokenController::class, 'showForm'])->name('password.token.form');
 Route::post('/password/token', [\App\Http\Controllers\PasswordResetByTokenController::class, 'reset'])->name('password.token.reset');
+
+// Temporary test route for analytics (remove in production)
+Route::get('/test-analytics', [AnalyticsController::class, 'index'])->name('test.analytics');
+Route::get('/test-analytics-controller', [AnalyticsController::class, 'test'])->name('test.analytics.controller');
+
+// Admin analytics and reports
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/analytics')->name('admin.analytics.')->group(function () {
+    Route::get('/', [AnalyticsController::class, 'index'])->name('index');
+});
+
+// Analytics API routes
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('api/analytics')->name('api.analytics.')->group(function () {
+    Route::get('/kpi', [AnalyticsController::class, 'getKpiData'])->name('kpi');
+    Route::get('/predictions', [AnalyticsController::class, 'getPredictions'])->name('predictions');
+    Route::get('/customer-segmentation', [AnalyticsController::class, 'getCustomerSegmentation'])->name('customer-segmentation');
+    Route::get('/inventory-optimization', [AnalyticsController::class, 'getInventoryOptimization'])->name('inventory-optimization');
+    Route::get('/trend-analysis', [AnalyticsController::class, 'getTrendAnalysis'])->name('trend-analysis');
+    Route::get('/performance-metrics', [AnalyticsController::class, 'getPerformanceMetrics'])->name('performance-metrics');
+    Route::get('/risk-assessment', [AnalyticsController::class, 'getRiskAssessment'])->name('risk-assessment');
+    Route::post('/scenario-analysis', [AnalyticsController::class, 'runScenarioAnalysis'])->name('scenario-analysis');
+    Route::post('/what-if-analysis', [AnalyticsController::class, 'runWhatIfAnalysis'])->name('what-if-analysis');
+    Route::post('/export-report', [AnalyticsController::class, 'exportReport'])->name('export-report');
+});
 
 require __DIR__.'/auth.php';
