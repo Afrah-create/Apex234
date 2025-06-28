@@ -89,6 +89,11 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::get('/api/order-statistics', [AdminOrderController::class, 'getOrderStatistics'])->name('api.order-statistics');
 });
 
+// Admin inventory analytics
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/inventory')->name('admin.inventory.')->group(function () {
+    Route::get('/', [InventoryController::class, 'index'])->name('index');
+});
+
 // Inventory API routes for charts
 Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('api/inventory')->name('api.inventory.')->group(function () {
     Route::get('/chart-data', [InventoryController::class, 'getInventoryChartData'])->name('chart-data');

@@ -32,7 +32,7 @@
                 <span class="sidebar-icon"><!-- <i class='fas fa-box'></i> --></span>
                 <span>Order Management</span>
             </a>
-            <a href="#" class="flex items-center gap-3 px-4 py-2 rounded-lg transition bg-opacity-0 hover:bg-blue-900/80 hover:bg-opacity-80 focus:bg-blue-900/90 sidebar-link">
+            <a href="{{ route('admin.inventory.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg transition bg-opacity-0 hover:bg-blue-900/80 hover:bg-opacity-80 focus:bg-blue-900/90 sidebar-link">
                 <span class="sidebar-icon"><!-- <i class='fas fa-warehouse'></i> --></span>
                 <span>Inventory Analytics</span>
             </a>

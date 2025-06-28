@@ -12,6 +12,11 @@ use Illuminate\Support\Facades\DB;
 
 class InventoryController extends Controller
 {
+    public function index()
+    {
+        return view('admin.inventory-analytics');
+    }
+
     public function getInventoryChartData(): JsonResponse
     {
         // Get inventory data grouped by product with total quantities
