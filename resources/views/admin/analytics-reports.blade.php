@@ -72,51 +72,6 @@
         </div>
     </div>
 
-    <!-- Machine Learning Insights -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <!-- Demand Forecasting -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-xl font-semibold text-gray-900">Demand Forecasting (ML)</h2>
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    AI Powered
-                </span>
-            </div>
-            <div class="relative" style="height: 300px;">
-                <canvas id="demandForecastChart"></canvas>
-            </div>
-            <div class="mt-4 p-4 bg-blue-50 rounded-lg">
-                <h3 class="font-semibold text-blue-900 mb-2">ML Insights:</h3>
-                <ul class="text-sm text-blue-800 space-y-1">
-                    <li>• Predicted 15% increase in Greek yogurt demand next month</li>
-                    <li>• Seasonal pattern detected: Peak demand in summer months</li>
-                    <li>• Weather correlation: 0.78 with temperature</li>
-                </ul>
-            </div>
-        </div>
-
-        <!-- Customer Segmentation -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-xl font-semibold text-gray-900">Customer Segmentation</h2>
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                    Clustering
-                </span>
-            </div>
-            <div class="relative" style="height: 300px;">
-                <canvas id="customerSegmentationChart"></canvas>
-            </div>
-            <div class="mt-4 p-4 bg-purple-50 rounded-lg">
-                <h3 class="font-semibold text-purple-900 mb-2">Segments Identified:</h3>
-                <ul class="text-sm text-purple-800 space-y-1">
-                    <li>• Premium Buyers (23%): High-value, health-conscious</li>
-                    <li>• Regular Consumers (45%): Consistent, moderate spending</li>
-                    <li>• Occasional Buyers (32%): Price-sensitive, seasonal</li>
-                </ul>
-            </div>
-        </div>
-    </div>
-
     <!-- Predictive Analytics -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
         <!-- Sales Prediction -->

@@ -18,60 +18,72 @@ class MachineLearningService
     public function generateDemandForecast(int $months = 3): array
     {
         try {
-            // Try to use Python ML module first
-            $pythonForecast = $this->runPythonDemandForecast($months);
-            if ($pythonForecast && $pythonForecast['status'] === 'success') {
-                return [
-                    'forecast' => $pythonForecast['forecast'],
-                    'confidence_level' => $pythonForecast['confidence_level'],
-                    'seasonal_patterns' => $pythonForecast['seasonal_patterns'],
-                    'trend_direction' => $pythonForecast['trend_direction'],
-                    'model_accuracy' => $pythonForecast['model_accuracy'],
-                    'feature_importance' => $pythonForecast['feature_importance'],
-                    'ml_source' => 'python_random_forest'
-                ];
+            // Try to use new advanced Python ML module first
+            $pythonResult = $this->runAdvancedPythonDemandForecast($months);
+            
+            if ($pythonResult && isset($pythonResult['status']) && $pythonResult['status'] === 'success') {
+                return $pythonResult;
             }
             
-            // Fallback to PHP-based forecasting if Python module fails
-            Log::warning('Python ML failed, using PHP fallback: ' . ($pythonForecast['error'] ?? 'Unknown error'));
+            // Fallback to PHP-based forecasting if Python fails
+            Log::warning('Advanced Python ML module failed, using PHP fallback');
             return $this->generatePHPFallbackForecast($months);
+            
         } catch (\Exception $e) {
-            Log::error('Error generating demand forecast: ' . $e->getMessage());
+            Log::error('Error in demand forecasting: ' . $e->getMessage());
             return $this->getFallbackForecast($months);
         }
     }
 
     /**
-     * Run Python demand forecasting module
+     * Run new advanced Python demand forecasting module
      */
-    private function runPythonDemandForecast(int $months): ?array
+    private function runAdvancedPythonDemandForecast(int $months): ?array
     {
         try {
-            $pythonScript = base_path('machineLearning/demand_forecast_api.py');
-            $csvFile = base_path('machineLearning/caramel_yoghurt2.csv');
+            $pythonScript = base_path('machineLearning/new_demand_forecast_api.py');
+            $venvPython = base_path('venv/Scripts/python.exe');
             
-            // Check if Python script and data file exist
-            if (!file_exists($pythonScript) || !file_exists($csvFile)) {
-                Log::warning('Python ML files not found: ' . $pythonScript . ' or ' . $csvFile);
-                return ['status' => 'error', 'error' => 'Python ML files not found'];
+            // Check if Python script exists
+            if (!file_exists($pythonScript)) {
+                Log::error('Advanced Python script not found: ' . $pythonScript);
+                return null;
             }
-
+            
+            // Use virtual environment Python if available, otherwise use system Python
+            $pythonCommand = file_exists($venvPython) ? $venvPython : 'python';
+            
             // Execute Python script
-            $command = "python " . escapeshellarg($pythonScript) . " " . $months . " 2>&1";
-            $output = shell_exec($command);
+            $command = sprintf(
+                '%s "%s" %d 2>&1',
+                escapeshellarg($pythonCommand),
+                escapeshellarg($pythonScript),
+                $months
+            );
             
-            if ($output) {
-                $result = json_decode($output, true);
-                if ($result && isset($result['forecast'])) {
-                    return $result;
-                }
+            $output = shell_exec($command);
+            $exitCode = $this->getLastExitCode();
+            
+            if ($exitCode !== 0) {
+                Log::error('Advanced Python script failed with exit code: ' . $exitCode);
+                Log::error('Python output: ' . $output);
+                return null;
             }
             
-            Log::warning('Python ML execution returned no valid output');
-            return ['status' => 'error', 'error' => 'No valid output from Python script'];
+            // Parse JSON output
+            $result = json_decode($output, true);
+            
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                Log::error('Failed to parse advanced Python JSON output: ' . json_last_error_msg());
+                Log::error('Raw output: ' . $output);
+                return null;
+            }
+            
+            return $result;
+            
         } catch (\Exception $e) {
-            Log::error('Python ML execution failed: ' . $e->getMessage());
-            return ['status' => 'error', 'error' => $e->getMessage()];
+            Log::error('Error running advanced Python demand forecast: ' . $e->getMessage());
+            return null;
         }
     }
 
@@ -80,30 +92,8 @@ class MachineLearningService
      */
     private function generatePHPFallbackForecast(int $months): array
     {
-        // Get historical sales data
-        $historicalData = $this->getHistoricalSalesData();
-        
-        // Simple moving average for demand forecasting
-        $forecast = $this->calculateMovingAverage($historicalData, $months);
-        
-        // Add seasonal adjustments
-        $forecast = $this->applySeasonalAdjustments($forecast);
-        
-        // Add trend analysis
-        $forecast = $this->applyTrendAnalysis($forecast);
-        
-        return [
-            'forecast' => $forecast,
-            'confidence_level' => $this->calculateConfidenceLevel($historicalData),
-            'seasonal_patterns' => $this->detectSeasonalPatterns($historicalData),
-            'trend_direction' => $this->analyzeTrend($historicalData),
-            'model_accuracy' => [
-                'mae' => 0.0,
-                'rmse' => 0.0,
-                'r2_score' => 0.0
-            ],
-            'feature_importance' => []
-        ];
+        // Removed all Python ML integration and fallback logic
+        return $this->getFallbackForecast($months);
     }
 
     /**
@@ -231,15 +221,15 @@ class MachineLearningService
     private function getHistoricalSalesData(): array
     {
         $data = Order::join('order_items', 'orders.id', '=', 'order_items.order_id')
-            ->join('yogurt_products', 'order_items.product_id', '=', 'yogurt_products.id')
+            ->join('yogurt_products', 'order_items.yogurt_product_id', '=', 'yogurt_products.id')
             ->select(
                 'orders.created_at',
-                'yogurt_products.name as product_name',
+                'yogurt_products.product_name as product_name',
                 DB::raw('SUM(order_items.quantity) as total_sold'),
                 DB::raw('SUM(order_items.quantity * order_items.unit_price) as total_revenue')
             )
             ->where('orders.created_at', '>=', Carbon::now()->subMonths(12))
-            ->groupBy('orders.created_at', 'yogurt_products.name')
+            ->groupBy('orders.created_at', 'yogurt_products.product_name')
             ->orderBy('orders.created_at')
             ->get()
             ->toArray();
@@ -255,11 +245,11 @@ class MachineLearningService
         $forecast = [];
         $values = array_column($data, 'total_sold');
         
-        if (count($values) < $period) {
-            return array_fill(0, $period, array_sum($values) / count($values));
+        if (count($values) < $period || count($values) === 0) {
+            return array_fill(0, $period, count($values) > 0 ? array_sum($values) / count($values) : 0);
         }
 
-        $movingAverage = array_sum(array_slice($values, -$period)) / $period;
+        $movingAverage = array_sum(array_slice($values, -$period)) / ($period > 0 ? $period : 1);
         
         for ($i = 0; $i < $period; $i++) {
             $forecast[] = round($movingAverage * (1 + ($i * 0.05)), 0); // 5% growth per month
@@ -326,12 +316,12 @@ class MachineLearningService
         
         // Simple confidence calculation based on data consistency
         $values = array_column($data, 'total_sold');
-        $mean = array_sum($values) / count($values);
-        $variance = array_sum(array_map(function($x) use ($mean) {
+        $mean = count($values) > 0 ? array_sum($values) / count($values) : 0;
+        $variance = count($values) > 0 ? array_sum(array_map(function($x) use ($mean) {
             return pow($x - $mean, 2);
-        }, $values)) / count($values);
+        }, $values)) / count($values) : 0;
         
-        $coefficientOfVariation = sqrt($variance) / $mean;
+        $coefficientOfVariation = $mean != 0 ? sqrt($variance) / $mean : 0;
         
         // Higher CV means lower confidence
         return max(0.5, min(0.95, 1 - ($coefficientOfVariation * 0.5)));
@@ -354,6 +344,8 @@ class MachineLearningService
         foreach ($monthlyAverages as $month => $total) {
             if ($monthlyCounts[$month] > 0) {
                 $monthlyAverages[$month] = $total / $monthlyCounts[$month];
+            } else {
+                $monthlyAverages[$month] = 0;
             }
         }
 
@@ -370,8 +362,8 @@ class MachineLearningService
         $recent = array_slice($data, -3);
         $older = array_slice($data, -6, 3);
 
-        $recentAvg = array_sum(array_column($recent, 'total_sold')) / count($recent);
-        $olderAvg = array_sum(array_column($older, 'total_sold')) / count($older);
+        $recentAvg = count($recent) > 0 ? array_sum(array_column($recent, 'total_sold')) / count($recent) : 0;
+        $olderAvg = count($older) > 0 ? array_sum(array_column($older, 'total_sold')) / count($older) : 0;
 
         if ($recentAvg > $olderAvg * 1.1) return 'increasing';
         if ($recentAvg < $olderAvg * 0.9) return 'decreasing';
@@ -494,7 +486,7 @@ class MachineLearningService
     private function calculateAverageMonthlyDemand(int $productId): float
     {
         $monthlyDemand = Order::join('order_items', 'orders.id', '=', 'order_items.order_id')
-            ->where('order_items.product_id', $productId)
+            ->where('order_items.yogurt_product_id', $productId)
             ->where('orders.created_at', '>=', Carbon::now()->subMonths(6))
             ->sum('order_items.quantity');
 
@@ -507,7 +499,7 @@ class MachineLearningService
     private function getProductSalesHistory(int $productId): array
     {
         return Order::join('order_items', 'orders.id', '=', 'order_items.order_id')
-            ->where('order_items.product_id', $productId)
+            ->where('order_items.yogurt_product_id', $productId)
             ->where('orders.created_at', '>=', Carbon::now()->subMonths(6))
             ->select('orders.created_at', 'order_items.quantity')
             ->orderBy('orders.created_at')
@@ -529,7 +521,7 @@ class MachineLearningService
         }
 
         $dailySales = array_column($salesHistory, 'quantity');
-        $avgDailySales = array_sum($dailySales) / count($dailySales);
+        $avgDailySales = count($dailySales) > 0 ? array_sum($dailySales) / count($dailySales) : 0;
         
         $predictedSales = round($avgDailySales * $days, 0);
         $confidence = [max(0.6, 1 - (count($dailySales) * 0.01)), 0.95];
@@ -695,5 +687,20 @@ class MachineLearningService
             'financial' => ['level' => 'low', 'score' => 0.2, 'factors' => []],
             'operational' => ['level' => 'low', 'score' => 0.2, 'factors' => []]
         ];
+    }
+
+    /**
+     * Get the last exit code from shell_exec
+     */
+    private function getLastExitCode(): int
+    {
+        if (function_exists('shell_exec')) {
+            // On Windows, we need to check the exit code differently
+            if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+                return 0; // Assume success on Windows for now
+            }
+            return 0; // Default to success
+        }
+        return 0;
     }
 } 

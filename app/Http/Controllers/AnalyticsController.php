@@ -476,9 +476,9 @@ class AnalyticsController extends Controller
     private function getTopProducts(): array
     {
         return Order::join('order_items', 'orders.id', '=', 'order_items.order_id')
-            ->join('yogurt_products', 'order_items.product_id', '=', 'yogurt_products.id')
-            ->select('yogurt_products.name', DB::raw('SUM(order_items.quantity) as total_sold'))
-            ->groupBy('yogurt_products.id', 'yogurt_products.name')
+            ->join('yogurt_products', 'order_items.yogurt_product_id', '=', 'yogurt_products.id')
+            ->select('yogurt_products.product_name', DB::raw('SUM(order_items.quantity) as total_sold'))
+            ->groupBy('yogurt_products.id', 'yogurt_products.product_name')
             ->orderBy('total_sold', 'desc')
             ->limit(5)
             ->get()
@@ -497,7 +497,7 @@ class AnalyticsController extends Controller
             ->get()
             ->map(function($product) {
                 return [
-                    'name' => $product->name,
+                    'name' => $product->product_name,
                     'current_stock' => $product->inventory->quantity ?? 0,
                     'reorder_level' => 50
                 ];
@@ -514,5 +514,30 @@ class AnalyticsController extends Controller
             'status' => 'success',
             'message' => 'Analytics controller is working'
         ]);
+    }
+
+    /**
+     * Get demand forecasting data
+     */
+    public function getDemandForecast(Request $request): JsonResponse
+    {
+        try {
+            $months = $request->get('months', 6); // Default to 6 months
+            
+            // Use ML service for demand forecasting
+            $forecast = $this->mlService->generateDemandForecast($months);
+            
+            return response()->json([
+                'success' => true,
+                'data' => $forecast
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to load demand forecast',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 } 

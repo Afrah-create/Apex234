@@ -162,6 +162,7 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
 Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('api/analytics')->name('api.analytics.')->group(function () {
     Route::get('/kpi', [AnalyticsController::class, 'getKpiData'])->name('kpi');
     Route::get('/predictions', [AnalyticsController::class, 'getPredictions'])->name('predictions');
+    Route::get('/demand-forecast', [AnalyticsController::class, 'getDemandForecast'])->name('demand-forecast');
     Route::get('/customer-segmentation', [AnalyticsController::class, 'getCustomerSegmentation'])->name('customer-segmentation');
     Route::get('/inventory-optimization', [AnalyticsController::class, 'getInventoryOptimization'])->name('inventory-optimization');
     Route::get('/trend-analysis', [AnalyticsController::class, 'getTrendAnalysis'])->name('trend-analysis');
