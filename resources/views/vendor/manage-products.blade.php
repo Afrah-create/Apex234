@@ -1,219 +1,875 @@
 @extends('layouts.app')
 
 @section('content')
-<main class="main-content">
-    <h1>Manage Products</h1>
-    <div class="mb-8">
-        <h2 class="text-xl font-semibold mb-4">Add New Product</h2>
-        <form id="vendor-add-product-form" class="bg-white rounded-lg shadow-md p-6 grid grid-cols-1 md:grid-cols-5 gap-4" enctype="multipart/form-data">
-            <div>
-                <label for="product-image" class="block font-bold mb-1">Image</label>
-                <input type="file" id="product-image" name="image" accept="image/*" class="w-full p-2 rounded border">
-            </div>
-            <div>
-                <label for="product-name" class="block font-bold mb-1">Name</label>
-                <input type="text" id="product-name" name="name" class="w-full p-2 rounded border" required>
-            </div>
-            <div>
-                <label for="product-type" class="block font-bold mb-1">Type</label>
-                <select id="product-type" name="type" class="w-full p-2 rounded border">
-                    <option value="greek">Greek</option>
-                    <option value="low_fat">Low Fat</option>
-                    <option value="organic">Organic</option>
-                    <option value="plain">Plain</option>
-                    <option value="flavored">Flavored</option>
-                </select>
-            </div>
-            <div>
-                <label for="product-price" class="block font-bold mb-1">Price</label>
-                <input type="number" id="product-price" name="price" min="0" step="0.01" class="w-full p-2 rounded border" required>
-            </div>
-            <div>
-                <label for="product-stock" class="block font-bold mb-1">Stock</label>
-                <input type="number" id="product-stock" name="stock" min="0" class="w-full p-2 rounded border" required>
-            </div>
-            <div class="md:col-span-5 flex items-end">
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg w-full">Add Product</button>
-            </div>
-        </form>
-        <div id="add-product-success" class="mt-2 text-green-600 font-bold hidden">Product added successfully!</div>
-    </div>
-
-    <div>
-        <h2 class="text-xl font-semibold mb-4">My Products</h2>
-        <div class="bg-white rounded-lg shadow-md p-4 overflow-x-auto">
-            <table class="w-full text-left">
-                <thead>
-                    <tr>
-                        <th>Image</th>
-                        <th>Name</th>
-                        <th>Type</th>
-                        <th>Status</th>
-                        <th>Price</th>
-                        <th>Stock</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="vendor-products-list">
-                    <!-- Populated by JS -->
-                </tbody>
-            </table>
+<main class="main-content px-4 py-6">
+    <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-6 md:mb-8">Inventory Management</h1>
+    
+    <!-- Inventory Summary Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
+        <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
+            <h3 class="text-sm md:text-lg font-semibold text-gray-700 mb-2">Total Products</h3>
+            <p id="total-products" class="text-2xl md:text-3xl font-bold text-blue-600">-</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
+            <h3 class="text-sm md:text-lg font-semibold text-gray-700 mb-2">Total Raw Materials</h3>
+            <p id="total-raw-materials" class="text-2xl md:text-3xl font-bold text-green-600">-</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
+            <h3 class="text-sm md:text-lg font-semibold text-gray-700 mb-2">Total Value</h3>
+            <p id="total-value" class="text-2xl md:text-3xl font-bold text-purple-600">-</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
+            <h3 class="text-sm md:text-lg font-semibold text-gray-700 mb-2">Low Stock Items</h3>
+            <p id="low-stock-items" class="text-2xl md:text-3xl font-bold text-red-600">-</p>
         </div>
     </div>
 
-    <!-- Edit Product Modal (hidden by default) -->
-    <div id="edit-product-modal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg relative">
-            <button onclick="closeEditProductModal()" class="absolute top-2 right-2 text-gray-500 hover:text-gray-900">&times;</button>
-            <h2 class="text-xl font-semibold mb-4">Edit Product</h2>
-            <form id="vendor-edit-product-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input type="hidden" id="edit-product-id">
-                <div>
-                    <label for="edit-product-image" class="block font-bold mb-1">Image</label>
-                    <img id="edit-product-image-preview" src="" alt="Product Image" class="h-16 w-16 object-cover rounded mb-2" />
-                    <input type="file" id="edit-product-image" name="image" accept="image/*" class="w-full p-2 rounded border">
+    <!-- Tabs -->
+    <div class="mb-6 md:mb-8">
+        <div class="border-b border-gray-200">
+            <nav class="-mb-px flex space-x-4 md:space-x-8 overflow-x-auto">
+                <button id="products-tab" class="tab-button border-b-2 border-blue-500 py-2 px-1 text-sm font-medium text-blue-600 whitespace-nowrap">
+                    Product Inventory
+                </button>
+                <button id="raw-materials-tab" class="tab-button border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 whitespace-nowrap">
+                    Raw Materials
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Product Inventory Section -->
+    <div id="products-section" class="inventory-section">
+        <div class="mb-6 md:mb-8">
+            <h2 class="text-lg md:text-xl font-semibold mb-4">Add New Product Inventory</h2>
+            <form id="add-product-inventory-form" class="bg-white rounded-lg shadow-md p-4 md:p-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                        <label for="product-name" class="block font-bold mb-1 text-sm">Product</label>
+                        <select id="product-name" name="product_name" class="w-full p-2 rounded border text-sm" required>
+                            <option value="">Select Product</option>
+                            <option value="Greek Vanilla Yoghurt">Greek Vanilla Yoghurt</option>
+                            <option value="Low Fat Blueberry Yoghurt">Low Fat Blueberry Yoghurt</option>
+                            <option value="Organic Strawberry Yoghurt">Organic Strawberry Yoghurt</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="batch-number" class="block font-bold mb-1 text-sm">Batch Number</label>
+                        <input type="text" id="batch-number" name="batch_number" class="w-full p-2 rounded border text-sm" required>
+                    </div>
+                    <div>
+                        <label for="quantity-available" class="block font-bold mb-1 text-sm">Quantity Available</label>
+                        <input type="number" id="quantity-available" name="quantity_available" min="0" class="w-full p-2 rounded border text-sm" required>
+                    </div>
+                    <div>
+                        <label for="unit-cost" class="block font-bold mb-1 text-sm">Unit Cost (UGX)</label>
+                        <input type="number" id="unit-cost" name="unit_cost" min="0" step="0.01" class="w-full p-2 rounded border text-sm" required>
+                    </div>
+                    <div>
+                        <label for="production-date" class="block font-bold mb-1 text-sm">Production Date</label>
+                        <input type="date" id="production-date" name="production_date" class="w-full p-2 rounded border text-sm" required>
+                    </div>
+                    <div>
+                        <label for="expiry-date" class="block font-bold mb-1 text-sm">Expiry Date</label>
+                        <input type="date" id="expiry-date" name="expiry_date" class="w-full p-2 rounded border text-sm" required>
+                    </div>
+                    <div>
+                        <label for="storage-temperature" class="block font-bold mb-1 text-sm">Storage Temp (°C)</label>
+                        <input type="number" id="storage-temperature" name="storage_temperature" min="-10" max="20" step="0.1" value="4.0" class="w-full p-2 rounded border text-sm" required>
+                    </div>
+                    <div>
+                        <label for="storage-location" class="block font-bold mb-1 text-sm">Storage Location</label>
+                        <select id="storage-location" name="storage_location" class="w-full p-2 rounded border text-sm" required>
+                            <option value="refrigerator">Refrigerator</option>
+                            <option value="cold_room">Cold Room</option>
+                            <option value="freezer">Freezer</option>
+                            <option value="warehouse">Warehouse</option>
+                        </select>
+                    </div>
                 </div>
-                <div>
-                    <label for="edit-product-name" class="block font-bold mb-1">Name</label>
-                    <input type="text" id="edit-product-name" name="name" class="w-full p-2 rounded border" required>
+                <div class="mt-4">
+                    <label for="product-notes" class="block font-bold mb-1 text-sm">Notes</label>
+                    <textarea id="product-notes" name="notes" class="w-full p-2 rounded border text-sm" rows="2"></textarea>
                 </div>
-                <div>
-                    <label for="edit-product-type" class="block font-bold mb-1">Type</label>
-                    <select id="edit-product-type" name="type" class="w-full p-2 rounded border">
-                        <option value="greek">Greek</option>
-                        <option value="low_fat">Low Fat</option>
-                        <option value="organic">Organic</option>
-                        <option value="plain">Plain</option>
-                        <option value="flavored">Flavored</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="edit-product-price" class="block font-bold mb-1">Price</label>
-                    <input type="number" id="edit-product-price" name="price" min="0" step="0.01" class="w-full p-2 rounded border" required>
-                </div>
-                <div>
-                    <label for="edit-product-stock" class="block font-bold mb-1">Stock</label>
-                    <input type="number" id="edit-product-stock" name="stock" min="0" class="w-full p-2 rounded border" required>
-                </div>
-                <div class="md:col-span-2 flex items-end">
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg w-full">Save Changes</button>
+                <div class="mt-4">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg w-full text-sm md:text-base">Add Product Inventory</button>
                 </div>
             </form>
+            <div id="add-product-inventory-success" class="mt-2 text-green-600 font-bold hidden text-sm">Product inventory added successfully!</div>
+        </div>
+
+        <div>
+            <h2 class="text-lg md:text-xl font-semibold mb-4">Product Inventory</h2>
+            
+            <!-- Search and Filter -->
+            <div class="mb-4 flex flex-col sm:flex-row gap-4">
+                <div class="flex-1">
+                    <input type="text" id="product-search" placeholder="Search products..." class="w-full p-2 rounded border text-sm">
+                </div>
+                <div class="flex gap-2">
+                    <select id="product-status-filter" class="p-2 rounded border text-sm">
+                        <option value="">All Status</option>
+                        <option value="available">Available</option>
+                        <option value="low_stock">Low Stock</option>
+                        <option value="out_of_stock">Out of Stock</option>
+                    </select>
+                    <select id="product-sort" class="p-2 rounded border text-sm">
+                        <option value="name">Sort by Name</option>
+                        <option value="quantity">Sort by Quantity</option>
+                        <option value="expiry">Sort by Expiry</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Desktop Table -->
+            <div class="hidden lg:block bg-white rounded-lg shadow-md p-4 overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="border-b">
+                            <th class="pb-2 text-sm font-semibold">Product</th>
+                            <th class="pb-2 text-sm font-semibold">Batch</th>
+                            <th class="pb-2 text-sm font-semibold">Available</th>
+                            <th class="pb-2 text-sm font-semibold">Reserved</th>
+                            <th class="pb-2 text-sm font-semibold">Damaged</th>
+                            <th class="pb-2 text-sm font-semibold">Expired</th>
+                            <th class="pb-2 text-sm font-semibold">Status</th>
+                            <th class="pb-2 text-sm font-semibold">Value (UGX)</th>
+                            <th class="pb-2 text-sm font-semibold">Expiry</th>
+                            <th class="pb-2 text-sm font-semibold">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="product-inventory-list">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mobile Cards -->
+            <div class="lg:hidden space-y-4" id="product-inventory-cards">
+                <!-- Populated by JS -->
+            </div>
+
+            <!-- Pagination -->
+            <div class="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div class="text-sm text-gray-600">
+                    Showing <span id="product-start">0</span> to <span id="product-end">0</span> of <span id="product-total">0</span> entries
+                </div>
+                <div class="flex gap-2">
+                    <button id="product-prev" class="px-3 py-1 border rounded text-sm disabled:opacity-50" disabled>Previous</button>
+                    <div id="product-pages" class="flex gap-1">
+                        <!-- Populated by JS -->
+                    </div>
+                    <button id="product-next" class="px-3 py-1 border rounded text-sm disabled:opacity-50" disabled>Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Raw Materials Section -->
+    <div id="raw-materials-section" class="inventory-section hidden">
+        <div class="mb-6 md:mb-8">
+            <h2 class="text-lg md:text-xl font-semibold mb-4">Add New Raw Material</h2>
+            <form id="add-raw-material-form" class="bg-white rounded-lg shadow-md p-4 md:p-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                        <label for="material-name" class="block font-bold mb-1 text-sm">Material Name</label>
+                        <input type="text" id="material-name" name="material_name" class="w-full p-2 rounded border text-sm" required>
+                    </div>
+                    <div>
+                        <label for="material-type" class="block font-bold mb-1 text-sm">Material Type</label>
+                        <select id="material-type" name="material_type" class="w-full p-2 rounded border text-sm" required>
+                            <option value="milk">Milk</option>
+                            <option value="culture">Culture</option>
+                            <option value="flavoring">Flavoring</option>
+                            <option value="sweetener">Sweetener</option>
+                            <option value="stabilizer">Stabilizer</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="quantity" class="block font-bold mb-1 text-sm">Quantity</label>
+                        <input type="number" id="quantity" name="quantity" min="0" step="0.01" class="w-full p-2 rounded border text-sm" required>
+                    </div>
+                    <div>
+                        <label for="unit-of-measure" class="block font-bold mb-1 text-sm">Unit</label>
+                        <input type="text" id="unit-of-measure" name="unit_of_measure" placeholder="L, kg, g" class="w-full p-2 rounded border text-sm" required>
+                    </div>
+                    <div>
+                        <label for="unit-price" class="block font-bold mb-1 text-sm">Unit Price (UGX)</label>
+                        <input type="number" id="unit-price" name="unit_price" min="0" step="0.01" class="w-full p-2 rounded border text-sm" required>
+                    </div>
+                    <div>
+                        <label for="harvest-date" class="block font-bold mb-1 text-sm">Harvest Date</label>
+                        <input type="date" id="harvest-date" name="harvest_date" class="w-full p-2 rounded border text-sm" required>
+                    </div>
+                    <div>
+                        <label for="raw-expiry-date" class="block font-bold mb-1 text-sm">Expiry Date</label>
+                        <input type="date" id="raw-expiry-date" name="expiry_date" class="w-full p-2 rounded border text-sm" required>
+                    </div>
+                    <div>
+                        <label for="quality-grade" class="block font-bold mb-1 text-sm">Quality Grade</label>
+                        <select id="quality-grade" name="quality_grade" class="w-full p-2 rounded border text-sm" required>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                            <option value="D">D</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <label for="raw-material-notes" class="block font-bold mb-1 text-sm">Quality Notes</label>
+                    <textarea id="raw-material-notes" name="quality_notes" class="w-full p-2 rounded border text-sm" rows="2"></textarea>
+                </div>
+                <div class="mt-4">
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg w-full text-sm md:text-base">Add Raw Material</button>
+                </div>
+            </form>
+            <div id="add-raw-material-success" class="mt-2 text-green-600 font-bold hidden text-sm">Raw material added successfully!</div>
+        </div>
+
+        <div>
+            <h2 class="text-lg md:text-xl font-semibold mb-4">Raw Materials Inventory</h2>
+            
+            <!-- Search and Filter -->
+            <div class="mb-4 flex flex-col sm:flex-row gap-4">
+                <div class="flex-1">
+                    <input type="text" id="raw-material-search" placeholder="Search materials..." class="w-full p-2 rounded border text-sm">
+                </div>
+                <div class="flex gap-2">
+                    <select id="raw-material-status-filter" class="p-2 rounded border text-sm">
+                        <option value="">All Status</option>
+                        <option value="available">Available</option>
+                        <option value="in_use">In Use</option>
+                        <option value="expired">Expired</option>
+                        <option value="disposed">Disposed</option>
+                    </select>
+                    <select id="raw-material-sort" class="p-2 rounded border text-sm">
+                        <option value="name">Sort by Name</option>
+                        <option value="quantity">Sort by Quantity</option>
+                        <option value="expiry">Sort by Expiry</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Desktop Table -->
+            <div class="hidden lg:block bg-white rounded-lg shadow-md p-4 overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="border-b">
+                            <th class="pb-2 text-sm font-semibold">Material</th>
+                            <th class="pb-2 text-sm font-semibold">Type</th>
+                            <th class="pb-2 text-sm font-semibold">Quantity</th>
+                            <th class="pb-2 text-sm font-semibold">Unit</th>
+                            <th class="pb-2 text-sm font-semibold">Unit Price</th>
+                            <th class="pb-2 text-sm font-semibold">Total Cost</th>
+                            <th class="pb-2 text-sm font-semibold">Grade</th>
+                            <th class="pb-2 text-sm font-semibold">Status</th>
+                            <th class="pb-2 text-sm font-semibold">Expiry</th>
+                            <th class="pb-2 text-sm font-semibold">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="raw-materials-list">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mobile Cards -->
+            <div class="lg:hidden space-y-4" id="raw-materials-cards">
+                <!-- Populated by JS -->
+            </div>
+
+            <!-- Pagination -->
+            <div class="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div class="text-sm text-gray-600">
+                    Showing <span id="raw-material-start">0</span> to <span id="raw-material-end">0</span> of <span id="raw-material-total">0</span> entries
+                </div>
+                <div class="flex gap-2">
+                    <button id="raw-material-prev" class="px-3 py-1 border rounded text-sm disabled:opacity-50" disabled>Previous</button>
+                    <div id="raw-material-pages" class="flex gap-1">
+                        <!-- Populated by JS -->
+                    </div>
+                    <button id="raw-material-next" class="px-3 py-1 border rounded text-sm disabled:opacity-50" disabled>Next</button>
+                </div>
+            </div>
         </div>
     </div>
 </main>
+
 <script>
 // Helper to get CSRF token
 function getCSRFToken() {
     return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 }
 
-// Fetch and display products
-async function loadVendorProducts() {
-    const res = await fetch('/api/vendor/products');
-    const products = await res.json();
-    const tbody = document.getElementById('vendor-products-list');
+// Pagination variables
+let productCurrentPage = 1;
+let rawMaterialCurrentPage = 1;
+const itemsPerPage = 10;
+let productData = [];
+let rawMaterialData = [];
+
+// Tab functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const productsTab = document.getElementById('products-tab');
+    const rawMaterialsTab = document.getElementById('raw-materials-tab');
+    const productsSection = document.getElementById('products-section');
+    const rawMaterialsSection = document.getElementById('raw-materials-section');
+
+    productsTab.addEventListener('click', function() {
+        productsTab.classList.add('border-blue-500', 'text-blue-600');
+        productsTab.classList.remove('border-transparent', 'text-gray-500');
+        rawMaterialsTab.classList.remove('border-blue-500', 'text-blue-600');
+        rawMaterialsTab.classList.add('border-transparent', 'text-gray-500');
+        productsSection.classList.remove('hidden');
+        rawMaterialsSection.classList.add('hidden');
+    });
+
+    rawMaterialsTab.addEventListener('click', function() {
+        rawMaterialsTab.classList.add('border-blue-500', 'text-blue-600');
+        rawMaterialsTab.classList.remove('border-transparent', 'text-gray-500');
+        productsTab.classList.remove('border-blue-500', 'text-blue-600');
+        productsTab.classList.add('border-transparent', 'text-gray-500');
+        rawMaterialsSection.classList.remove('hidden');
+        productsSection.classList.add('hidden');
+    });
+
+    // Search and filter event listeners
+    document.getElementById('product-search').addEventListener('input', filterProducts);
+    document.getElementById('product-status-filter').addEventListener('change', filterProducts);
+    document.getElementById('product-sort').addEventListener('change', filterProducts);
+    
+    document.getElementById('raw-material-search').addEventListener('input', filterRawMaterials);
+    document.getElementById('raw-material-status-filter').addEventListener('change', filterRawMaterials);
+    document.getElementById('raw-material-sort').addEventListener('change', filterRawMaterials);
+
+    // Load initial data
+    loadInventorySummary();
+    loadProductInventory();
+    loadRawMaterials();
+});
+
+// Load inventory summary
+async function loadInventorySummary() {
+    try {
+        const response = await fetch('/api/vendor/inventory/summary');
+        const data = await response.json();
+        
+        document.getElementById('total-products').textContent = data.product_summary.total_batches || 0;
+        document.getElementById('total-raw-materials').textContent = data.raw_material_summary.total_materials || 0;
+        document.getElementById('total-value').textContent = 
+            ((data.product_summary.total_value || 0) + (data.raw_material_summary.total_cost || 0)).toLocaleString() + ' UGX';
+        
+        // Calculate low stock items
+        const lowStockCount = data.product_summary.total_available <= 10 ? 1 : 0;
+        document.getElementById('low-stock-items').textContent = lowStockCount;
+    } catch (error) {
+        console.error('Error loading inventory summary:', error);
+    }
+}
+
+// Load product inventory
+async function loadProductInventory() {
+    try {
+        const response = await fetch('/api/vendor/inventory');
+        const data = await response.json();
+        
+        productData = data.product_inventory || [];
+        renderProductInventory();
+    } catch (error) {
+        console.error('Error loading product inventory:', error);
+    }
+}
+
+// Filter and render product inventory
+function filterProducts() {
+    const searchTerm = document.getElementById('product-search').value.toLowerCase();
+    const statusFilter = document.getElementById('product-status-filter').value;
+    const sortBy = document.getElementById('product-sort').value;
+    
+    let filtered = productData.filter(item => {
+        const matchesSearch = item.product_name.toLowerCase().includes(searchTerm) || 
+                            item.batch_number.toLowerCase().includes(searchTerm);
+        const matchesStatus = !statusFilter || item.inventory_status === statusFilter;
+        return matchesSearch && matchesStatus;
+    });
+    
+    // Sort
+    filtered.sort((a, b) => {
+        switch(sortBy) {
+            case 'quantity':
+                return b.quantity_available - a.quantity_available;
+            case 'expiry':
+                return new Date(a.expiry_date) - new Date(b.expiry_date);
+            default:
+                return a.product_name.localeCompare(b.product_name);
+        }
+    });
+    
+    productData = filtered;
+    productCurrentPage = 1;
+    renderProductInventory();
+}
+
+// Render product inventory with pagination
+function renderProductInventory() {
+    const startIndex = (productCurrentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedData = productData.slice(startIndex, endIndex);
+    
+    // Desktop table
+    const tbody = document.getElementById('product-inventory-list');
     tbody.innerHTML = '';
-    products.forEach(product => {
+    
+    paginatedData.forEach(inventory => {
         const tr = document.createElement('tr');
-        let imgSrc = product.image_path ? `/storage/${product.image_path}` : (product.product_type === 'greek' ? '/images/greek.jpeg' : product.product_type === 'organic' ? '/images/strawbeery.jpeg' : '/images/mango (2).jpeg');
+        tr.className = 'border-b hover:bg-gray-50';
+        
+        const statusClass = inventory.inventory_status === 'available' ? 'text-green-600' : 
+                          inventory.inventory_status === 'low_stock' ? 'text-yellow-600' : 'text-red-600';
+        
         tr.innerHTML = `
-            <td><img src="${imgSrc}" alt="${product.product_name}" class="h-16 w-16 object-cover rounded" /></td>
-            <td>${product.product_name}</td>
-            <td>${product.product_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</td>
-            <td><span class="${product.status === 'active' ? 'text-green-600' : 'text-gray-600'} font-bold">${product.status.charAt(0).toUpperCase() + product.status.slice(1)}</span></td>
-            <td>${parseFloat(product.selling_price).toLocaleString()} UGX</td>
-            <td>${product.stock ?? '-'}</td>
-            <td>
-                <button class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded mr-2" onclick="openEditProductModal(${product.id})">Edit</button>
-                <button class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded mr-2" onclick="deleteProduct(${product.id})">Delete</button>
-                <button class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded" onclick="toggleProductStatus(${product.id})">${product.status === 'active' ? 'Deactivate' : 'Activate'}</button>
+            <td class="py-2 text-sm">${inventory.product_name}</td>
+            <td class="py-2 text-sm">${inventory.batch_number}</td>
+            <td class="py-2 text-sm">${inventory.quantity_available}</td>
+            <td class="py-2 text-sm">${inventory.quantity_reserved}</td>
+            <td class="py-2 text-sm">${inventory.quantity_damaged}</td>
+            <td class="py-2 text-sm">${inventory.quantity_expired}</td>
+            <td class="py-2"><span class="font-bold ${statusClass} text-sm">${inventory.inventory_status.replace('_', ' ').toUpperCase()}</span></td>
+            <td class="py-2 text-sm">${parseFloat(inventory.total_value).toLocaleString()}</td>
+            <td class="py-2 text-sm">${inventory.expiry_date}</td>
+            <td class="py-2">
+                <button class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded mr-1 text-xs" onclick="editProductInventory(${inventory.id})">Edit</button>
+                <button class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs" onclick="deleteProductInventory(${inventory.id})">Delete</button>
             </td>
         `;
         tbody.appendChild(tr);
     });
+    
+    // Mobile cards
+    const cardsContainer = document.getElementById('product-inventory-cards');
+    cardsContainer.innerHTML = '';
+    
+    paginatedData.forEach(inventory => {
+        const statusClass = inventory.inventory_status === 'available' ? 'text-green-600' : 
+                          inventory.inventory_status === 'low_stock' ? 'text-yellow-600' : 'text-red-600';
+        
+        const card = document.createElement('div');
+        card.className = 'bg-white rounded-lg shadow-md p-4';
+        card.innerHTML = `
+            <div class="flex justify-between items-start mb-2">
+                <h3 class="font-semibold text-sm">${inventory.product_name}</h3>
+                <span class="font-bold ${statusClass} text-xs">${inventory.inventory_status.replace('_', ' ').toUpperCase()}</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+                <div><span class="font-semibold">Batch:</span> ${inventory.batch_number}</div>
+                <div><span class="font-semibold">Available:</span> ${inventory.quantity_available}</div>
+                <div><span class="font-semibold">Reserved:</span> ${inventory.quantity_reserved}</div>
+                <div><span class="font-semibold">Value:</span> ${parseFloat(inventory.total_value).toLocaleString()} UGX</div>
+                <div><span class="font-semibold">Expiry:</span> ${inventory.expiry_date}</div>
+            </div>
+            <div class="flex gap-2">
+                <button class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs flex-1" onclick="editProductInventory(${inventory.id})">Edit</button>
+                <button class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs flex-1" onclick="deleteProductInventory(${inventory.id})">Delete</button>
+            </div>
+        `;
+        cardsContainer.appendChild(card);
+    });
+    
+    // Update pagination info
+    document.getElementById('product-start').textContent = startIndex + 1;
+    document.getElementById('product-end').textContent = Math.min(endIndex, productData.length);
+    document.getElementById('product-total').textContent = productData.length;
+    
+    // Update pagination buttons
+    updateProductPagination();
 }
 
-// Add product form
-const addForm = document.getElementById('vendor-add-product-form');
-addForm.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const formData = new FormData(addForm);
-    const res = await fetch('/api/vendor/products', {
-        method: 'POST',
-        headers: { 'X-CSRF-TOKEN': getCSRFToken() },
-        body: formData
+// Update product pagination
+function updateProductPagination() {
+    const totalPages = Math.ceil(productData.length / itemsPerPage);
+    const pagesContainer = document.getElementById('product-pages');
+    const prevBtn = document.getElementById('product-prev');
+    const nextBtn = document.getElementById('product-next');
+    
+    pagesContainer.innerHTML = '';
+    
+    for (let i = 1; i <= totalPages; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.className = `px-3 py-1 border rounded text-sm ${i === productCurrentPage ? 'bg-blue-600 text-white' : ''}`;
+        pageBtn.textContent = i;
+        pageBtn.onclick = () => {
+            productCurrentPage = i;
+            renderProductInventory();
+        };
+        pagesContainer.appendChild(pageBtn);
+    }
+    
+    prevBtn.disabled = productCurrentPage === 1;
+    nextBtn.disabled = productCurrentPage === totalPages;
+    
+    prevBtn.onclick = () => {
+        if (productCurrentPage > 1) {
+            productCurrentPage--;
+            renderProductInventory();
+        }
+    };
+    
+    nextBtn.onclick = () => {
+        if (productCurrentPage < totalPages) {
+            productCurrentPage++;
+            renderProductInventory();
+        }
+    };
+}
+
+// Load raw materials
+async function loadRawMaterials() {
+    try {
+        const response = await fetch('/api/vendor/inventory');
+        const data = await response.json();
+        
+        rawMaterialData = data.raw_materials || [];
+        renderRawMaterials();
+    } catch (error) {
+        console.error('Error loading raw materials:', error);
+    }
+}
+
+// Filter and render raw materials
+function filterRawMaterials() {
+    const searchTerm = document.getElementById('raw-material-search').value.toLowerCase();
+    const statusFilter = document.getElementById('raw-material-status-filter').value;
+    const sortBy = document.getElementById('raw-material-sort').value;
+    
+    let filtered = rawMaterialData.filter(item => {
+        const matchesSearch = item.material_name.toLowerCase().includes(searchTerm) || 
+                            item.material_type.toLowerCase().includes(searchTerm);
+        const matchesStatus = !statusFilter || item.status === statusFilter;
+        return matchesSearch && matchesStatus;
     });
-    const data = await res.json();
-    if (data.success) {
-        document.getElementById('add-product-success').classList.remove('hidden');
-        addForm.reset();
-        loadVendorProducts();
-        setTimeout(() => document.getElementById('add-product-success').classList.add('hidden'), 2000);
+    
+    // Sort
+    filtered.sort((a, b) => {
+        switch(sortBy) {
+            case 'quantity':
+                return b.quantity - a.quantity;
+            case 'expiry':
+                return new Date(a.expiry_date) - new Date(b.expiry_date);
+            default:
+                return a.material_name.localeCompare(b.material_name);
+        }
+    });
+    
+    rawMaterialData = filtered;
+    rawMaterialCurrentPage = 1;
+    renderRawMaterials();
+}
+
+// Render raw materials with pagination
+function renderRawMaterials() {
+    const startIndex = (rawMaterialCurrentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedData = rawMaterialData.slice(startIndex, endIndex);
+    
+    // Desktop table
+    const tbody = document.getElementById('raw-materials-list');
+    tbody.innerHTML = '';
+    
+    paginatedData.forEach(material => {
+        const tr = document.createElement('tr');
+        tr.className = 'border-b hover:bg-gray-50';
+        
+        const statusClass = material.status === 'available' ? 'text-green-600' : 
+                          material.status === 'in_use' ? 'text-blue-600' : 
+                          material.status === 'expired' ? 'text-red-600' : 'text-gray-600';
+        
+        tr.innerHTML = `
+            <td class="py-2 text-sm">${material.material_name}</td>
+            <td class="py-2 text-sm">${material.material_type}</td>
+            <td class="py-2 text-sm">${material.quantity}</td>
+            <td class="py-2 text-sm">${material.unit_of_measure}</td>
+            <td class="py-2 text-sm">${parseFloat(material.unit_price).toLocaleString()}</td>
+            <td class="py-2 text-sm">${parseFloat(material.total_cost).toLocaleString()}</td>
+            <td class="py-2 text-sm">${material.quality_grade}</td>
+            <td class="py-2"><span class="font-bold ${statusClass} text-sm">${material.status.toUpperCase()}</span></td>
+            <td class="py-2 text-sm">${material.expiry_date}</td>
+            <td class="py-2">
+                <button class="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded mr-1 text-xs" onclick="editRawMaterial(${material.id})">Edit</button>
+                <button class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs" onclick="deleteRawMaterial(${material.id})">Delete</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+    
+    // Mobile cards
+    const cardsContainer = document.getElementById('raw-materials-cards');
+    cardsContainer.innerHTML = '';
+    
+    paginatedData.forEach(material => {
+        const statusClass = material.status === 'available' ? 'text-green-600' : 
+                          material.status === 'in_use' ? 'text-blue-600' : 
+                          material.status === 'expired' ? 'text-red-600' : 'text-gray-600';
+        
+        const card = document.createElement('div');
+        card.className = 'bg-white rounded-lg shadow-md p-4';
+        card.innerHTML = `
+            <div class="flex justify-between items-start mb-2">
+                <h3 class="font-semibold text-sm">${material.material_name}</h3>
+                <span class="font-bold ${statusClass} text-xs">${material.status.toUpperCase()}</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+                <div><span class="font-semibold">Type:</span> ${material.material_type}</div>
+                <div><span class="font-semibold">Quantity:</span> ${material.quantity} ${material.unit_of_measure}</div>
+                <div><span class="font-semibold">Unit Price:</span> ${parseFloat(material.unit_price).toLocaleString()} UGX</div>
+                <div><span class="font-semibold">Total Cost:</span> ${parseFloat(material.total_cost).toLocaleString()} UGX</div>
+                <div><span class="font-semibold">Grade:</span> ${material.quality_grade}</div>
+                <div><span class="font-semibold">Expiry:</span> ${material.expiry_date}</div>
+            </div>
+            <div class="flex gap-2">
+                <button class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs flex-1" onclick="editRawMaterial(${material.id})">Edit</button>
+                <button class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs flex-1" onclick="deleteRawMaterial(${material.id})">Delete</button>
+            </div>
+        `;
+        cardsContainer.appendChild(card);
+    });
+    
+    // Update pagination info
+    document.getElementById('raw-material-start').textContent = startIndex + 1;
+    document.getElementById('raw-material-end').textContent = Math.min(endIndex, rawMaterialData.length);
+    document.getElementById('raw-material-total').textContent = rawMaterialData.length;
+    
+    // Update pagination buttons
+    updateRawMaterialPagination();
+}
+
+// Update raw material pagination
+function updateRawMaterialPagination() {
+    const totalPages = Math.ceil(rawMaterialData.length / itemsPerPage);
+    const pagesContainer = document.getElementById('raw-material-pages');
+    const prevBtn = document.getElementById('raw-material-prev');
+    const nextBtn = document.getElementById('raw-material-next');
+    
+    pagesContainer.innerHTML = '';
+    
+    for (let i = 1; i <= totalPages; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.className = `px-3 py-1 border rounded text-sm ${i === rawMaterialCurrentPage ? 'bg-green-600 text-white' : ''}`;
+        pageBtn.textContent = i;
+        pageBtn.onclick = () => {
+            rawMaterialCurrentPage = i;
+            renderRawMaterials();
+        };
+        pagesContainer.appendChild(pageBtn);
+    }
+    
+    prevBtn.disabled = rawMaterialCurrentPage === 1;
+    nextBtn.disabled = rawMaterialCurrentPage === totalPages;
+    
+    prevBtn.onclick = () => {
+        if (rawMaterialCurrentPage > 1) {
+            rawMaterialCurrentPage--;
+            renderRawMaterials();
+        }
+    };
+    
+    nextBtn.onclick = () => {
+        if (rawMaterialCurrentPage < totalPages) {
+            rawMaterialCurrentPage++;
+            renderRawMaterials();
+        }
+    };
+}
+
+// Add product inventory form
+const addProductInventoryForm = document.getElementById('add-product-inventory-form');
+addProductInventoryForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(addProductInventoryForm);
+    const data = Object.fromEntries(formData.entries());
+    
+    try {
+        const response = await fetch('/api/vendor/inventory/products', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': getCSRFToken()
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            document.getElementById('add-product-inventory-success').classList.remove('hidden');
+            addProductInventoryForm.reset();
+            loadProductInventory();
+            loadInventorySummary();
+            setTimeout(() => document.getElementById('add-product-inventory-success').classList.add('hidden'), 3000);
+        } else {
+            alert('Error adding product inventory: ' + (result.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error adding product inventory');
     }
 });
 
-// Edit product modal logic
-let currentEditProductId = null;
-function openEditProductModal(id) {
-    fetch(`/api/vendor/products`).then(res => res.json()).then(products => {
-        const product = products.find(p => p.id === id);
-        if (!product) return;
-        currentEditProductId = id;
-        document.getElementById('edit-product-id').value = id;
-        document.getElementById('edit-product-name').value = product.product_name;
-        document.getElementById('edit-product-type').value = product.product_type;
-        document.getElementById('edit-product-price').value = product.selling_price;
-        document.getElementById('edit-product-stock').value = product.stock ?? '';
-        document.getElementById('edit-product-image-preview').src = product.image_path ? `/storage/${product.image_path}` : '';
-        document.getElementById('edit-product-modal').classList.remove('hidden');
-    });
-}
-function closeEditProductModal() {
-    document.getElementById('edit-product-modal').classList.add('hidden');
-    currentEditProductId = null;
-}
-
-// Edit product form
-const editForm = document.getElementById('vendor-edit-product-form');
-editForm.addEventListener('submit', async function(e) {
+// Add raw material form
+const addRawMaterialForm = document.getElementById('add-raw-material-form');
+addRawMaterialForm.addEventListener('submit', async function(e) {
     e.preventDefault();
-    if (!currentEditProductId) return;
-    const formData = new FormData(editForm);
-    const res = await fetch(`/api/vendor/products/${currentEditProductId}`, {
-        method: 'POST',
-        headers: { 'X-CSRF-TOKEN': getCSRFToken() },
-        body: formData
-    });
-    const data = await res.json();
-    if (data.success) {
-        closeEditProductModal();
-        loadVendorProducts();
+    
+    const formData = new FormData(addRawMaterialForm);
+    const data = Object.fromEntries(formData.entries());
+    
+    try {
+        const response = await fetch('/api/vendor/inventory/raw-materials', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': getCSRFToken()
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            document.getElementById('add-raw-material-success').classList.remove('hidden');
+            addRawMaterialForm.reset();
+            loadRawMaterials();
+            loadInventorySummary();
+            setTimeout(() => document.getElementById('add-raw-material-success').classList.add('hidden'), 3000);
+        } else {
+            alert('Error adding raw material: ' + (result.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error adding raw material');
     }
 });
 
-// Delete product
-async function deleteProduct(id) {
-    if (!confirm('Are you sure you want to delete this product?')) return;
-    await fetch(`/api/vendor/products/${id}`, {
-        method: 'DELETE',
-        headers: { 'X-CSRF-TOKEN': getCSRFToken() }
-    });
-    loadVendorProducts();
+// Edit product inventory (simple inline edit for now)
+async function editProductInventory(id) {
+    const newQuantity = prompt('Enter new quantity available:');
+    if (newQuantity === null || newQuantity === '') return;
+    
+    try {
+        const response = await fetch(`/api/vendor/inventory/products/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': getCSRFToken()
+            },
+            body: JSON.stringify({
+                quantity_available: parseInt(newQuantity)
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            loadProductInventory();
+            loadInventorySummary();
+        } else {
+            alert('Error updating product inventory: ' + (result.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error updating product inventory');
+    }
 }
 
-// Toggle product status
-async function toggleProductStatus(id) {
-    await fetch(`/api/vendor/products/${id}/toggle-status`, {
-        method: 'POST',
-        headers: { 'X-CSRF-TOKEN': getCSRFToken() }
-    });
-    loadVendorProducts();
+// Delete product inventory
+async function deleteProductInventory(id) {
+    if (!confirm('Are you sure you want to delete this product inventory?')) return;
+    
+    try {
+        const response = await fetch(`/api/vendor/inventory/products/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': getCSRFToken()
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            loadProductInventory();
+            loadInventorySummary();
+        } else {
+            alert('Error deleting product inventory: ' + (result.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error deleting product inventory');
+    }
 }
 
-// Initial load
-window.addEventListener('DOMContentLoaded', function() {
-    loadVendorProducts();
-});
+// Edit raw material (simple inline edit for now)
+async function editRawMaterial(id) {
+    const newQuantity = prompt('Enter new quantity:');
+    if (newQuantity === null || newQuantity === '') return;
+    
+    try {
+        const response = await fetch(`/api/vendor/inventory/raw-materials/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': getCSRFToken()
+            },
+            body: JSON.stringify({
+                quantity: parseFloat(newQuantity)
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            loadRawMaterials();
+            loadInventorySummary();
+        } else {
+            alert('Error updating raw material: ' + (result.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error updating raw material');
+    }
+}
+
+// Delete raw material
+async function deleteRawMaterial(id) {
+    if (!confirm('Are you sure you want to delete this raw material?')) return;
+    
+    try {
+        const response = await fetch(`/api/vendor/inventory/raw-materials/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': getCSRFToken()
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            loadRawMaterials();
+            loadInventorySummary();
+        } else {
+            alert('Error deleting raw material: ' + (result.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error deleting raw material');
+    }
+}
+
+// Auto-refresh data every 30 seconds for real-time updates
+setInterval(() => {
+    loadInventorySummary();
+    loadProductInventory();
+    loadRawMaterials();
+}, 30000);
 </script>
-@endsection 
+@endsection

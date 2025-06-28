@@ -129,6 +129,19 @@ Route::middleware(['auth', 'verified'])->prefix('api/vendor')->group(function ()
     Route::post('/products/{id}/toggle-status', [\App\Http\Controllers\VendorProductController::class, 'toggleStatus']);
 });
 
+// Vendor inventory management API routes
+Route::middleware(['auth', 'verified'])->prefix('api/vendor/inventory')->name('api.vendor.inventory.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\VendorInventoryController::class, 'index'])->name('index');
+    Route::post('/products', [\App\Http\Controllers\VendorInventoryController::class, 'storeProductInventory'])->name('store-product');
+    Route::put('/products/{id}', [\App\Http\Controllers\VendorInventoryController::class, 'updateProductInventory'])->name('update-product');
+    Route::delete('/products/{id}', [\App\Http\Controllers\VendorInventoryController::class, 'deleteProductInventory'])->name('delete-product');
+    Route::post('/raw-materials', [\App\Http\Controllers\VendorInventoryController::class, 'storeRawMaterial'])->name('store-raw-material');
+    Route::put('/raw-materials/{id}', [\App\Http\Controllers\VendorInventoryController::class, 'updateRawMaterial'])->name('update-raw-material');
+    Route::delete('/raw-materials/{id}', [\App\Http\Controllers\VendorInventoryController::class, 'deleteRawMaterial'])->name('delete-raw-material');
+    Route::get('/summary', [\App\Http\Controllers\VendorInventoryController::class, 'getInventorySummary'])->name('summary');
+    Route::get('/chart-data', [\App\Http\Controllers\VendorInventoryController::class, 'getInventoryChartData'])->name('chart-data');
+});
+
 // Password reset by token (code) form
 Route::get('/password/token', [\App\Http\Controllers\PasswordResetByTokenController::class, 'showForm'])->name('password.token.form');
 Route::post('/password/token', [\App\Http\Controllers\PasswordResetByTokenController::class, 'reset'])->name('password.token.reset');
