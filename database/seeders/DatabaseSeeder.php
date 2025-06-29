@@ -15,12 +15,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-    //    User::factory()->create([
-      //      'name' => 'Test User',
-       //     'email' => 'test@example.com',
-       // ]);
+       
 
         // Create roles
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
@@ -82,27 +77,28 @@ class DatabaseSeeder extends Seeder
         // $vendor->permissions()->attach($manageOrders->id); // Uncomment if you want direct user-permission
 
         // Seed users
-        $users = \App\Models\User::factory(30)->create();
+        $users = \App\Models\User::factory(2)->create();
 
         // Seed production facilities
-        $productionFacilities = \App\Models\ProductionFacility::factory(30)->create();
+        $productionFacilities = \App\Models\ProductionFacility::factory(2)->create();
 
         // Seed distribution centers
-        $distributionCenters = \App\Models\DistributionCenter::factory(30)->create();
+        $distributionCenters = \App\Models\DistributionCenter::factory(2)->create();
 
         // Seed yogurt products using the new seeder with UGX pricing
         $this->call([
-            YogurtProductSeeder::class
+            YogurtProductSeeder::class,
+            DairyFarmSeeder::class
         ]);
         $yogurtProducts = \App\Models\YogurtProduct::all(); // Get the seeded products
 
         // Seed retailers (each linked to a user)
-        $retailers = \App\Models\Retailer::factory(30)->create([
+        $retailers = \App\Models\Retailer::factory(2)->create([
             'user_id' => $users->random()->id,
         ]);
 
         // Seed suppliers (each linked to a user)
-        $suppliers = \App\Models\Supplier::factory(30)->create([
+        $suppliers = \App\Models\Supplier::factory(2)->create([
             'user_id' => $users->random()->id,
         ]);
 
@@ -110,7 +106,7 @@ class DatabaseSeeder extends Seeder
         $vendors = \App\Models\Vendor::factory(30)->create();
 
         // Seed orders (each linked to a retailer and distribution center)
-        $orders = \App\Models\Order::factory(30)->create([
+        $orders = \App\Models\Order::factory(2)->create([
             'retailer_id' => $retailers->random()->id,
             'distribution_center_id' => $distributionCenters->random()->id,
         ]);
@@ -132,13 +128,13 @@ class DatabaseSeeder extends Seeder
         // ]);
 
         // Seed quality checks (each linked to a yogurt product and production facility)
-        $qualityChecks = \App\Models\QualityCheck::factory(30)->create([
+        $qualityChecks = \App\Models\QualityCheck::factory(2)->create([
             'yogurt_product_id' => $yogurtProducts->random()->id,
             'production_facility_id' => $productionFacilities->random()->id,
         ]);
 
         // Seed deliveries (each linked to an order, distribution center, and retailer)
-        $deliveries = \App\Models\Delivery::factory(30)->create([
+        $deliveries = \App\Models\Delivery::factory(2)->create([
             'order_id' => $orders->random()->id,
             'distribution_center_id' => $distributionCenters->random()->id,
             'retailer_id' => $retailers->random()->id,

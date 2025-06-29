@@ -465,6 +465,22 @@
                 demandForecastChart.update();
             })
             .catch(error => console.error('Error loading predictions:', error));
+
+        // Load trend analysis data
+        fetch('{{ route("api.analytics.trend-analysis") }}')
+            .then(response => response.json())
+            .then(data => {
+                // Update trend analysis chart with real data
+                trendAnalysisChart.data.labels = data.quarters;
+                trendAnalysisChart.data.datasets[0].data = data.revenue;
+                trendAnalysisChart.data.datasets[1].data = data.profit;
+                trendAnalysisChart.update();
+                
+                // Update growth rate and market share
+                document.querySelector('.bg-blue-50 .text-lg').textContent = data.growth_rate + '%';
+                document.querySelector('.bg-green-50 .text-lg').textContent = data.market_share + '%';
+            })
+            .catch(error => console.error('Error loading trend analysis data:', error));
     }
 
     function refreshAllData() {

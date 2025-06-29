@@ -140,6 +140,16 @@ Route::middleware(['auth', 'verified'])->prefix('api/vendor/inventory')->name('a
     Route::delete('/raw-materials/{id}', [\App\Http\Controllers\VendorInventoryController::class, 'deleteRawMaterial'])->name('delete-raw-material');
     Route::get('/summary', [\App\Http\Controllers\VendorInventoryController::class, 'getInventorySummary'])->name('summary');
     Route::get('/chart-data', [\App\Http\Controllers\VendorInventoryController::class, 'getInventoryChartData'])->name('chart-data');
+    Route::get('/dairy-farms', [\App\Http\Controllers\VendorInventoryController::class, 'getDairyFarms'])->name('dairy-farms');
+});
+
+// Vendor edit views routes
+Route::middleware(['auth', 'verified'])->prefix('vendor')->name('vendor.')->group(function () {
+    Route::get('/manage-products', function () {
+        return view('vendor.manage-products');
+    })->name('manage-products');
+    Route::get('/products/{id}/edit', [\App\Http\Controllers\VendorProductController::class, 'show'])->name('products.edit');
+    Route::get('/raw-materials/{id}/edit', [\App\Http\Controllers\VendorInventoryController::class, 'showRawMaterial'])->name('raw-materials.edit');
 });
 
 // Password reset by token (code) form

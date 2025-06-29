@@ -36,6 +36,7 @@ class VendorInventoryController extends Controller
             ->map(function($inventory) {
                 return [
                     'id' => $inventory->id,
+                    'yogurt_product_id' => $inventory->yogurt_product_id,
                     'type' => 'product',
                     'product_name' => $inventory->yogurtProduct->product_name,
                     'product_type' => $inventory->yogurtProduct->product_type,
@@ -272,6 +273,7 @@ class VendorInventoryController extends Controller
     public function storeRawMaterial(Request $request): JsonResponse
     {
         $request->validate([
+            'dairy_farm_id' => 'required|exists:dairy_farms,id',
             'material_name' => 'required|string',
             'material_type' => 'required|in:milk,culture,flavoring,sweetener,stabilizer,other',
             'quantity' => 'required|numeric|min:0',
@@ -287,32 +289,7 @@ class VendorInventoryController extends Controller
             'quality_notes' => 'nullable|string',
         ]);
 
-        // Get or create dairy farm
-        $dairyFarm = DB::table('dairy_farms')->first();
-        if (!$dairyFarm) {
-            // Create a default dairy farm if none exists
-            $dairyFarmId = DB::table('dairy_farms')->insertGetId([
-                'supplier_id' => 1, // Default supplier
-                'farm_name' => 'Default Dairy Farm',
-                'farm_code' => 'FARM001',
-                'farm_address' => 'Kampala, Uganda',
-                'farm_phone' => '+256-XXX-XXX-XXX',
-                'farm_email' => 'farm@caramel-yg.com',
-                'farm_manager' => 'Farm Manager',
-                'manager_phone' => '+256-XXX-XXX-XXX',
-                'manager_email' => 'manager@caramel-yg.com',
-                'total_cattle' => 100,
-                'milking_cattle' => 80,
-                'daily_milk_production' => 500.00,
-                'certification_status' => 'certified',
-                'quality_rating' => 4.5,
-                'status' => 'active',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        } else {
-            $dairyFarmId = $dairyFarm->id;
-        }
+        $dairyFarmId = $request->dairy_farm_id;
 
         // Calculate total cost
         $totalCost = $request->quantity * $request->unit_price;
@@ -356,33 +333,73 @@ class VendorInventoryController extends Controller
     public function updateRawMaterial(Request $request, $id): JsonResponse
     {
         $request->validate([
+            'material_name' => 'nullable|string|max:255',
+            'material_type' => 'nullable|string|max:255',
             'quantity' => 'required|numeric|min:0',
+            'unit_of_measure' => 'nullable|string|max:50',
             'unit_price' => 'required|numeric|min:0',
-            'temperature' => 'nullable|numeric|between:-10,20',
-            'ph_level' => 'nullable|numeric|between:0,14',
+            'harvest_date' => 'nullable|date',
+            'expiry_date' => 'nullable|date',
+            'quality_grade' => 'nullable|string|max:10',
+            'temperature' => 'nullable|numeric',
+            'ph_level' => 'nullable|numeric',
             'fat_content' => 'nullable|numeric|min:0',
             'protein_content' => 'nullable|numeric|min:0',
-            'status' => 'required|in:available,in_use,expired,disposed',
+            'status' => 'nullable|in:available,in_use,expired,disposed',
             'quality_notes' => 'nullable|string',
         ]);
 
         // Calculate total cost
         $totalCost = $request->quantity * $request->unit_price;
 
+        $updateData = [
+            'quantity' => $request->quantity,
+            'unit_price' => $request->unit_price,
+            'total_cost' => $totalCost,
+            'updated_at' => now(),
+        ];
+
+        // Only update fields that are provided and not empty
+        if ($request->filled('material_name')) {
+            $updateData['material_name'] = $request->material_name;
+        }
+        if ($request->filled('material_type')) {
+            $updateData['material_type'] = $request->material_type;
+        }
+        if ($request->filled('unit_of_measure')) {
+            $updateData['unit_of_measure'] = $request->unit_of_measure;
+        }
+        if ($request->filled('harvest_date')) {
+            $updateData['harvest_date'] = $request->harvest_date;
+        }
+        if ($request->filled('expiry_date')) {
+            $updateData['expiry_date'] = $request->expiry_date;
+        }
+        if ($request->filled('quality_grade')) {
+            $updateData['quality_grade'] = $request->quality_grade;
+        }
+        if ($request->filled('temperature')) {
+            $updateData['temperature'] = $request->temperature;
+        }
+        if ($request->filled('ph_level')) {
+            $updateData['ph_level'] = $request->ph_level;
+        }
+        if ($request->filled('fat_content')) {
+            $updateData['fat_content'] = $request->fat_content;
+        }
+        if ($request->filled('protein_content')) {
+            $updateData['protein_content'] = $request->protein_content;
+        }
+        if ($request->filled('status')) {
+            $updateData['status'] = $request->status;
+        }
+        if ($request->filled('quality_notes')) {
+            $updateData['quality_notes'] = $request->quality_notes;
+        }
+
         DB::table('raw_materials')
             ->where('id', $id)
-            ->update([
-                'quantity' => $request->quantity,
-                'unit_price' => $request->unit_price,
-                'total_cost' => $totalCost,
-                'temperature' => $request->temperature,
-                'ph_level' => $request->ph_level,
-                'fat_content' => $request->fat_content,
-                'protein_content' => $request->protein_content,
-                'status' => $request->status,
-                'quality_notes' => $request->quality_notes,
-                'updated_at' => now(),
-            ]);
+            ->update($updateData);
 
         $rawMaterial = DB::table('raw_materials')->find($id);
 
@@ -466,5 +483,19 @@ class VendorInventoryController extends Controller
             'raw_material_type_data' => $rawMaterialTypeData,
             'raw_material_status_data' => $rawMaterialStatusData
         ]);
+    }
+
+    // Show edit form for a raw material
+    public function showRawMaterial($id)
+    {
+        $rawMaterial = RawMaterial::findOrFail($id);
+        return view('vendor.edit-raw-material', compact('rawMaterial'));
+    }
+
+    // Get all dairy farms for the form
+    public function getDairyFarms(): JsonResponse
+    {
+        $farms = \App\Models\DairyFarm::select('id', 'farm_name')->get();
+        return response()->json($farms);
     }
 } 

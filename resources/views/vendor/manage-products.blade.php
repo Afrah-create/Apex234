@@ -1,26 +1,54 @@
 @extends('layouts.app')
 
 @section('content')
-<main class="main-content px-4 py-6">
+<main class="main-content">
     <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-6 md:mb-8">Inventory Management</h1>
     
     <!-- Inventory Summary Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
-        <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
-            <h3 class="text-sm md:text-lg font-semibold text-gray-700 mb-2">Total Products</h3>
-            <p id="total-products" class="text-2xl md:text-3xl font-bold text-blue-600">-</p>
+    <div class="summary-cards mb-8">
+        <div class="summary-card" style="--summary-card-border: #22c55e;">
+            <div class="icon" style="background: #bbf7d0; color: #22c55e;">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+            </div>
+            <div class="details">
+                <p>Total Products</p>
+                <p id="total-products">-</p>
+            </div>
         </div>
-        <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
-            <h3 class="text-sm md:text-lg font-semibold text-gray-700 mb-2">Total Raw Materials</h3>
-            <p id="total-raw-materials" class="text-2xl md:text-3xl font-bold text-green-600">-</p>
+        <div class="summary-card" style="--summary-card-border: #3b82f6;">
+            <div class="icon" style="background: #dbeafe; color: #3b82f6;">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                </svg>
+            </div>
+            <div class="details">
+                <p>Total Raw Materials</p>
+                <p id="total-raw-materials">-</p>
+            </div>
         </div>
-        <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
-            <h3 class="text-sm md:text-lg font-semibold text-gray-700 mb-2">Total Value</h3>
-            <p id="total-value" class="text-2xl md:text-3xl font-bold text-purple-600">-</p>
+        <div class="summary-card" style="--summary-card-border: #f59e0b;">
+            <div class="icon" style="background: #fef3c7; color: #f59e0b;">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                </svg>
+            </div>
+            <div class="details">
+                <p>Total Value</p>
+                <p id="total-value">-</p>
+            </div>
         </div>
-        <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
-            <h3 class="text-sm md:text-lg font-semibold text-gray-700 mb-2">Low Stock Items</h3>
-            <p id="low-stock-items" class="text-2xl md:text-3xl font-bold text-red-600">-</p>
+        <div class="summary-card" style="--summary-card-border: #ef4444;">
+            <div class="icon" style="background: #fee2e2; color: #ef4444;">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+            </div>
+            <div class="details">
+                <p>Low Stock Items</p>
+                <p id="low-stock-items">-</p>
+            </div>
         </div>
     </div>
 
@@ -64,6 +92,11 @@
                     <div>
                         <label for="unit-cost" class="block font-bold mb-1 text-sm">Unit Cost (UGX)</label>
                         <input type="number" id="unit-cost" name="unit_cost" min="0" step="0.01" class="w-full p-2 rounded border text-sm" required>
+                    </div>
+                    <div>
+                        <label for="total-value" class="block font-bold mb-1 text-sm">Total Value (UGX)</label>
+                        <input type="number" id="total-value" name="total_value" class="w-full p-2 rounded border text-sm bg-gray-100" readonly>
+                        <p class="text-xs text-gray-500 mt-1">Auto-calculated: Unit Cost × Quantity</p>
                     </div>
                     <div>
                         <label for="production-date" class="block font-bold mb-1 text-sm">Production Date</label>
@@ -123,7 +156,7 @@
 
             <!-- Desktop Table -->
             <div class="hidden lg:block bg-white rounded-lg shadow-md p-4 overflow-x-auto">
-                <table class="w-full text-left">
+                <table class="user-table w-full text-left">
                     <thead>
                         <tr class="border-b">
                             <th class="pb-2 text-sm font-semibold">Product</th>
@@ -199,6 +232,11 @@
                         <input type="number" id="unit-price" name="unit_price" min="0" step="0.01" class="w-full p-2 rounded border text-sm" required>
                     </div>
                     <div>
+                        <label for="total-cost" class="block font-bold mb-1 text-sm">Total Cost (UGX)</label>
+                        <input type="number" id="total-cost" name="total_cost" class="w-full p-2 rounded border text-sm bg-gray-100" readonly>
+                        <p class="text-xs text-gray-500 mt-1">Auto-calculated: Unit Price × Quantity</p>
+                    </div>
+                    <div>
                         <label for="harvest-date" class="block font-bold mb-1 text-sm">Harvest Date</label>
                         <input type="date" id="harvest-date" name="harvest_date" class="w-full p-2 rounded border text-sm" required>
                     </div>
@@ -213,6 +251,12 @@
                             <option value="B">B</option>
                             <option value="C">C</option>
                             <option value="D">D</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="dairy-farm-id" class="block font-bold mb-1 text-sm">Dairy Farm</label>
+                        <select id="dairy-farm-id" name="dairy_farm_id" class="w-full p-2 rounded border text-sm" required>
+                            <option value="">Select Dairy Farm</option>
                         </select>
                     </div>
                 </div>
@@ -253,7 +297,7 @@
 
             <!-- Desktop Table -->
             <div class="hidden lg:block bg-white rounded-lg shadow-md p-4 overflow-x-auto">
-                <table class="w-full text-left">
+                <table class="user-table w-full text-left">
                     <thead>
                         <tr class="border-b">
                             <th class="pb-2 text-sm font-semibold">Material</th>
@@ -439,7 +483,7 @@ function renderProductInventory() {
             <td class="py-2 text-sm">${parseFloat(inventory.total_value).toLocaleString()}</td>
             <td class="py-2 text-sm">${inventory.expiry_date}</td>
             <td class="py-2">
-                <button class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded mr-1 text-xs" onclick="editProductInventory(${inventory.id})">Edit</button>
+                <button class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded mr-1 text-xs" onclick="editProductInventory(${inventory.yogurt_product_id})">Edit</button>
                 <button class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs" onclick="deleteProductInventory(${inventory.id})">Delete</button>
             </td>
         `;
@@ -455,7 +499,7 @@ function renderProductInventory() {
                           inventory.inventory_status === 'low_stock' ? 'text-yellow-600' : 'text-red-600';
         
         const card = document.createElement('div');
-        card.className = 'bg-white rounded-lg shadow-md p-4';
+        card.className = 'product-card';
         card.innerHTML = `
             <div class="flex justify-between items-start mb-2">
                 <h3 class="font-semibold text-sm">${inventory.product_name}</h3>
@@ -465,12 +509,12 @@ function renderProductInventory() {
                 <div><span class="font-semibold">Batch:</span> ${inventory.batch_number}</div>
                 <div><span class="font-semibold">Available:</span> ${inventory.quantity_available}</div>
                 <div><span class="font-semibold">Reserved:</span> ${inventory.quantity_reserved}</div>
-                <div><span class="font-semibold">Value:</span> ${parseFloat(inventory.total_value).toLocaleString()} UGX</div>
+                <div class="text-[10px]"><span class="font-semibold">Value:</span> ${parseFloat(inventory.total_value).toLocaleString()} UGX</div>
                 <div><span class="font-semibold">Expiry:</span> ${inventory.expiry_date}</div>
             </div>
             <div class="flex gap-2">
-                <button class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs flex-1" onclick="editProductInventory(${inventory.id})">Edit</button>
-                <button class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs flex-1" onclick="deleteProductInventory(${inventory.id})">Delete</button>
+                <button class="action-btn edit-btn bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs flex-1" onclick="editProductInventory(${inventory.yogurt_product_id})">Edit</button>
+                <button class="action-btn delete-btn bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs flex-1" onclick="deleteProductInventory(${inventory.id})">Delete</button>
             </div>
         `;
         cardsContainer.appendChild(card);
@@ -612,7 +656,7 @@ function renderRawMaterials() {
                           material.status === 'expired' ? 'text-red-600' : 'text-gray-600';
         
         const card = document.createElement('div');
-        card.className = 'bg-white rounded-lg shadow-md p-4';
+        card.className = 'product-card';
         card.innerHTML = `
             <div class="flex justify-between items-start mb-2">
                 <h3 class="font-semibold text-sm">${material.material_name}</h3>
@@ -621,14 +665,14 @@ function renderRawMaterials() {
             <div class="grid grid-cols-2 gap-2 text-xs mb-3">
                 <div><span class="font-semibold">Type:</span> ${material.material_type}</div>
                 <div><span class="font-semibold">Quantity:</span> ${material.quantity} ${material.unit_of_measure}</div>
-                <div><span class="font-semibold">Unit Price:</span> ${parseFloat(material.unit_price).toLocaleString()} UGX</div>
-                <div><span class="font-semibold">Total Cost:</span> ${parseFloat(material.total_cost).toLocaleString()} UGX</div>
+                <div class="text-[10px]"><span class="font-semibold">Unit Price:</span> ${parseFloat(material.unit_price).toLocaleString()} UGX</div>
+                <div class="text-[10px]"><span class="font-semibold">Total Cost:</span> ${parseFloat(material.total_cost).toLocaleString()} UGX</div>
                 <div><span class="font-semibold">Grade:</span> ${material.quality_grade}</div>
                 <div><span class="font-semibold">Expiry:</span> ${material.expiry_date}</div>
             </div>
             <div class="flex gap-2">
-                <button class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs flex-1" onclick="editRawMaterial(${material.id})">Edit</button>
-                <button class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs flex-1" onclick="deleteRawMaterial(${material.id})">Delete</button>
+                <button class="action-btn edit-btn bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs flex-1" onclick="editRawMaterial(${material.id})">Edit</button>
+                <button class="action-btn delete-btn bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs flex-1" onclick="deleteRawMaterial(${material.id})">Delete</button>
             </div>
         `;
         cardsContainer.appendChild(card);
@@ -751,35 +795,9 @@ addRawMaterialForm.addEventListener('submit', async function(e) {
     }
 });
 
-// Edit product inventory (simple inline edit for now)
-async function editProductInventory(id) {
-    const newQuantity = prompt('Enter new quantity available:');
-    if (newQuantity === null || newQuantity === '') return;
-    
-    try {
-        const response = await fetch(`/api/vendor/inventory/products/${id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': getCSRFToken()
-            },
-            body: JSON.stringify({
-                quantity_available: parseInt(newQuantity)
-            })
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            loadProductInventory();
-            loadInventorySummary();
-        } else {
-            alert('Error updating product inventory: ' + (result.error || 'Unknown error'));
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Error updating product inventory');
-    }
+// Edit product inventory - redirect to edit view
+function editProductInventory(id) {
+    window.location.href = `/vendor/products/${id}/edit`;
 }
 
 // Delete product inventory
@@ -808,35 +826,9 @@ async function deleteProductInventory(id) {
     }
 }
 
-// Edit raw material (simple inline edit for now)
-async function editRawMaterial(id) {
-    const newQuantity = prompt('Enter new quantity:');
-    if (newQuantity === null || newQuantity === '') return;
-    
-    try {
-        const response = await fetch(`/api/vendor/inventory/raw-materials/${id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': getCSRFToken()
-            },
-            body: JSON.stringify({
-                quantity: parseFloat(newQuantity)
-            })
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            loadRawMaterials();
-            loadInventorySummary();
-        } else {
-            alert('Error updating raw material: ' + (result.error || 'Unknown error'));
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Error updating raw material');
-    }
+// Edit raw material - redirect to edit view
+function editRawMaterial(id) {
+    window.location.href = `/vendor/raw-materials/${id}/edit`;
 }
 
 // Delete raw material
@@ -871,5 +863,60 @@ setInterval(() => {
     loadProductInventory();
     loadRawMaterials();
 }, 30000);
+
+// Auto-calculate total value for product inventory
+function calculateProductTotalValue() {
+    const quantity = parseInt(document.getElementById('quantity-available').value) || 0;
+    const unitCost = parseFloat(document.getElementById('unit-cost').value) || 0;
+    const totalValue = quantity * unitCost;
+    document.getElementById('total-value').value = totalValue.toFixed(2);
+}
+
+// Auto-calculate total cost for raw materials
+function calculateRawMaterialTotalCost() {
+    const quantity = parseFloat(document.getElementById('quantity').value) || 0;
+    const unitPrice = parseFloat(document.getElementById('unit-price').value) || 0;
+    const totalCost = quantity * unitPrice;
+    document.getElementById('total-cost').value = totalCost.toFixed(2);
+}
+
+// Add event listeners for auto-calculation
+document.addEventListener('DOMContentLoaded', function() {
+    // Product inventory auto-calculation
+    const quantityAvailable = document.getElementById('quantity-available');
+    const unitCost = document.getElementById('unit-cost');
+    
+    if (quantityAvailable && unitCost) {
+        quantityAvailable.addEventListener('input', calculateProductTotalValue);
+        unitCost.addEventListener('input', calculateProductTotalValue);
+    }
+    
+    // Raw material auto-calculation
+    const rawQuantity = document.getElementById('quantity');
+    const rawUnitPrice = document.getElementById('unit-price');
+    
+    if (rawQuantity && rawUnitPrice) {
+        rawQuantity.addEventListener('input', calculateRawMaterialTotalCost);
+        rawUnitPrice.addEventListener('input', calculateRawMaterialTotalCost);
+    }
+});
+
+// Populate dairy farm select for raw material form
+function populateDairyFarms() {
+    fetch('/api/vendor/inventory/dairy-farms')
+        .then(response => response.json())
+        .then(farms => {
+            const select = document.getElementById('dairy-farm-id');
+            if (!select) return;
+            select.innerHTML = '<option value="">Select Dairy Farm</option>';
+            farms.forEach(farm => {
+                const option = document.createElement('option');
+                option.value = farm.id;
+                option.textContent = farm.farm_name;
+                select.appendChild(option);
+            });
+        });
+}
+document.addEventListener('DOMContentLoaded', populateDairyFarms);
 </script>
 @endsection

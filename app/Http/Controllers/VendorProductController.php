@@ -81,25 +81,67 @@ class VendorProductController extends Controller
     {
         $product = YogurtProduct::findOrFail($id);
         $request->validate([
-            'name' => 'required|string',
-            'type' => 'required|string',
+            'name' => 'required|string|max:255',
+            'type' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
             'image' => 'nullable|image|max:2048',
+            'quantity_available' => 'nullable|integer|min:0',
+            'quantity_reserved' => 'nullable|integer|min:0',
+            'quantity_damaged' => 'nullable|integer|min:0',
+            'inventory_status' => 'nullable|in:available,low_stock,out_of_stock,expired,damaged',
         ]);
-        // Check if product_name and product_code are in allowedProducts
-        if (!in_array($request->name, array_column($this->allowedProducts, 'product_name'))) {
-            abort(403, 'Only the three main products are allowed.');
-        }
+        
+        // Allow editing any product - remove restrictions
         if ($request->hasFile('image')) {
             if ($product->image_path) Storage::disk('public')->delete($product->image_path);
             $product->image_path = $request->file('image')->store('products', 'public');
         }
+        
         $product->product_name = $request->name;
         $product->product_type = $request->type;
         $product->selling_price = $request->price;
         $product->stock = $request->stock;
         $product->save();
+        
+        // Update inventory quantities if provided
+        $inventory = Inventory::where('yogurt_product_id', $id)->first();
+        if ($inventory) {
+            if ($request->filled('quantity_available')) {
+                $inventory->quantity_available = $request->quantity_available;
+            }
+            if ($request->filled('quantity_reserved')) {
+                $inventory->quantity_reserved = $request->quantity_reserved;
+            }
+            if ($request->filled('quantity_damaged')) {
+                $inventory->quantity_damaged = $request->quantity_damaged;
+            }
+            
+            // Auto-determine inventory status based on quantities if not explicitly set
+            if ($request->filled('inventory_status')) {
+                $inventory->inventory_status = $request->inventory_status;
+            } else {
+                // Auto-determine status based on quantities
+                $available = $inventory->quantity_available;
+                $damaged = $inventory->quantity_damaged;
+                
+                if ($damaged > 0 && $available == 0) {
+                    $inventory->inventory_status = 'damaged';
+                } elseif ($available == 0) {
+                    $inventory->inventory_status = 'out_of_stock';
+                } elseif ($available <= 10) {
+                    $inventory->inventory_status = 'low_stock';
+                } else {
+                    $inventory->inventory_status = 'available';
+                }
+            }
+            
+            // Recalculate total value based on available quantity
+            $inventory->total_value = $inventory->quantity_available * $product->selling_price;
+            $inventory->last_updated = now()->toDateString();
+            $inventory->save();
+        }
+        
         return response()->json(['success' => true, 'product' => $product]);
     }
 
@@ -119,5 +161,13 @@ class VendorProductController extends Controller
         $product->status = $product->status === 'active' ? 'inactive' : 'active';
         $product->save();
         return response()->json(['success' => true, 'status' => $product->status]);
+    }
+
+    // Show edit form for a product
+    public function show($id)
+    {
+        $product = YogurtProduct::findOrFail($id);
+        $inventory = Inventory::where('yogurt_product_id', $id)->first();
+        return view('vendor.edit-product', compact('product', 'inventory'));
     }
 } 
