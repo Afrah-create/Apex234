@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
 New Demand Forecasting Module for Laravel Integration
-This script uses the demanForecasting.csv dataset for advanced demand forecasting
 """
 
 import pandas as pd
