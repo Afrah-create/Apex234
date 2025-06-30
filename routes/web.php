@@ -180,4 +180,30 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::post('/export-report', [AnalyticsController::class, 'exportReport'])->name('export-report');
 });
 
+// Admin advanced reports
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/reports')->name('admin.reports.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\AdminReportController::class, 'index'])->name('index');
+    Route::get('/download/{filename}', [\App\Http\Controllers\AdminReportController::class, 'downloadReport'])->name('download');
+});
+
+// Reports API routes
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('api/reports')->name('api.reports.')->group(function () {
+    Route::get('/templates', [\App\Http\Controllers\AdminReportController::class, 'getReportTemplates'])->name('templates');
+    Route::get('/filters', [\App\Http\Controllers\AdminReportController::class, 'getReportFilters'])->name('filters');
+    Route::post('/generate', [\App\Http\Controllers\AdminReportController::class, 'generateCustomReport'])->name('generate');
+    Route::post('/export', [\App\Http\Controllers\AdminReportController::class, 'exportReport'])->name('export');
+    
+    // Scheduled reports routes
+    Route::get('/scheduled', [\App\Http\Controllers\AdminReportController::class, 'getScheduledReports'])->name('scheduled');
+    Route::post('/scheduled', [\App\Http\Controllers\AdminReportController::class, 'createScheduledReport'])->name('scheduled.create');
+    Route::put('/scheduled/{id}', [\App\Http\Controllers\AdminReportController::class, 'updateScheduledReport'])->name('scheduled.update');
+    Route::delete('/scheduled/{id}', [\App\Http\Controllers\AdminReportController::class, 'deleteScheduledReport'])->name('scheduled.delete');
+    Route::patch('/scheduled/{id}/toggle', [\App\Http\Controllers\AdminReportController::class, 'toggleScheduledReportStatus'])->name('scheduled.toggle');
+    Route::post('/scheduled/{id}/trigger', [\App\Http\Controllers\AdminReportController::class, 'triggerScheduledReport'])->name('scheduled.trigger');
+    
+    // Report logs routes
+    Route::get('/logs', [\App\Http\Controllers\AdminReportController::class, 'getReportLogs'])->name('logs');
+    Route::get('/statistics', [\App\Http\Controllers\AdminReportController::class, 'getReportStatistics'])->name('statistics');
+});
+
 require __DIR__.'/auth.php';
