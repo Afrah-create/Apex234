@@ -180,4 +180,9 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::post('/export-report', [AnalyticsController::class, 'exportReport'])->name('export-report');
 });
 
+// Supplier Milk Batch Management
+Route::post('/supplier/milk-batch', [\App\Http\Controllers\SupplierController::class, 'submitMilkBatch']);
+Route::get('/supplier/milk-batch/history', [\App\Http\Controllers\SupplierController::class, 'milkBatchHistory']);
+Route::patch('/supplier/milk-batch/{id}/status', [\App\Http\Controllers\SupplierController::class, 'updateMilkBatchStatus']);
+
 require __DIR__.'/auth.php';
