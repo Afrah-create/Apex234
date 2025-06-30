@@ -13,6 +13,14 @@ return new class extends Migration
     {
         Schema::create('vendor_applicant', function (Blueprint $table) {
             $table->id();
+            $table->string('name');
+            $table->string('email');
+            $table->string('phone');
+            $table->string('company_name');
+            $table->string('pdf_path');
+            $table->string('status')->default('pending');
+            $table->date('visit_date')->nullable();
+            $table->text('validation_message')->nullable();
             $table->timestamps();
         });
     }
