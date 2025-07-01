@@ -409,7 +409,7 @@ async function loadRawMaterialOrders() {
                     <div class="font-medium">${order.supplier_name}</div>
                     <div class="text-xs text-gray-500">${order.supplier_email}</div>
                 </td>
-                <td class="px-4 py-3">$${parseFloat(order.total_amount).toFixed(2)}</td>
+                <td class="px-4 py-3">UGX ${parseFloat(order.total_amount).toLocaleString()}</td>
                 <td class="px-4 py-3">
                     <span class="px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(order.status)}">
                         ${order.status.charAt(0).toUpperCase() + order.status.slice(1)}

@@ -46,9 +46,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard/retailer', function () {
         return view('dashboard-retailer');
     })->name('dashboard.retailer');
-    Route::get('/dashboard/supplier', function () {
-        return view('dashboard-supplier');
-    })->name('dashboard.supplier');
+    Route::get('/dashboard/supplier', [\App\Http\Controllers\SupplierController::class, 'supplierDashboard'])->name('dashboard.supplier');
     Route::get('/dashboard/vendor', function () {
         return view('dashboard-vendor');
     })->name('dashboard.vendor');
@@ -225,6 +223,7 @@ Route::middleware(['auth', 'verified'])->prefix('api/supplier/orders')->group(fu
     Route::get('/stats', [\App\Http\Controllers\SupplierOrderController::class, 'orderStats']);
 });
 
-
+// Supplier Dashboard
+Route::get('/supplier/dashboard', [App\Http\Controllers\SupplierController::class, 'supplierDashboard'])->name('supplier.dashboard');
 
 require __DIR__.'/auth.php';

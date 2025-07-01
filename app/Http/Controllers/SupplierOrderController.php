@@ -209,7 +209,7 @@ class SupplierOrderController extends Controller
 
         // Add to vendor's inventory (create or increment)
         $vendorId = $order->vendor_id;
-        $vendorInventory = \App\Models\RawMaterial::where('vendor_id', $vendorId)
+        $vendorInventory = \App\Models\RawMaterial::where('supplier_id', $vendorId)
             ->where('material_type', $order->material_type)
             ->where('unit_of_measure', $order->unit_of_measure)
             ->first();
@@ -219,7 +219,7 @@ class SupplierOrderController extends Controller
             $vendorInventory->save();
         } else {
             \App\Models\RawMaterial::create([
-                'vendor_id' => $vendorId,
+                'supplier_id' => $vendorId,
                 'material_type' => $order->material_type,
                 'material_name' => $order->material_name,
                 'quantity' => $order->quantity,

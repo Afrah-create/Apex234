@@ -57,7 +57,7 @@
                 </select>
             </div>
             <div class="flex flex-col sm:flex-row sm:items-center gap-2">
-                <label class="sm:w-40 font-semibold text-gray-700">Unit Price</label>
+                <label class="sm:w-40 font-semibold text-gray-700">Unit Price (UGX)</label>
                 <input type="number" name="unit_price" class="flex-1 border rounded px-3 py-2" min="0" step="0.01" required value="{{ old('unit_price', 0) }}">
             </div>
             <div class="flex flex-col sm:flex-row sm:items-center gap-2">

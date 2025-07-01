@@ -11,19 +11,23 @@
     <!-- Key Metrics -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center">
-            <span class="text-2xl font-bold text-blue-900">120</span>
+            <span class="text-2xl font-bold text-blue-900">{{ $totalSupplied }}</span>
             <span class="text-gray-600 mt-2">Total Raw Materials Supplied</span>
         </div>
         <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center">
-            <span class="text-2xl font-bold text-yellow-600">5</span>
+            <span class="text-2xl font-bold text-yellow-600">{{ $pendingDeliveries }}</span>
             <span class="text-gray-600 mt-2">Pending Deliveries</span>
         </div>
         <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center">
-            <span class="text-2xl font-bold text-green-600">115</span>
+            <span class="text-2xl font-bold text-green-600">{{ $deliveredBatches }}</span>
             <span class="text-gray-600 mt-2">Delivered Batches</span>
         </div>
         <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center">
-            <span class="text-2xl font-bold text-purple-700">Milk: 300L<br>Sugar: 80kg<br>Fruits: 50kg</span>
+            <span class="text-2xl font-bold text-purple-700">
+                Milk: {{ $inventorySummary['milk']['qty'] ?? 0 }}{{ $inventorySummary['milk']['unit'] ?? 'L' }}<br>
+                Sugar: {{ $inventorySummary['sugar']['qty'] ?? 0 }}{{ $inventorySummary['sugar']['unit'] ?? 'kg' }}<br>
+                Fruits: {{ $inventorySummary['fruit']['qty'] ?? 0 }}{{ $inventorySummary['fruit']['unit'] ?? 'kg' }}
+            </span>
             <span class="text-gray-600 mt-2">Current Inventory</span>
         </div>
     </div>

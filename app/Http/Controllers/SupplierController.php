@@ -355,4 +355,54 @@ class SupplierController extends Controller
         }
         return redirect()->route('supplier.raw-material-inventory')->with('success', 'Profile updated successfully!');
     }
+
+    public function supplierDashboard()
+    {
+        $user = Auth::user();
+        $supplier = $user->supplier;
+
+        // Total raw materials supplied
+        $totalSupplied = \App\Models\RawMaterial::whereHas('dairyFarm', function($q) use ($supplier) {
+            $q->where('supplier_id', $supplier->id);
+        })->count();
+
+        // Pending deliveries (orders)
+        $pendingDeliveries = \App\Models\RawMaterialOrder::where('supplier_id', $supplier->id)
+            ->whereIn('status', ['pending', 'processing'])
+            ->count();
+
+        // Delivered batches (orders)
+        $deliveredBatches = \App\Models\RawMaterialOrder::where('supplier_id', $supplier->id)
+            ->where('status', 'delivered')
+            ->count();
+
+        // Current inventory by type
+        $inventory = \App\Models\RawMaterial::whereHas('dairyFarm', function($q) use ($supplier) {
+            $q->where('supplier_id', $supplier->id);
+        })
+        ->where('status', 'available')
+        ->selectRaw('material_type, SUM(quantity) as total, unit_of_measure')
+        ->groupBy('material_type', 'unit_of_measure')
+        ->get();
+
+        $inventorySummary = [
+            'milk' => ['qty' => 0, 'unit' => 'L'],
+            'sugar' => ['qty' => 0, 'unit' => 'kg'],
+            'fruit' => ['qty' => 0, 'unit' => 'kg'],
+        ];
+        foreach ($inventory as $item) {
+            $type = strtolower($item->material_type);
+            if (isset($inventorySummary[$type])) {
+                $inventorySummary[$type]['qty'] = $item->total;
+                $inventorySummary[$type]['unit'] = $item->unit_of_measure;
+            }
+        }
+
+        return view('dashboard-supplier', compact(
+            'totalSupplied',
+            'pendingDeliveries',
+            'deliveredBatches',
+            'inventorySummary'
+        ));
+    }
 }

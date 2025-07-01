@@ -182,7 +182,7 @@ function renderOrders() {
                 <div class="text-xs text-gray-500 capitalize">${order.material_type}</div>
             </td>
             <td class="px-4 py-3">${order.quantity} ${order.unit_of_measure}</td>
-            <td class="px-4 py-3">$${parseFloat(order.total_amount).toFixed(2)}</td>
+            <td class="px-4 py-3">UGX ${parseFloat(order.total_amount).toLocaleString()}</td>
             <td class="px-4 py-3">${new Date(order.order_date).toLocaleDateString()}</td>
             <td class="px-4 py-3">${order.expected_delivery_date || '-'}</td>
             <td class="px-4 py-3">

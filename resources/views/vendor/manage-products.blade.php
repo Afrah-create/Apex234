@@ -480,7 +480,7 @@ function renderProductInventory() {
             <td class="py-2 text-sm">${inventory.quantity_damaged}</td>
             <td class="py-2 text-sm">${inventory.quantity_expired}</td>
             <td class="py-2"><span class="font-bold ${statusClass} text-sm">${inventory.inventory_status.replace('_', ' ').toUpperCase()}</span></td>
-            <td class="py-2 text-sm">${parseFloat(inventory.total_value).toLocaleString()}</td>
+            <td class="py-2 text-sm">${parseFloat(inventory.total_value).toLocaleString()} UGX</td>
             <td class="py-2 text-sm">${inventory.expiry_date}</td>
             <td class="py-2">
                 <button class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded mr-1 text-xs" onclick="editProductInventory(${inventory.yogurt_product_id})">Edit</button>
@@ -633,8 +633,8 @@ function renderRawMaterials() {
             <td class="py-2 text-sm">${material.material_type}</td>
             <td class="py-2 text-sm">${material.quantity}</td>
             <td class="py-2 text-sm">${material.unit_of_measure}</td>
-            <td class="py-2 text-sm">${parseFloat(material.unit_price).toLocaleString()}</td>
-            <td class="py-2 text-sm">${parseFloat(material.total_cost).toLocaleString()}</td>
+            <td class="py-2 text-sm">${parseFloat(material.unit_price).toLocaleString()} UGX</td>
+            <td class="py-2 text-sm">${parseFloat(material.total_cost).toLocaleString()} UGX</td>
             <td class="py-2 text-sm">${material.quality_grade}</td>
             <td class="py-2"><span class="font-bold ${statusClass} text-sm">${material.status.toUpperCase()}</span></td>
             <td class="py-2 text-sm">${material.expiry_date}</td>
