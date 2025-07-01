@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use App\Models\User;
+use App\Models\VendorApplicant;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -42,6 +43,10 @@ class AuthenticatedSessionController extends Controller
             case 'supplier':
                 return redirect()->route('dashboard.supplier');
             case 'vendor':
+                $vendorApplicant = VendorApplicant::where('email', $user->email)->latest()->first();
+                if (!$vendorApplicant || $vendorApplicant->status === 'pending') {
+                    return redirect()->route('vendor-applicant.create');
+                }
                 return redirect()->route('dashboard.vendor');
             default:
                 return redirect()->route('dashboard');

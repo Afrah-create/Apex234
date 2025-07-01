@@ -134,6 +134,7 @@ Route::middleware(['auth', 'verified'])->prefix('api/vendor')->group(function ()
 Route::get('/vendor/apply', [VendorApplicantController::class, 'create'])->name('vendor-applicant.create');
 Route::post('/vendor/apply', [VendorApplicantController::class, 'store'])->name('vendor-applicant.store');
 Route::get('/vendor/status', [VendorApplicantController::class, 'status'])->name('vendor-applicant.status');
+Route::get('/vendor/confirmation', [VendorApplicantController::class, 'confirmation'])->name('vendor-applicant.confirmation');
 
 // Vendor inventory management API routes
 Route::middleware(['auth', 'verified'])->prefix('api/vendor/inventory')->name('api.vendor.inventory.')->group(function () {

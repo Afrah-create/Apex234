@@ -23,11 +23,24 @@ class VendorApplicantController extends Controller
             'email' => 'required|email|max:255',
             'phone' => 'required|string|max:20',
             'company_name' => 'required|string|max:255',
-            'pdf' => 'required|file|mimes:pdf|max:2048',
+            'annual_revenue' => 'required|numeric|min:0',
+            'reference' => 'required|string|max:255',
+            'license_number' => 'required|string|max:255',
+            'compliance_certificate' => 'required|in:Yes,No',
         ]);
 
-        // Store the PDF
-        $pdfPath = $request->file('pdf')->store('vendor_applications', 'public');
+        // Generate PDF from form data
+        $pdfFileName = 'vendor_application_' . time() . '.pdf';
+        $pdfDir = storage_path('app/public/vendor_applications');
+        if (!file_exists($pdfDir)) {
+            mkdir($pdfDir, 0777, true);
+        }
+        $pdfFilePath = $pdfDir . '/' . $pdfFileName;
+        // Use dompdf to generate PDF
+        $pdfContent = view('vendor.pdf', $validated)->render();
+        $pdf = \PDF::loadHTML($pdfContent);
+        $pdf->save($pdfFilePath);
+        $pdfPath = 'vendor_applications/' . $pdfFileName;
 
         // Create the vendor applicant record (initially pending)
         $applicant = VendorApplicant::create([
@@ -41,9 +54,8 @@ class VendorApplicantController extends Controller
 
         // Send PDF to Java server for validation
         $javaServerUrl = 'http://localhost:8080/api/vendors/apply'; // Update if needed
-        $pdfFilePath = storage_path('app/public/' . $pdfPath);
         try {
-            $response = Http::attach('file', fopen($pdfFilePath, 'r'), basename($pdfFilePath))
+            $response = \Illuminate\Support\Facades\Http::attach('file', fopen($pdfFilePath, 'r'), basename($pdfFilePath))
                 ->post($javaServerUrl);
 
             if ($response->status() === 202) {
@@ -72,7 +84,8 @@ class VendorApplicantController extends Controller
             ]);
         }
 
-        return redirect()->back()->with('success', 'Application submitted successfully!');
+        // Redirect to confirmation page with check status button
+        return redirect()->route('vendor-applicant.confirmation', ['email' => $validated['email']]);
     }
 
     // Show the status of a vendor application by email
@@ -84,5 +97,12 @@ class VendorApplicantController extends Controller
             $applicant = VendorApplicant::where('email', $email)->latest()->first();
         }
         return view('vendor.status', compact('applicant', 'email'));
+    }
+
+    // Show the confirmation page after application submission
+    public function confirmation(Request $request)
+    {
+        $email = $request->query('email');
+        return view('vendor.confirmation', compact('email'));
     }
 } 
