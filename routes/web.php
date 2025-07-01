@@ -87,6 +87,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/vendor/manage-products', function () {
         return view('vendor.manage-products');
     })->name('vendor.manage-products');
+    Route::get('/dashboard/employee', function () {
+        return view('employee.dashboard');
+    })->name('dashboard.employee');
 });
 
 Route::middleware('auth')->group(function () {
@@ -241,5 +244,6 @@ Route::get('/api/workforce/distribution', [\App\Http\Controllers\AdminWorkforceC
 // User and Workforce Management (Tabbed)
 Route::get('/admin/users', [\App\Http\Controllers\AdminEmployeeController::class, 'index'])->name('admin.users.index');
 Route::post('/admin/employees/{employee}/assign-vendor', [\App\Http\Controllers\AdminEmployeeController::class, 'assignVendor'])->name('admin.employees.assignVendor');
+Route::post('/admin/employees', [\App\Http\Controllers\AdminEmployeeController::class, 'store'])->name('admin.employees.store');
 
 require __DIR__.'/auth.php';

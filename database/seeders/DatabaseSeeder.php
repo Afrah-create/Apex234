@@ -143,5 +143,8 @@ class DatabaseSeeder extends Seeder
 
         // Seed employees
         $this->call(EmployeeSeeder::class);
+
+        // Ensure the 'employee' role exists
+        \App\Models\Role::firstOrCreate(['name' => 'employee']);
     }
 }
