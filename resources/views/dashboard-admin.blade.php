@@ -7,24 +7,6 @@
             <div class="flex items-center justify-between mb-4">
                 <h1 class="text-2xl font-bold text-gray-900">Executive Dashboard</h1>
                 <div class="flex space-x-4">
-                    <a href="{{ route('admin.inventory.index') }}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition duration-200 flex items-center">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                        </svg>
-                        Detailed Analytics
-                    </a>
-                    <a href="{{ route('admin.users.index') }}" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition duration-200 flex items-center">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-                        </svg>
-                        User Management
-                    </a>
-                    <a href="{{ route('admin.orders.index') }}" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition duration-200 flex items-center">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-                        </svg>
-                        Order Management
-                    </a>
                     <a href="{{ route('admin.reports.index') }}" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition duration-200 flex items-center">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -36,68 +18,56 @@
             <p class="text-gray-600">Welcome to the Caramel Yogurt Management System. Monitor real-time production metrics, inventory analytics, and supply chain performance.</p>
         </div>
 
-        <!-- Inventory Summary Cards -->
-        <div class="summary-cards">
-            <div class="summary-card" style="--summary-card-border: #22c55e;">
-                <div class="icon" style="background: #bbf7d0; color: #22c55e;">
-                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                    </svg>
-                </div>
-                <div class="details">
-                    <p>Stock Available</p>
-                    <p id="total-available">-</p>
-                </div>
-            </div>
-            <div class="summary-card" style="--summary-card-border: #3b82f6;">
-                <div class="icon" style="background: #dbeafe; color: #3b82f6;">
-                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-                <div class="details">
-                    <p>Allocated Inventory</p>
-                    <p id="total-reserved">-</p>
-                </div>
-            </div>
-            <div class="summary-card" style="--summary-card-border: #ef4444;">
-                <div class="icon" style="background: #fee2e2; color: #ef4444;">
-                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-                    </svg>
-                </div>
-                <div class="details">
-                    <p>Critical Stock Alerts</p>
-                    <p id="low-stock-items">-</p>
-                </div>
-            </div>
-            <div class="summary-card" style="--summary-card-border: #6b7280;">
-                <div class="icon" style="background: #f3f4f6; color: #6b7280;">
-                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                </div>
-                <div class="details">
-                    <p>SKU Count</p>
-                    <p id="total-products">-</p>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Inventory Chart -->
+        <!-- Recent Orders Widget -->
         <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-xl font-semibold text-gray-900">Inventory Analytics Dashboard</h2>
-                <button onclick="refreshChart()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition duration-200 flex items-center">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                    </svg>
-                    Refresh Data
-                </button>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-semibold text-gray-900">Recent Orders</h2>
+                <a href="{{ route('admin.orders.index') }}" class="text-blue-500 hover:underline">View All</a>
             </div>
-            <div class="relative" style="height: 400px;">
-                <canvas id="inventoryChart"></canvas>
+            <div class="overflow-x-auto rounded-lg border border-gray-200">
+                <table class="min-w-full divide-y divide-gray-200 rounded-lg overflow-hidden">
+                    <thead class="bg-gray-100 sticky top-0 z-10">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Order ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Customer</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Total (UGX)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-100">
+                        @forelse($recentOrders as $order)
+                        <tr class="hover:bg-blue-50 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">{{ $order->id }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $order->customer_name }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $order->created_at->format('Y-m-d') }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <span class="inline-block px-2 py-1 rounded-full text-xs font-semibold 
+                                    @if($order->status === 'pending') bg-yellow-100 text-yellow-800
+                                    @elseif($order->status === 'confirmed') bg-blue-100 text-blue-800
+                                    @elseif($order->status === 'processing') bg-purple-100 text-purple-800
+                                    @elseif($order->status === 'shipped') bg-indigo-100 text-indigo-800
+                                    @elseif($order->status === 'delivered') bg-green-100 text-green-800
+                                    @elseif($order->status === 'cancelled') bg-red-100 text-red-800
+                                    @else bg-gray-100 text-gray-800 @endif">
+                                    {{ ucfirst($order->status) }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">UGX {{ number_format($order->total, 0) }}</td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="5" class="px-6 py-8 text-center text-gray-400">No recent orders found.</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
+            @if(method_exists($recentOrders, 'links'))
+                <div class="mt-4 flex justify-center">
+                    {{ $recentOrders->links() }}
+                </div>
+            @endif
         </div>
         
         <!-- User Statistics Chart -->
@@ -143,7 +113,9 @@
     
     // Initialize inventory chart
     function initChart() {
-        const ctx = document.getElementById('inventoryChart').getContext('2d');
+        const canvas = document.getElementById('inventoryChart');
+        if (!canvas) return; // Prevent error if element is missing
+        const ctx = canvas.getContext('2d');
         inventoryChart = new Chart(ctx, {
             type: 'bar',
             data: {
@@ -183,7 +155,9 @@
     
     // Initialize user chart
     function initUserChart() {
-        const ctx = document.getElementById('userChart').getContext('2d');
+        const canvas = document.getElementById('userChart');
+        if (!canvas) return; // Prevent error if element is missing
+        const ctx = canvas.getContext('2d');
         userChart = new Chart(ctx, {
             type: 'pie',
             data: {
@@ -284,25 +258,10 @@
         }
     }
     
-    // Load summary data
-    async function loadSummaryData() {
-        try {
-            const response = await fetch('{{ route("api.inventory.summary") }}');
-            const data = await response.json();
-            
-            document.getElementById('total-available').textContent = data.total_available || 0;
-            document.getElementById('total-reserved').textContent = data.total_reserved || 0;
-            document.getElementById('low-stock-items').textContent = data.low_stock_items || 0;
-            document.getElementById('total-products').textContent = data.total_products || 0;
-        } catch (error) {
-            console.error('Error loading summary data:', error);
-        }
-    }
-    
     // Refresh inventory chart and summary
     function refreshChart() {
         loadChartData();
-        loadSummaryData();
+        loadUserStatistics();
     }
     
     // Refresh user chart
@@ -314,7 +273,6 @@
     function startAutoRefresh() {
         setInterval(() => {
             loadChartData();
-            loadSummaryData();
             loadUserStatistics();
         }, 30000);
     }
@@ -324,7 +282,6 @@
         initChart();
         initUserChart();
         loadChartData();
-        loadSummaryData();
         loadUserStatistics();
         startAutoRefresh();
     });

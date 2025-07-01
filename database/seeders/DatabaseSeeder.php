@@ -140,5 +140,8 @@ class DatabaseSeeder extends Seeder
             'distribution_center_id' => $distributionCenters->random()->id,
             'retailer_id' => $retailers->random()->id,
         ]);
+
+        // Seed employees
+        $this->call(EmployeeSeeder::class);
     }
 }

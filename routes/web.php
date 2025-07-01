@@ -27,7 +27,36 @@ Route::get('/dashboard', function () {
         $role = $user->getPrimaryRoleName();
         switch ($role) {
             case 'admin':
-                return view('dashboard-admin');
+                $recentOrders = \App\Models\Order::with(['retailer.user'])
+                    ->orderBy('created_at', 'desc')
+                    ->simplePaginate(5);
+                $recentOrders->getCollection()->transform(function ($order) {
+                    $customerName = $order->retailer && $order->retailer->user ? $order->retailer->user->name : 'N/A';
+                    return (object) [
+                        'id' => $order->id,
+                        'customer_name' => $customerName,
+                        'created_at' => $order->created_at,
+                        'status' => $order->status,
+                        'total' => $order->total,
+                    ];
+                });
+
+                // User statistics
+                $totalUsers = \App\Models\User::count();
+                $roles = \App\Models\Role::withCount('users')->get();
+                $roleBreakdown = $roles->map(function ($role) use ($totalUsers) {
+                    $percentage = $totalUsers > 0 ? round(($role->users_count / $totalUsers) * 100, 1) : 0;
+                    return [
+                        'role' => $role->name,
+                        'count' => $role->users_count,
+                        'percentage' => $percentage,
+                    ];
+                });
+                $userStatistics = [
+                    'total_users' => $totalUsers,
+                    'role_breakdown' => $roleBreakdown,
+                ];
+                return view('dashboard-admin', compact('recentOrders', 'userStatistics'));
             case 'retailer':
                 return redirect()->route('dashboard.retailer');
             case 'supplier':
@@ -205,5 +234,12 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::get('/logs', [\App\Http\Controllers\AdminReportController::class, 'getReportLogs'])->name('logs');
     Route::get('/statistics', [\App\Http\Controllers\AdminReportController::class, 'getReportStatistics'])->name('statistics');
 });
+
+// Workforce distribution API for admin dashboard
+Route::get('/api/workforce/distribution', [\App\Http\Controllers\AdminWorkforceController::class, 'getWorkforceDistribution'])->name('api.workforce.distribution');
+
+// User and Workforce Management (Tabbed)
+Route::get('/admin/users', [\App\Http\Controllers\AdminEmployeeController::class, 'index'])->name('admin.users.index');
+Route::post('/admin/employees/{employee}/assign-vendor', [\App\Http\Controllers\AdminEmployeeController::class, 'assignVendor'])->name('admin.employees.assignVendor');
 
 require __DIR__.'/auth.php';
