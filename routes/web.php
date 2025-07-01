@@ -185,4 +185,26 @@ Route::post('/supplier/milk-batch', [\App\Http\Controllers\SupplierController::c
 Route::get('/supplier/milk-batch/history', [\App\Http\Controllers\SupplierController::class, 'milkBatchHistory']);
 Route::patch('/supplier/milk-batch/{id}/status', [\App\Http\Controllers\SupplierController::class, 'updateMilkBatchStatus']);
 
+// Supplier Raw Material Inventory Blade view
+Route::middleware(['auth', 'verified'])->get('/supplier/raw-material-inventory', function () {
+    return view('supplier.raw-material-inventory');
+})->name('supplier.raw-material-inventory');
+
+// Supplier Raw Material Inventory API
+Route::middleware(['auth', 'verified'])->get('/api/supplier/raw-material-inventory', [\App\Http\Controllers\SupplierController::class, 'rawMaterialInventory']);
+Route::middleware(['auth', 'verified'])->post('/api/supplier/raw-material-inventory', [\App\Http\Controllers\SupplierController::class, 'storeRawMaterial']);
+Route::middleware(['auth', 'verified'])->put('/api/supplier/raw-material-inventory/{id}', [\App\Http\Controllers\SupplierController::class, 'updateRawMaterial']);
+
+// Supplier Add Raw Material Blade view
+Route::middleware(['auth', 'verified'])->get('/supplier/raw-material-inventory/add', function () {
+    return view('supplier.add-raw-material');
+})->name('supplier.add-raw-material');
+
+// Supplier Add Raw Material POST (Blade form)
+Route::middleware(['auth', 'verified'])->post('/supplier/raw-material-inventory/add', [\App\Http\Controllers\SupplierController::class, 'storeRawMaterialBlade'])->name('supplier.add-raw-material');
+
+// Supplier Profile Page
+Route::middleware(['auth', 'verified'])->get('/supplier/profile', [\App\Http\Controllers\SupplierController::class, 'profile'])->name('supplier.profile');
+Route::middleware(['auth', 'verified'])->put('/supplier/profile', [\App\Http\Controllers\SupplierController::class, 'updateProfile'])->name('supplier.profile.update');
+
 require __DIR__.'/auth.php';

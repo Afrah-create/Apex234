@@ -72,4 +72,9 @@ class User extends Authenticatable
     {
         $this->notify(new \App\Notifications\CustomResetPassword($token));
     }
+
+    public function supplier()
+    {
+        return $this->hasOne(\App\Models\Supplier::class);
+    }
 }

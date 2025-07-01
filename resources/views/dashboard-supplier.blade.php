@@ -1,125 +1,83 @@
 @extends('layouts.app')
 
 @section('content')
-    <main class="main-content">
-        <h1>Supplier</h1>
-        <p>Welcome, Supplier! Use the sidebar to manage your supplies and deliveries.</p>
-    </main>
-    <div class="mt-6">
-        <h2>Milk Batch Management</h2>
-        <form id="milk-batch-form" class="bg-white rounded shadow p-4 mb-4" method="POST">
-            @csrf
-            <div class="mb-3">
-                <label for="batch_id" class="block font-bold mb-1">Batch ID</label>
-                <input type="text" id="batch_id" name="batch_id" class="w-full p-2 border rounded" required>
-            </div>
-            <div class="mb-3">
-                <label for="quantity" class="block font-bold mb-1">Quantity (Liters)</label>
-                <input type="number" id="quantity" name="quantity" class="w-full p-2 border rounded" min="0" step="0.01" required>
-            </div>
-            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Add Batch</button>
-            <div id="milk-batch-success" class="mt-2 text-green-600 font-bold hidden text-sm">Batch added successfully!</div>
-            <div id="milk-batch-error" class="mt-2 text-red-600 font-bold hidden text-sm"></div>
-        </form>
-        <h3 class="mt-6 mb-2 font-bold">Supply History</h3>
-        <table class="min-w-full bg-white rounded shadow">
+<div class="max-w-7xl mx-auto py-8 px-4">
+    <!-- Welcome Section -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-blue-900 mb-2">Welcome, {{ Auth::user()->name }}!</h1>
+        <p class="text-gray-700">This is your supplier dashboard. Here you can manage your supplies, deliveries, and monitor your performance at a glance.</p>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+            <span class="text-2xl font-bold text-blue-900">120</span>
+            <span class="text-gray-600 mt-2">Total Raw Materials Supplied</span>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+            <span class="text-2xl font-bold text-yellow-600">5</span>
+            <span class="text-gray-600 mt-2">Pending Deliveries</span>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+            <span class="text-2xl font-bold text-green-600">115</span>
+            <span class="text-gray-600 mt-2">Delivered Batches</span>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+            <span class="text-2xl font-bold text-purple-700">Milk: 300L<br>Sugar: 80kg<br>Fruits: 50kg</span>
+            <span class="text-gray-600 mt-2">Current Inventory</span>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="mb-8 flex flex-wrap gap-4">
+        <a href="#" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded shadow font-semibold transition">Add New Supply</a>
+        <a href="#" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded shadow font-semibold transition">View Supply Requests</a>
+        <a href="#" class="bg-purple-700 hover:bg-purple-800 text-white px-6 py-3 rounded shadow font-semibold transition">Manage Inventory</a>
+        <a href="#" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded shadow font-semibold transition">Order History</a>
+    </div>
+
+    <!-- Notifications/Alerts -->
+    <div class="mb-8">
+        <h2 class="text-xl font-semibold text-blue-900 mb-2">Notifications & Alerts</h2>
+        <ul class="list-disc pl-6 text-red-600">
+            <li>Low stock: Sugar below 10kg!</li>
+            <li>2 pending quality checks for recent milk batches.</li>
+        </ul>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold text-blue-900 mb-4">Recent Activity</h2>
+        <table class="min-w-full">
             <thead>
                 <tr>
-                    <th class="px-4 py-2">Batch ID</th>
-                    <th class="px-4 py-2">Volume (L)</th>
-                    <th class="px-4 py-2">Delivery Status</th>
-                    <th class="px-4 py-2">Action</th>
+                    <th class="px-4 py-2 text-left">Date</th>
+                    <th class="px-4 py-2 text-left">Material</th>
+                    <th class="px-4 py-2 text-left">Quantity</th>
+                    <th class="px-4 py-2 text-left">Status</th>
                 </tr>
             </thead>
-            <tbody id="supply-history-body">
-                <!-- Supply history rows will be inserted here by JS -->
+            <tbody>
+                <tr>
+                    <td class="px-4 py-2">2024-06-27</td>
+                    <td class="px-4 py-2">Milk</td>
+                    <td class="px-4 py-2">100L</td>
+                    <td class="px-4 py-2"><span class="text-green-600 font-semibold">Delivered</span></td>
+                </tr>
+                <tr>
+                    <td class="px-4 py-2">2024-06-26</td>
+                    <td class="px-4 py-2">Sugar</td>
+                    <td class="px-4 py-2">20kg</td>
+                    <td class="px-4 py-2"><span class="text-yellow-600 font-semibold">Pending</span></td>
+                </tr>
+                <tr>
+                    <td class="px-4 py-2">2024-06-25</td>
+                    <td class="px-4 py-2">Fruits</td>
+                    <td class="px-4 py-2">15kg</td>
+                    <td class="px-4 py-2"><span class="text-green-600 font-semibold">Delivered</span></td>
+                </tr>
             </tbody>
         </table>
     </div>
-    <script>
-    document.getElementById('milk-batch-form').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const form = e.target;
-        const batchId = form.batch_id.value;
-        const quantity = form.quantity.value;
-        const token = document.querySelector('input[name="_token"]').value;
-        try {
-            const res = await fetch('/supplier/milk-batch', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': token,
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ batch_id: batchId, quantity })
-            });
-            const data = await res.json();
-            if (data.success) {
-                document.getElementById('milk-batch-success').classList.remove('hidden');
-                document.getElementById('milk-batch-error').classList.add('hidden');
-                form.reset();
-                loadSupplyHistory();
-            } else {
-                throw new Error(data.message || 'Submission failed');
-            }
-        } catch (error) {
-            document.getElementById('milk-batch-error').textContent = error.message || 'An error occurred.';
-            document.getElementById('milk-batch-error').classList.remove('hidden');
-            document.getElementById('milk-batch-success').classList.add('hidden');
-        }
-    });
-    async function loadSupplyHistory() {
-        const res = await fetch('/supplier/milk-batch/history', { headers: { 'Accept': 'application/json' } });
-        const data = await res.json();
-        const tbody = document.getElementById('supply-history-body');
-        tbody.innerHTML = '';
-        if (data.history && data.history.length > 0) {
-            data.history.forEach(row => {
-                tbody.innerHTML += `<tr>
-                    <td class='px-4 py-2'>${row.batch_id}</td>
-                    <td class='px-4 py-2'>${row.quantity}</td>
-                    <td class='px-4 py-2'><span class="status-label">${row.delivery_status}</span></td>
-                    <td class='px-4 py-2'>
-                        <button class="toggle-status-btn bg-gray-200 px-2 py-1 rounded" data-id="${row.id}" data-status="${row.delivery_status}">
-                            ${row.delivery_status === 'Pending' ? 'Mark Delivered' : 'Mark Pending'}
-                        </button>
-                    </td>
-                </tr>`;
-            });
-        } else {
-            tbody.innerHTML = `<tr><td colspan='4' class='text-center py-2'>No supply history found.</td></tr>`;
-        }
-        attachToggleStatusEvents();
-    }
-    function attachToggleStatusEvents() {
-        document.querySelectorAll('.toggle-status-btn').forEach(btn => {
-            btn.addEventListener('click', async function() {
-                const id = this.getAttribute('data-id');
-                const currentStatus = this.getAttribute('data-status');
-                const newStatus = currentStatus === 'Pending' ? 'Delivered' : 'Pending';
-                const token = document.querySelector('input[name="_token"]').value;
-                try {
-                    const res = await fetch(`/supplier/milk-batch/${id}/status`, {
-                        method: 'PATCH',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': token,
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({ status: newStatus })
-                    });
-                    const data = await res.json();
-                    if (data.success) {
-                        loadSupplyHistory();
-                    } else {
-                        alert(data.message || 'Status update failed');
-                    }
-                } catch (error) {
-                    alert(error.message || 'An error occurred.');
-                }
-            });
-        });
-    }
-    document.addEventListener('DOMContentLoaded', loadSupplyHistory);
-    </script>
+</div>
 @endsection 
