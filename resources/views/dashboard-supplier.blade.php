@@ -30,10 +30,10 @@
 
     <!-- Quick Actions -->
     <div class="mb-8 flex flex-wrap gap-4">
-        <a href="#" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded shadow font-semibold transition">Add New Supply</a>
-        <a href="#" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded shadow font-semibold transition">View Supply Requests</a>
-        <a href="#" class="bg-purple-700 hover:bg-purple-800 text-white px-6 py-3 rounded shadow font-semibold transition">Manage Inventory</a>
-        <a href="#" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded shadow font-semibold transition">Order History</a>
+        <a href="{{ route('supplier.raw-material-inventory') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded shadow font-semibold transition">Raw Material Inventory</a>
+        <a href="{{ route('supplier.manage-orders') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded shadow font-semibold transition">Manage Orders</a>
+        <a href="{{ route('supplier.add-raw-material') }}" class="bg-purple-700 hover:bg-purple-800 text-white px-6 py-3 rounded shadow font-semibold transition">Add New Supply</a>
+        <a href="{{ route('supplier.profile') }}" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded shadow font-semibold transition">Profile & Settings</a>
     </div>
 
     <!-- Notifications/Alerts -->

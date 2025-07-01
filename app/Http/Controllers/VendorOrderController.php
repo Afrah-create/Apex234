@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Supplier;
 use App\Models\User;
 use App\Models\Order;
+use App\Models\RawMaterialOrder;
+use App\Models\RawMaterial;
 
 class VendorOrderController extends Controller
 {
@@ -19,42 +21,184 @@ class VendorOrderController extends Controller
             return [
                 'id' => $s->id,
                 'name' => $s->user->name ?? 'Supplier',
+                'email' => $s->user->email ?? '',
             ];
         });
         return response()->json($suppliers);
     }
 
-    // Place a new raw material order
+    // Get available raw materials from suppliers
+    public function availableRawMaterials(): JsonResponse
+    {
+        $materials = RawMaterial::with(['dairyFarm.supplier.user'])
+            ->where('status', 'available')
+            ->where('quantity', '>', 0)
+            ->get()
+            ->groupBy('material_type')
+            ->map(function($items, $type) {
+                // Group by supplier id (from dairyFarm relation)
+                $suppliers = $items->groupBy(function($item) {
+                    return $item->dairyFarm->supplier->id;
+                })->map(function($supplierItems, $supplierId) {
+                    $supplier = $supplierItems->first()->dairyFarm->supplier;
+                    return [
+                        'supplier_id' => $supplierId,
+                        'supplier_name' => $supplier->user->name ?? 'Supplier',
+                        'supplier_email' => $supplier->user->email ?? '',
+                        'available_quantity' => $supplierItems->sum('quantity'),
+                        'unit_price' => $supplierItems->avg('unit_price'),
+                        'unit_of_measure' => $supplierItems->first()->unit_of_measure,
+                        'batches' => $supplierItems->map(function($item) {
+                            return [
+                                'batch_code' => $item->material_code,
+                                'quantity' => $item->quantity,
+                                'unit_of_measure' => $item->unit_of_measure,
+                                'expiry_date' => $item->expiry_date,
+                            ];
+                        })->values(),
+                    ];
+                })->values();
+                return [
+                    'type' => $type,
+                    'total_quantity' => $items->sum('quantity'),
+                    'suppliers' => $suppliers,
+                ];
+            });
+
+        return response()->json($materials);
+    }
+
+    // Place a new raw material order with availability check
     public function placeRawMaterialOrder(Request $request): JsonResponse
     {
         $request->validate([
-            'material' => 'required|string',
-            'quantity' => 'required|numeric|min:1',
+            'material_type' => 'required|string|in:milk,sugar,fruit',
+            'material_name' => 'required|string',
+            'quantity' => 'required|numeric|min:0.01',
             'supplier_id' => 'required|exists:suppliers,id',
+            'unit_of_measure' => 'required|string',
+            'expected_delivery_date' => 'nullable|date|after:today',
         ]);
-        $orderId = DB::table('raw_material_orders')->insertGetId([
-            'vendor_id' => Auth::id(),
-            'supplier_id' => $request->supplier_id,
-            'material' => $request->material,
+
+        $vendor = Auth::user();
+        $supplier = Supplier::with('user')->findOrFail($request->supplier_id);
+
+        // Check availability
+        $availableMaterials = RawMaterial::whereHas('dairyFarm', function($query) use ($supplier) {
+                $query->where('supplier_id', $supplier->id);
+            })
+            ->where('material_type', $request->material_type)
+            ->where('status', 'available')
+            ->where('quantity', '>', 0)
+            ->get();
+
+        $totalAvailable = $availableMaterials->sum('quantity');
+
+        if ($totalAvailable < $request->quantity) {
+            // Create order with unavailable status
+            $order = RawMaterialOrder::create([
+                'vendor_id' => $vendor->id,
+                'supplier_id' => $supplier->id,
+                'material_type' => $request->material_type,
+                'material_name' => $request->material_name,
+                'quantity' => $request->quantity,
+                'unit_of_measure' => $request->unit_of_measure,
+                'unit_price' => $availableMaterials->avg('unit_price') ?? 0,
+                'total_amount' => ($availableMaterials->avg('unit_price') ?? 0) * $request->quantity,
+                'status' => 'unavailable',
+                'notes' => "Insufficient inventory. Available: {$totalAvailable} {$request->unit_of_measure}, Requested: {$request->quantity} {$request->unit_of_measure}",
+                'expected_delivery_date' => $request->expected_delivery_date,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => "Insufficient inventory available. Only {$totalAvailable} {$request->unit_of_measure} available, but {$request->quantity} {$request->unit_of_measure} requested.",
+                'order_id' => $order->id,
+                'available_quantity' => $totalAvailable,
+                'requested_quantity' => $request->quantity,
+                'status' => 'unavailable'
+            ], 400);
+        }
+
+        // Calculate total amount based on available materials
+        $unitPrice = $availableMaterials->avg('unit_price') ?? 0;
+        $totalAmount = $unitPrice * $request->quantity;
+
+        // Create order with pending status
+        $order = RawMaterialOrder::create([
+            'vendor_id' => $vendor->id,
+            'supplier_id' => $supplier->id,
+            'material_type' => $request->material_type,
+            'material_name' => $request->material_name,
             'quantity' => $request->quantity,
+            'unit_of_measure' => $request->unit_of_measure,
+            'unit_price' => $unitPrice,
+            'total_amount' => $totalAmount,
             'status' => 'pending',
-            'created_at' => now(),
-            'updated_at' => now(),
+            'notes' => "Order placed successfully. Available inventory confirmed.",
+            'expected_delivery_date' => $request->expected_delivery_date,
         ]);
-        return response()->json(['success' => true, 'order_id' => $orderId]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Order placed successfully! Supplier has been notified.',
+            'order_id' => $order->id,
+            'total_amount' => $totalAmount,
+            'status' => 'pending'
+        ]);
     }
 
     // List vendor's raw material orders
     public function listRawMaterialOrders(): JsonResponse
     {
-        $orders = DB::table('raw_material_orders')
-            ->join('suppliers', 'raw_material_orders.supplier_id', '=', 'suppliers.id')
-            ->join('users', 'suppliers.user_id', '=', 'users.id')
-            ->select('raw_material_orders.*', 'users.name as supplier_name')
-            ->where('raw_material_orders.vendor_id', Auth::id())
-            ->orderByDesc('raw_material_orders.created_at')
-            ->get();
+        $orders = RawMaterialOrder::with(['supplier.user'])
+            ->where('vendor_id', Auth::id())
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function($order) {
+                return [
+                    'id' => $order->id,
+                    'material_type' => $order->material_type,
+                    'material_name' => $order->material_name,
+                    'quantity' => $order->quantity,
+                    'unit_of_measure' => $order->unit_of_measure,
+                    'unit_price' => $order->unit_price,
+                    'total_amount' => $order->total_amount,
+                    'supplier_name' => $order->supplier->user->name ?? 'Supplier',
+                    'supplier_email' => $order->supplier->user->email ?? '',
+                    'status' => $order->status,
+                    'notes' => $order->notes,
+                    'order_date' => $order->order_date->format('Y-m-d H:i:s'),
+                    'expected_delivery_date' => $order->expected_delivery_date?->format('Y-m-d'),
+                    'actual_delivery_date' => $order->actual_delivery_date?->format('Y-m-d'),
+                    'created_at' => $order->created_at->format('Y-m-d H:i:s'),
+                ];
+            });
+
         return response()->json($orders);
+    }
+
+    // Cancel a raw material order
+    public function cancelRawMaterialOrder($id): JsonResponse
+    {
+        $order = RawMaterialOrder::where('vendor_id', Auth::id())
+            ->where('id', $id)
+            ->first();
+
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'Order not found.'], 404);
+        }
+
+        if (!in_array($order->status, ['pending', 'confirmed'])) {
+            return response()->json(['success' => false, 'message' => 'Order cannot be cancelled in current status.'], 400);
+        }
+
+        $order->update([
+            'status' => 'cancelled',
+            'notes' => $order->notes . ' [Cancelled by vendor]'
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Order cancelled successfully.']);
     }
 
     // List product orders from retailers

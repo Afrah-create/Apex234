@@ -114,8 +114,10 @@ Route::middleware(['auth', 'verified'])->prefix('api/vendor')->name('api.vendor.
 // Vendor order management API routes
 Route::middleware(['auth', 'verified'])->prefix('api/vendor')->group(function () {
     Route::get('/suppliers', [\App\Http\Controllers\VendorOrderController::class, 'suppliers']);
+    Route::get('/available-raw-materials', [\App\Http\Controllers\VendorOrderController::class, 'availableRawMaterials']);
     Route::post('/raw-material-orders', [\App\Http\Controllers\VendorOrderController::class, 'placeRawMaterialOrder']);
     Route::get('/raw-material-orders', [\App\Http\Controllers\VendorOrderController::class, 'listRawMaterialOrders']);
+    Route::post('/raw-material-orders/{id}/cancel', [\App\Http\Controllers\VendorOrderController::class, 'cancelRawMaterialOrder']);
     Route::get('/product-orders', [\App\Http\Controllers\VendorOrderController::class, 'listProductOrders']);
     Route::post('/product-orders/{id}/confirm', [\App\Http\Controllers\VendorOrderController::class, 'confirmProductOrder']);
 });
@@ -206,5 +208,23 @@ Route::middleware(['auth', 'verified'])->post('/supplier/raw-material-inventory/
 // Supplier Profile Page
 Route::middleware(['auth', 'verified'])->get('/supplier/profile', [\App\Http\Controllers\SupplierController::class, 'profile'])->name('supplier.profile');
 Route::middleware(['auth', 'verified'])->put('/supplier/profile', [\App\Http\Controllers\SupplierController::class, 'updateProfile'])->name('supplier.profile.update');
+
+// Supplier Manage Orders Page
+Route::middleware(['auth', 'verified'])->get('/supplier/manage-orders', function () {
+    return view('supplier.manage-orders');
+})->name('supplier.manage-orders');
+
+// Supplier Order Management API routes
+Route::middleware(['auth', 'verified'])->prefix('api/supplier/orders')->group(function () {
+    Route::get('/incoming', [\App\Http\Controllers\SupplierOrderController::class, 'incomingOrders']);
+    Route::post('/{id}/confirm', [\App\Http\Controllers\SupplierOrderController::class, 'confirmOrder']);
+    Route::post('/{id}/process', [\App\Http\Controllers\SupplierOrderController::class, 'processOrder']);
+    Route::post('/{id}/ship', [\App\Http\Controllers\SupplierOrderController::class, 'shipOrder']);
+    Route::post('/{id}/deliver', [\App\Http\Controllers\SupplierOrderController::class, 'deliverOrder']);
+    Route::post('/{id}/reject', [\App\Http\Controllers\SupplierOrderController::class, 'rejectOrder']);
+    Route::get('/stats', [\App\Http\Controllers\SupplierOrderController::class, 'orderStats']);
+});
+
+
 
 require __DIR__.'/auth.php';
