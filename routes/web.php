@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminUserController;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Http\Controllers\VendorApplicantController;
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -27,7 +28,37 @@ Route::get('/dashboard', function () {
         $role = $user->getPrimaryRoleName();
         switch ($role) {
             case 'admin':
-                return view('dashboard-admin');
+                $recentOrders = \App\Models\Order::with(['retailer.user'])
+                    ->orderBy('created_at', 'desc')
+                    ->simplePaginate(5);
+                $recentOrders->getCollection()->transform(function ($order) {
+                    $customerName = $order->retailer && $order->retailer->user ? $order->retailer->user->name : 'N/A';
+                    return (object) [
+                        'id' => $order->id,
+                        'customer_name' => $customerName,
+                        'created_at' => $order->created_at,
+                        'status' => $order->status,
+                        'total' => $order->total,
+                    ];
+                });
+
+                // User statistics
+                $totalUsers = \App\Models\User::count();
+                $roles = \App\Models\Role::withCount('users')->get();
+                $roleBreakdown = $roles->map(function ($role) use ($totalUsers) {
+                    $percentage = $totalUsers > 0 ? round(($role->users_count / $totalUsers) * 100, 1) : 0;
+                    return [
+                        'role' => $role->name,
+                        'count' => $role->users_count,
+                        'percentage' => $percentage,
+                    ];
+                });
+                $userStatistics = [
+                    'total_users' => $totalUsers,
+                    'role_breakdown' => $roleBreakdown,
+                ];
+                $newVendorApplicants = \App\Models\VendorApplicant::where('status', 'validated')->orderBy('created_at', 'desc')->get();
+                return view('dashboard-admin', compact('recentOrders', 'userStatistics', 'newVendorApplicants'));
             case 'retailer':
                 return redirect()->route('dashboard.retailer');
             case 'supplier':
@@ -46,7 +77,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard/retailer', function () {
         return view('dashboard-retailer');
     })->name('dashboard.retailer');
-    Route::get('/dashboard/supplier', [\App\Http\Controllers\SupplierController::class, 'supplierDashboard'])->name('dashboard.supplier');
+    Route::get('/dashboard/supplier', function () {
+        return view('dashboard-supplier');
+    })->name('dashboard.supplier');
     Route::get('/dashboard/vendor', function () {
         return view('dashboard-vendor');
     })->name('dashboard.vendor');
@@ -56,6 +89,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/vendor/manage-products', function () {
         return view('vendor.manage-products');
     })->name('vendor.manage-products');
+    Route::get('/dashboard/employee', function () {
+        return view('employee.dashboard');
+    })->name('dashboard.employee');
+    Route::post('/retailer/orders', [\App\Http\Controllers\RetailerOrderController::class, 'store'])->name('retailer.orders.store');
 });
 
 Route::middleware('auth')->group(function () {
@@ -129,6 +166,12 @@ Route::middleware(['auth', 'verified'])->prefix('api/vendor')->group(function ()
     Route::post('/products/{id}/toggle-status', [\App\Http\Controllers\VendorProductController::class, 'toggleStatus']);
 });
 
+// Vendor application form routes
+Route::get('/vendor/apply', [VendorApplicantController::class, 'create'])->name('vendor-applicant.create');
+Route::post('/vendor/apply', [VendorApplicantController::class, 'store'])->name('vendor-applicant.store');
+Route::get('/vendor/status', [VendorApplicantController::class, 'status'])->name('vendor-applicant.status');
+Route::get('/vendor/confirmation', [VendorApplicantController::class, 'confirmation'])->name('vendor-applicant.confirmation');
+
 // Vendor inventory management API routes
 Route::middleware(['auth', 'verified'])->prefix('api/vendor/inventory')->name('api.vendor.inventory.')->group(function () {
     Route::get('/', [\App\Http\Controllers\VendorInventoryController::class, 'index'])->name('index');
@@ -179,87 +222,5 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::post('/what-if-analysis', [AnalyticsController::class, 'runWhatIfAnalysis'])->name('what-if-analysis');
     Route::post('/export-report', [AnalyticsController::class, 'exportReport'])->name('export-report');
 });
-
-// Supplier Milk Batch Management
-Route::post('/supplier/milk-batch', [\App\Http\Controllers\SupplierController::class, 'submitMilkBatch']);
-Route::get('/supplier/milk-batch/history', [\App\Http\Controllers\SupplierController::class, 'milkBatchHistory']);
-Route::patch('/supplier/milk-batch/{id}/status', [\App\Http\Controllers\SupplierController::class, 'updateMilkBatchStatus']);
-
-// Supplier Raw Material Inventory Blade view
-Route::middleware(['auth', 'verified'])->get('/supplier/raw-material-inventory', function () {
-    return view('supplier.raw-material-inventory');
-})->name('supplier.raw-material-inventory');
-
-// Supplier Raw Material Inventory API
-Route::middleware(['auth', 'verified'])->get('/api/supplier/raw-material-inventory', [\App\Http\Controllers\SupplierController::class, 'rawMaterialInventory']);
-Route::middleware(['auth', 'verified'])->post('/api/supplier/raw-material-inventory', [\App\Http\Controllers\SupplierController::class, 'storeRawMaterial']);
-Route::middleware(['auth', 'verified'])->put('/api/supplier/raw-material-inventory/{id}', [\App\Http\Controllers\SupplierController::class, 'updateRawMaterial']);
-
-// Supplier Add Raw Material Blade view
-Route::middleware(['auth', 'verified'])->get('/supplier/raw-material-inventory/add', function () {
-    return view('supplier.add-raw-material');
-})->name('supplier.add-raw-material');
-
-// Supplier Add Raw Material POST (Blade form)
-Route::middleware(['auth', 'verified'])->post('/supplier/raw-material-inventory/add', [\App\Http\Controllers\SupplierController::class, 'storeRawMaterialBlade'])->name('supplier.add-raw-material');
-
-// Supplier Profile Page
-Route::middleware(['auth', 'verified'])->get('/supplier/profile', [\App\Http\Controllers\SupplierController::class, 'profile'])->name('supplier.profile');
-Route::middleware(['auth', 'verified'])->put('/supplier/profile', [\App\Http\Controllers\SupplierController::class, 'updateProfile'])->name('supplier.profile.update');
-
-// Supplier Manage Orders Page
-Route::middleware(['auth', 'verified'])->get('/supplier/manage-orders', function () {
-    return view('supplier.manage-orders');
-})->name('supplier.manage-orders');
-
-// Supplier Order Management API routes
-Route::middleware(['auth', 'verified'])->prefix('api/supplier/orders')->group(function () {
-    Route::get('/incoming', [\App\Http\Controllers\SupplierOrderController::class, 'incomingOrders']);
-    Route::post('/{id}/confirm', [\App\Http\Controllers\SupplierOrderController::class, 'confirmOrder']);
-    Route::post('/{id}/process', [\App\Http\Controllers\SupplierOrderController::class, 'processOrder']);
-    Route::post('/{id}/ship', [\App\Http\Controllers\SupplierOrderController::class, 'shipOrder']);
-    Route::post('/{id}/deliver', [\App\Http\Controllers\SupplierOrderController::class, 'deliverOrder']);
-    Route::post('/{id}/reject', [\App\Http\Controllers\SupplierOrderController::class, 'rejectOrder']);
-    Route::get('/stats', [\App\Http\Controllers\SupplierOrderController::class, 'orderStats']);
-});
-
-// Supplier Dashboard
-Route::get('/supplier/dashboard', [App\Http\Controllers\SupplierController::class, 'supplierDashboard'])->name('supplier.dashboard');
-
-// Delivery API routes
-Route::middleware(['auth', 'verified'])->post('/api/deliveries', [\App\Http\Controllers\DeliveryController::class, 'store']);
-
-// Supplier Delivery Form (for testing/demo)
-Route::get('/supplier/delivery-form', function () {
-    $user = Auth::user();
-    return view('supplier.delivery-form', [
-        'order_id' => 123,
-        'distribution_center_id' => 1,
-        'vendor_id' => 45,
-        'vendor_name' => 'Acme Vendor Ltd.',
-        'vendor_address' => '123 Main St, Cityville',
-        'vendor_phone' => '+1234567890',
-        'supplier_id' => $user && $user->supplier ? $user->supplier->id : null,
-    ]);
-});
-
-// API: Get drivers for a supplier
-Route::get('/api/supplier/{supplier}/drivers', function($supplierId) {
-    $supplier = \App\Models\Supplier::findOrFail($supplierId);
-    return response()->json($supplier->drivers()->get([
-        'id', 'name', 'phone', 'license', 'photo', 'vehicle_number', 'email', 'emergency_contact'
-    ]));
-});
-
-// Supplier driver management UI
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/supplier/drivers', [\App\Http\Controllers\SupplierController::class, 'manageDrivers'])->name('supplier.drivers');
-    Route::post('/supplier/drivers', [\App\Http\Controllers\SupplierController::class, 'storeDriver'])->name('supplier.drivers.store');
-    Route::post('/supplier/drivers/{driverId}/update', [\App\Http\Controllers\SupplierController::class, 'updateDriver'])->name('supplier.drivers.update');
-    Route::post('/supplier/drivers/{driverId}/delete', [\App\Http\Controllers\SupplierController::class, 'deleteDriver'])->name('supplier.drivers.delete');
-});
-
-// Supplier Track Deliveries Page
-Route::middleware(['auth', 'verified'])->get('/supplier/track-deliveries', [\App\Http\Controllers\SupplierController::class, 'trackDeliveries'])->name('supplier.track-deliveries');
 
 require __DIR__.'/auth.php';

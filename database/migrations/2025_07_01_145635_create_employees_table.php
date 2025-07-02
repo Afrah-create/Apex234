@@ -11,16 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('vendor_applicant', function (Blueprint $table) {
+        Schema::create('employees', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('email');
-            $table->string('phone');
-            $table->string('company_name');
-            $table->string('pdf_path');
-            $table->string('status')->default('pending');
-            $table->date('visit_date')->nullable();
-            $table->text('validation_message')->nullable();
+            $table->enum('role', ['Production Worker', 'Warehouse Staff', 'Driver', 'Sales Manager']);
             $table->timestamps();
         });
     }
@@ -30,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('vendor_applicant');
+        Schema::dropIfExists('employees');
     }
 };
