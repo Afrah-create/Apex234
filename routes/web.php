@@ -57,7 +57,8 @@ Route::get('/dashboard', function () {
                     'total_users' => $totalUsers,
                     'role_breakdown' => $roleBreakdown,
                 ];
-                return view('dashboard-admin', compact('recentOrders', 'userStatistics'));
+                $newVendorApplicants = \App\Models\VendorApplicant::where('status', 'validated')->orderBy('created_at', 'desc')->get();
+                return view('dashboard-admin', compact('recentOrders', 'userStatistics', 'newVendorApplicants'));
             case 'retailer':
                 return redirect()->route('dashboard.retailer');
             case 'supplier':
@@ -251,5 +252,11 @@ Route::get('/api/workforce/distribution', [\App\Http\Controllers\AdminWorkforceC
 Route::get('/admin/users', [\App\Http\Controllers\AdminEmployeeController::class, 'index'])->name('admin.users.index');
 Route::post('/admin/employees/{employee}/assign-vendor', [\App\Http\Controllers\AdminEmployeeController::class, 'assignVendor'])->name('admin.employees.assignVendor');
 Route::post('/admin/employees', [\App\Http\Controllers\AdminEmployeeController::class, 'store'])->name('admin.employees.store');
+
+// Admin vendor applicant management
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/vendor-applicants')->name('admin.vendor-applicants.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\AdminVendorApplicantController::class, 'index'])->name('index');
+    Route::post('/{id}/approve', [\App\Http\Controllers\AdminVendorApplicantController::class, 'approve'])->name('approve');
+});
 
 require __DIR__.'/auth.php';

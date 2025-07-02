@@ -70,6 +70,50 @@
             @endif
         </div>
         
+        <!-- New Vendor Applicants Table -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-semibold text-gray-900">New Vendor Applicants Awaiting Approval</h2>
+            </div>
+            <div class="overflow-x-auto rounded-lg border border-gray-200">
+                <table class="min-w-full divide-y divide-gray-200 rounded-lg overflow-hidden">
+                    <thead class="bg-gray-100 sticky top-0 z-10">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Email</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Phone</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Company</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Visit Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Validation Message</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-100">
+                        @forelse($newVendorApplicants as $applicant)
+                        <tr class="hover:bg-blue-50 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">{{ $applicant->name }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $applicant->email }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $applicant->phone }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $applicant->company_name }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $applicant->visit_date ?? '-' }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $applicant->validation_message ?? '-' }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <form method="POST" action="{{ route('admin.vendor-applicants.approve', $applicant->id) }}">
+                                    @csrf
+                                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Approve</button>
+                                </form>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="7" class="px-6 py-8 text-center text-gray-400">No new vendor applicants awaiting approval.</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
         <!-- User Statistics Chart -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             <div class="bg-white rounded-lg shadow-md p-6">
