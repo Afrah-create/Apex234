@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminUserController;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Http\Controllers\ChatController;
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -178,6 +179,15 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::post('/scenario-analysis', [AnalyticsController::class, 'runScenarioAnalysis'])->name('scenario-analysis');
     Route::post('/what-if-analysis', [AnalyticsController::class, 'runWhatIfAnalysis'])->name('what-if-analysis');
     Route::post('/export-report', [AnalyticsController::class, 'exportReport'])->name('export-report');
+});
+
+// Chat routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/chat/recipients', [ChatController::class, 'getRecipients']);
+    Route::post('/chat/send', [ChatController::class, 'sendMessage']);
+    Route::get('/chat/unread-count', [ChatController::class, 'getUnreadCount']);
+    Route::get('/chat/messages', [ChatController::class, 'getMessages']);
+    Route::post('/chat/mark-all-read', [ChatController::class, 'markAllAsRead']);
 });
 
 require __DIR__.'/auth.php';
