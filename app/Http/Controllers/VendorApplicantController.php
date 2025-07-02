@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\VendorApplicant;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class VendorApplicantController extends Controller
 {
@@ -36,53 +37,50 @@ class VendorApplicantController extends Controller
             mkdir($pdfDir, 0777, true);
         }
         $pdfFilePath = $pdfDir . '/' . $pdfFileName;
-        // Use dompdf to generate PDF
         $pdfContent = view('vendor.pdf', $validated)->render();
-        $pdf = \PDF::loadHTML($pdfContent);
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML($pdfContent);
         $pdf->save($pdfFilePath);
         $pdfPath = 'vendor_applications/' . $pdfFileName;
 
-        // Create the vendor applicant record (initially pending)
+        // Send PDF to Java server for validation
+        $javaServerUrl = 'http://localhost:8080/api/vendors/apply'; // Update if needed
+        $status = 'pending';
+        $visitDate = null;
+        $validationMessage = null;
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::attach('file', fopen($pdfFilePath, 'r'), basename($pdfFilePath))
+                ->post($javaServerUrl);
+
+            if ($response->status() === 202) {
+                // Validation passed
+                $body = $response->body();
+                if (preg_match('/(\\d{4}-\\d{2}-\\d{2})/', $body, $matches)) {
+                    $visitDate = $matches[1];
+                }
+                $status = 'validated';
+                $validationMessage = $body;
+            } else {
+                // Validation failed
+                $status = 'rejected';
+                $validationMessage = $response->body();
+            }
+        } catch (\Exception $e) {
+            $status = 'error';
+            $validationMessage = 'Error communicating with validation server: ' . $e->getMessage();
+        }
+
+        // Now create the vendor applicant record (after validation)
         $applicant = VendorApplicant::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'phone' => $validated['phone'],
             'company_name' => $validated['company_name'],
             'pdf_path' => $pdfPath,
-            'status' => 'pending',
+            'status' => $status,
+            'visit_date' => $visitDate,
+            'validation_message' => $validationMessage,
         ]);
-
-        // Send PDF to Java server for validation
-        $javaServerUrl = 'http://localhost:8080/api/vendors/apply'; // Update if needed
-        try {
-            $response = \Illuminate\Support\Facades\Http::attach('file', fopen($pdfFilePath, 'r'), basename($pdfFilePath))
-                ->post($javaServerUrl);
-
-            if ($response->status() === 202) {
-                // Validation passed, extract visit date from response
-                $body = $response->body();
-                $visitDate = null;
-                if (preg_match('/(\\d{4}-\\d{2}-\\d{2})/', $body, $matches)) {
-                    $visitDate = $matches[1];
-                }
-                $applicant->update([
-                    'status' => 'validated',
-                    'visit_date' => $visitDate,
-                    'validation_message' => $body,
-                ]);
-            } else {
-                // Validation failed
-                $applicant->update([
-                    'status' => 'rejected',
-                    'validation_message' => $response->body(),
-                ]);
-            }
-        } catch (\Exception $e) {
-            $applicant->update([
-                'status' => 'error',
-                'validation_message' => 'Error communicating with validation server: ' . $e->getMessage(),
-            ]);
-        }
 
         // Redirect to confirmation page with check status button
         return redirect()->route('vendor-applicant.confirmation', ['email' => $validated['email']]);

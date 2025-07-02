@@ -123,4 +123,6 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'PDF' => Barryvdh\DomPDF\Facade\Pdf::class,
+
 ];
