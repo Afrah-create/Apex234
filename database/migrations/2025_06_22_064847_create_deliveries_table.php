@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('order_id')->constrained()->onDelete('cascade');
             $table->foreignId('distribution_center_id')->constrained()->onDelete('cascade');
-            $table->foreignId('retailer_id')->constrained()->onDelete('cascade');
+            $table->foreignId('vendor_id')->constrained()->onDelete('cascade');
             $table->string('delivery_number')->unique();
             $table->string('vehicle_number')->nullable();
             $table->string('driver_name');

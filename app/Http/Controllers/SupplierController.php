@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\RawMaterial;
 use App\Models\DairyFarm;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Driver;
 
 class SupplierController extends Controller
 {
@@ -404,5 +405,90 @@ class SupplierController extends Controller
             'deliveredBatches',
             'inventorySummary'
         ));
+    }
+
+    // Show driver management UI
+    public function manageDrivers()
+    {
+        $supplier = Auth::user()->supplier;
+        $drivers = $supplier ? $supplier->drivers : collect();
+        return view('supplier.manage-drivers', compact('drivers'));
+    }
+
+    // Store a new driver
+    public function storeDriver(Request $request)
+    {
+        $supplier = Auth::user()->supplier;
+        if (!$supplier) return back()->with('error', 'Supplier not found.');
+        if ($supplier->drivers()->count() >= 3) {
+            return back()->with('error', 'You can only have up to 3 drivers.');
+        }
+        $data = $request->validate([
+            'name' => 'required|string|max:100',
+            'phone' => 'required|string|max:20',
+            'email' => 'nullable|email|max:255',
+            'address' => 'nullable|string|max:255',
+            'date_of_birth' => 'nullable|date',
+            'license' => 'required|string|max:50|unique:drivers,license,NULL,id,supplier_id,' . $supplier->id,
+            'license_expiry' => 'nullable|date',
+            'emergency_contact' => 'nullable|string|max:100',
+            'photo' => 'nullable|image|max:2048',
+            'vehicle_number' => 'nullable|string|max:50',
+        ]);
+        if ($request->hasFile('photo')) {
+            $data['photo'] = $request->file('photo')->store('drivers', 'public');
+        }
+        $supplier->drivers()->create($data);
+        return back()->with('success', 'Driver added successfully.');
+    }
+
+    // Update an existing driver
+    public function updateDriver(Request $request, $driverId)
+    {
+        $supplier = Auth::user()->supplier;
+        $driver = $supplier ? $supplier->drivers()->findOrFail($driverId) : null;
+        if (!$driver) return back()->with('error', 'Driver not found.');
+        $data = $request->validate([
+            'name' => 'required|string|max:100',
+            'phone' => 'required|string|max:20',
+            'email' => 'nullable|email|max:255',
+            'address' => 'nullable|string|max:255',
+            'date_of_birth' => 'nullable|date',
+            'license' => 'required|string|max:50|unique:drivers,license,' . $driver->id . ',id,supplier_id,' . $supplier->id,
+            'license_expiry' => 'nullable|date',
+            'emergency_contact' => 'nullable|string|max:100',
+            'photo' => 'nullable|image|max:2048',
+            'vehicle_number' => 'nullable|string|max:50',
+        ]);
+        if ($request->hasFile('photo')) {
+            $data['photo'] = $request->file('photo')->store('drivers', 'public');
+        }
+        $driver->update($data);
+        return back()->with('success', 'Driver updated successfully.');
+    }
+
+    // Delete a driver
+    public function deleteDriver($driverId)
+    {
+        $supplier = Auth::user()->supplier;
+        $driver = $supplier ? $supplier->drivers()->findOrFail($driverId) : null;
+        if ($driver) $driver->delete();
+        return back()->with('success', 'Driver deleted successfully.');
+    }
+
+    // Show all deliveries for the supplier (track deliveries page)
+    public function trackDeliveries()
+    {
+        $supplier = Auth::user()->supplier;
+        $deliveries = collect();
+        if ($supplier) {
+            // Find all raw material order IDs for this supplier
+            $orderIds = \App\Models\RawMaterialOrder::where('supplier_id', $supplier->id)->pluck('id');
+            // Fetch deliveries where order_id matches any of these IDs
+            if ($orderIds->count() > 0) {
+                $deliveries = \App\Models\Delivery::whereIn('order_id', $orderIds)->orderByDesc('created_at')->get();
+            }
+        }
+        return view('supplier.track-deliveries', compact('deliveries'));
     }
 }

@@ -139,5 +139,19 @@ class DatabaseSeeder extends Seeder
             'distribution_center_id' => $distributionCenters->random()->id,
             'retailer_id' => $retailers->random()->id,
         ]);
+
+        // Seed drivers for each supplier
+        \App\Models\Supplier::all()->each(function($supplier) {
+            if ($supplier->drivers()->count() < 3) {
+                $drivers = [
+                    ['name' => 'John Doe', 'phone' => '+1234567891', 'license' => 'DL-12345'],
+                    ['name' => 'Jane Smith', 'phone' => '+1234567892', 'license' => 'DL-67890'],
+                    ['name' => 'Mike Brown', 'phone' => '+1234567893', 'license' => 'DL-54321'],
+                ];
+                foreach ($drivers as $driver) {
+                    $supplier->drivers()->firstOrCreate(['license' => $driver['license']], $driver);
+                }
+            }
+        });
     }
 }

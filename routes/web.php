@@ -226,4 +226,40 @@ Route::middleware(['auth', 'verified'])->prefix('api/supplier/orders')->group(fu
 // Supplier Dashboard
 Route::get('/supplier/dashboard', [App\Http\Controllers\SupplierController::class, 'supplierDashboard'])->name('supplier.dashboard');
 
+// Delivery API routes
+Route::middleware(['auth', 'verified'])->post('/api/deliveries', [\App\Http\Controllers\DeliveryController::class, 'store']);
+
+// Supplier Delivery Form (for testing/demo)
+Route::get('/supplier/delivery-form', function () {
+    $user = Auth::user();
+    return view('supplier.delivery-form', [
+        'order_id' => 123,
+        'distribution_center_id' => 1,
+        'vendor_id' => 45,
+        'vendor_name' => 'Acme Vendor Ltd.',
+        'vendor_address' => '123 Main St, Cityville',
+        'vendor_phone' => '+1234567890',
+        'supplier_id' => $user && $user->supplier ? $user->supplier->id : null,
+    ]);
+});
+
+// API: Get drivers for a supplier
+Route::get('/api/supplier/{supplier}/drivers', function($supplierId) {
+    $supplier = \App\Models\Supplier::findOrFail($supplierId);
+    return response()->json($supplier->drivers()->get([
+        'id', 'name', 'phone', 'license', 'photo', 'vehicle_number', 'email', 'emergency_contact'
+    ]));
+});
+
+// Supplier driver management UI
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/supplier/drivers', [\App\Http\Controllers\SupplierController::class, 'manageDrivers'])->name('supplier.drivers');
+    Route::post('/supplier/drivers', [\App\Http\Controllers\SupplierController::class, 'storeDriver'])->name('supplier.drivers.store');
+    Route::post('/supplier/drivers/{driverId}/update', [\App\Http\Controllers\SupplierController::class, 'updateDriver'])->name('supplier.drivers.update');
+    Route::post('/supplier/drivers/{driverId}/delete', [\App\Http\Controllers\SupplierController::class, 'deleteDriver'])->name('supplier.drivers.delete');
+});
+
+// Supplier Track Deliveries Page
+Route::middleware(['auth', 'verified'])->get('/supplier/track-deliveries', [\App\Http\Controllers\SupplierController::class, 'trackDeliveries'])->name('supplier.track-deliveries');
+
 require __DIR__.'/auth.php';

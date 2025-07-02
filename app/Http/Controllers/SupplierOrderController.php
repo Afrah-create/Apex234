@@ -28,8 +28,11 @@ class SupplierOrderController extends Controller
             ->map(function($order) {
                 return [
                     'id' => $order->id,
+                    'vendor_id' => $order->vendor_id,
                     'vendor_name' => $order->vendor->name ?? 'Vendor',
                     'vendor_email' => $order->vendor->email ?? '',
+                    'vendor_address' => $order->vendor->business_address ?? '',
+                    'vendor_phone' => $order->vendor->contact_phone ?? '',
                     'material_type' => $order->material_type,
                     'material_name' => $order->material_name,
                     'quantity' => $order->quantity,

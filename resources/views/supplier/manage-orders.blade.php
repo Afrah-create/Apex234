@@ -7,6 +7,9 @@
             <h1 class="text-2xl font-bold text-blue-900 mb-1">Manage Incoming Orders</h1>
             <p class="text-gray-600">Review and process raw material orders from vendors. Check availability and update order status.</p>
         </div>
+        <div class="mt-4 md:mt-0 flex justify-end">
+            <a href="{{ route('supplier.drivers') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow">Manage Drivers</a>
+        </div>
     </div>
 
     <!-- Order Statistics -->
@@ -98,6 +101,79 @@
                     <button type="button" id="cancel-reject" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">Cancel</button>
                     <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">Reject Order</button>
                 </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delivery Creation Modal -->
+    <div id="create-delivery-modal" class="fixed inset-0 bg-black bg-opacity-40 z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 relative mx-2">
+            <button id="close-create-delivery-modal" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">&times;</button>
+            <h2 class="text-xl font-bold mb-4">Create Delivery</h2>
+            <form id="create-delivery-form" class="space-y-4">
+                <input type="hidden" id="delivery-order-id" name="order_id">
+                <div>
+                    <label class="block font-semibold mb-1">Distribution Center ID</label>
+                    <input type="number" id="distribution_center_id" name="distribution_center_id" class="w-full border rounded px-3 py-2" required>
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1">Vendor ID</label>
+                    <input type="number" id="vendor_id" name="vendor_id" class="w-full border rounded px-3 py-2" required>
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1">Vendor Name</label>
+                    <input type="text" id="vendor_name" name="vendor_name" class="w-full border rounded px-3 py-2 bg-gray-100" readonly>
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1">Vendor Address</label>
+                    <input type="text" id="vendor_address" name="vendor_address" class="w-full border rounded px-3 py-2 bg-gray-100" readonly>
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1">Vendor Phone</label>
+                    <input type="text" id="vendor_phone" name="vendor_phone" class="w-full border rounded px-3 py-2 bg-gray-100" readonly>
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1">Vehicle Number</label>
+                    <input type="text" id="vehicle_number" name="vehicle_number" class="w-full border rounded px-3 py-2">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1">Driver Name</label>
+                    <input type="text" id="driver_name" name="driver_name" class="w-full border rounded px-3 py-2" required>
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1">Driver Phone</label>
+                    <input type="text" id="driver_phone" name="driver_phone" class="w-full border rounded px-3 py-2" required>
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1">Driver License</label>
+                    <input type="text" id="driver_license" name="driver_license" class="w-full border rounded px-3 py-2">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1">Scheduled Delivery Date</label>
+                    <input type="date" id="scheduled_delivery_date" name="scheduled_delivery_date" class="w-full border rounded px-3 py-2" required>
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1">Scheduled Delivery Time</label>
+                    <input type="time" id="scheduled_delivery_time" name="scheduled_delivery_time" class="w-full border rounded px-3 py-2" required>
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1">Delivery Address</label>
+                    <input type="text" id="delivery_address" name="delivery_address" class="w-full border rounded px-3 py-2" required>
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1">Recipient Name</label>
+                    <input type="text" id="recipient_name" name="recipient_name" class="w-full border rounded px-3 py-2" required>
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1">Recipient Phone</label>
+                    <input type="text" id="recipient_phone" name="recipient_phone" class="w-full border rounded px-3 py-2" required>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" id="cancel-create-delivery" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">Cancel</button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Create Delivery</button>
+                </div>
+                <div id="create-delivery-error" class="text-red-600 text-sm mt-2 hidden"></div>
+                <div id="create-delivery-success" class="text-green-600 text-sm mt-2 hidden"></div>
             </form>
         </div>
     </div>
@@ -232,6 +308,7 @@ function getActionButtons(order) {
             break;
         case 'shipped':
             buttons += `<button onclick="deliverOrder(${order.id})" class="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded text-xs">Deliver</button>`;
+            buttons += `<a href="/supplier/delivery-form?order_id=${order.id}&distribution_center_id=${order.distribution_center_id || ''}&vendor_id=${order.vendor_id || ''}&vendor_name=${encodeURIComponent(order.vendor_name || '')}&vendor_address=${encodeURIComponent(order.vendor_address || '')}&vendor_phone=${encodeURIComponent(order.vendor_phone || '')}" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs ml-1">Create Delivery</a>`;
             break;
         default:
             buttons += `<span class="text-gray-400 text-xs">No actions</span>`;
@@ -432,6 +509,76 @@ document.getElementById('search-input').addEventListener('input', applyFilters);
 document.addEventListener('DOMContentLoaded', function() {
     loadOrderStats();
     loadIncomingOrders();
+});
+
+// Delivery Modal Logic
+function showCreateDeliveryModal(orderId) {
+    document.getElementById('delivery-order-id').value = orderId;
+    // Autofill vendor_id and details
+    const order = allOrders.find(o => o.id == orderId);
+    if (order && order.vendor_id) {
+        document.getElementById('vendor_id').value = order.vendor_id;
+        document.getElementById('vendor_id').setAttribute('readonly', 'readonly');
+        document.getElementById('vendor_name').value = order.vendor_name || '';
+        document.getElementById('vendor_phone').value = order.vendor_phone || '';
+        document.getElementById('vendor_address').value = order.vendor_address || '';
+    } else {
+        document.getElementById('vendor_id').value = '';
+        document.getElementById('vendor_id').removeAttribute('readonly');
+        document.getElementById('vendor_name').value = '';
+        document.getElementById('vendor_phone').value = '';
+        document.getElementById('vendor_address').value = '';
+    }
+    document.getElementById('create-delivery-modal').classList.remove('hidden');
+}
+document.getElementById('close-create-delivery-modal').addEventListener('click', function() {
+    document.getElementById('create-delivery-modal').classList.add('hidden');
+});
+document.getElementById('cancel-create-delivery').addEventListener('click', function() {
+    document.getElementById('create-delivery-modal').classList.add('hidden');
+});
+document.getElementById('create-delivery-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const payload = {
+        order_id: form.order_id.value,
+        distribution_center_id: form.distribution_center_id.value,
+        vendor_id: form.vendor_id.value,
+        vehicle_number: form.vehicle_number.value,
+        driver_name: form.driver_name.value,
+        driver_phone: form.driver_phone.value,
+        driver_license: form.driver_license.value,
+        scheduled_delivery_date: form.scheduled_delivery_date.value,
+        scheduled_delivery_time: form.scheduled_delivery_time.value,
+        delivery_address: form.delivery_address.value,
+        recipient_name: form.recipient_name.value,
+        recipient_phone: form.recipient_phone.value,
+    };
+    document.getElementById('create-delivery-error').classList.add('hidden');
+    document.getElementById('create-delivery-success').classList.add('hidden');
+    try {
+        const res = await fetch('/api/deliveries', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById('create-delivery-success').textContent = 'Delivery created successfully!';
+            document.getElementById('create-delivery-success').classList.remove('hidden');
+            form.reset();
+            setTimeout(() => document.getElementById('create-delivery-modal').classList.add('hidden'), 1500);
+        } else {
+            throw new Error(data.message || 'Failed to create delivery.');
+        }
+    } catch (err) {
+        document.getElementById('create-delivery-error').textContent = err.message;
+        document.getElementById('create-delivery-error').classList.remove('hidden');
+    }
 });
 </script>
 @endsection 

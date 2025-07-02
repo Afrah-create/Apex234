@@ -18,4 +18,12 @@ class Supplier extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    /**
+     * Get the drivers for the supplier (max 3 per supplier, enforced in logic).
+     */
+    public function drivers()
+    {
+        return $this->hasMany(Driver::class);
+    }
 }
