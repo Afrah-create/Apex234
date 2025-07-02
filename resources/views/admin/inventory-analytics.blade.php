@@ -103,18 +103,6 @@
     <!-- User Statistics and Stock Alerts -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         <div class="bg-white rounded-lg shadow-md p-6">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-xl font-semibold text-gray-900">User Distribution</h2>
-                <button onclick="refreshUserChart()" class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded-lg transition duration-200 text-sm">
-                    Refresh
-                </button>
-            </div>
-            <div class="relative" style="height: 300px;">
-                <canvas id="userChart"></canvas>
-            </div>
-        </div>
-        
-        <div class="bg-white rounded-lg shadow-md p-6">
             <h2 class="text-xl font-semibold text-gray-900 mb-6">Stock Alerts</h2>
             <div class="space-y-4">
                 <div class="flex items-center justify-between p-4 bg-yellow-50 rounded-lg border border-yellow-200">
@@ -191,19 +179,17 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-    let inventoryChart, userChart;
+    let inventoryChart;
 
     // Initialize charts when page loads
     document.addEventListener('DOMContentLoaded', function() {
         initializeCharts();
         loadInventoryData();
-        loadUserStatistics();
         loadInventoryTable();
         
         // Auto-refresh every 30 seconds
         setInterval(function() {
             loadInventoryData();
-            loadUserStatistics();
             loadInventoryTable();
         }, 30000);
     });
@@ -246,40 +232,6 @@
                 }
             }
         });
-
-        // Initialize User Chart
-        const userCtx = document.getElementById('userChart').getContext('2d');
-        userChart = new Chart(userCtx, {
-            type: 'doughnut',
-            data: {
-                labels: [],
-                datasets: []
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                    },
-                    title: {
-                        display: true,
-                        text: 'User Distribution by Role'
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const label = context.label || '';
-                                const value = context.parsed;
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = ((value / total) * 100).toFixed(1);
-                                return `${label}: ${value} users (${percentage}%)`;
-                            }
-                        }
-                    }
-                }
-            }
-        });
     }
 
     function loadInventoryData() {
@@ -305,17 +257,6 @@
                 document.getElementById('lowStockItems').textContent = data.low_stock_items;
             })
             .catch(error => console.error('Error loading inventory summary:', error));
-    }
-
-    function loadUserStatistics() {
-        fetch('{{ route("api.inventory.user-statistics") }}')
-            .then(response => response.json())
-            .then(data => {
-                userChart.data.labels = data.chart_data.labels;
-                userChart.data.datasets = data.chart_data.datasets;
-                userChart.update();
-            })
-            .catch(error => console.error('Error loading user statistics:', error));
     }
 
     function loadInventoryTable() {
@@ -383,28 +324,12 @@
 
     function refreshData() {
         loadInventoryData();
-        loadUserStatistics();
         loadInventoryTable();
         
         // Show refresh feedback
         const button = event.target;
         const originalText = button.innerHTML;
         button.innerHTML = '<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Refreshed!';
-        button.disabled = true;
-        
-        setTimeout(() => {
-            button.innerHTML = originalText;
-            button.disabled = false;
-        }, 2000);
-    }
-
-    function refreshUserChart() {
-        loadUserStatistics();
-        
-        // Show refresh feedback
-        const button = event.target;
-        const originalText = button.innerHTML;
-        button.innerHTML = 'Refreshed!';
         button.disabled = true;
         
         setTimeout(() => {

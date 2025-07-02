@@ -15,7 +15,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-       
+
 
         // Create roles
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
@@ -88,7 +88,8 @@ class DatabaseSeeder extends Seeder
         // Seed yogurt products using the new seeder with UGX pricing
         $this->call([
             YogurtProductSeeder::class,
-            DairyFarmSeeder::class
+            DairyFarmSeeder::class,
+            ScheduledReportsSeeder::class
         ]);
         $yogurtProducts = \App\Models\YogurtProduct::all(); // Get the seeded products
 
@@ -139,5 +140,11 @@ class DatabaseSeeder extends Seeder
             'distribution_center_id' => $distributionCenters->random()->id,
             'retailer_id' => $retailers->random()->id,
         ]);
+
+        // Seed employees
+        $this->call(EmployeeSeeder::class);
+
+        // Ensure the 'employee' role exists
+        \App\Models\Role::firstOrCreate(['name' => 'employee']);
     }
 }

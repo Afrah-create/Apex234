@@ -260,54 +260,22 @@
         </div>
     </div>
 
-    <!-- Export and Reports -->
+    <!-- Advanced Reports Link -->
     <div class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-xl font-semibold text-gray-900 mb-6">Export & Reports</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <button onclick="exportReport('sales')" class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition duration-200">
-                <div class="flex items-center">
-                    <svg class="w-6 h-6 text-blue-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 014-4h4a4 4 0 014 4v2"></path>
-                    </svg>
-                    <div>
-                        <p class="font-medium text-gray-900">Sales Report</p>
-                        <p class="text-sm text-gray-500">PDF Export</p>
-                    </div>
-                </div>
-            </button>
-            <button onclick="exportReport('inventory')" class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition duration-200">
-                <div class="flex items-center">
-                    <svg class="w-6 h-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                    </svg>
-                    <div>
-                        <p class="font-medium text-gray-900">Inventory Report</p>
-                        <p class="text-sm text-gray-500">Excel Export</p>
-                    </div>
-                </div>
-            </button>
-            <button onclick="exportReport('analytics')" class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition duration-200">
-                <div class="flex items-center">
-                    <svg class="w-6 h-6 text-purple-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                    </svg>
-                    <div>
-                        <p class="font-medium text-gray-900">Analytics Report</p>
-                        <p class="text-sm text-gray-500">PDF Export</p>
-                    </div>
-                </div>
-            </button>
-            <button onclick="exportReport('ml')" class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition duration-200">
-                <div class="flex items-center">
-                    <svg class="w-6 h-6 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-                    </svg>
-                    <div>
-                        <p class="font-medium text-gray-900">ML Insights</p>
-                        <p class="text-sm text-gray-500">JSON Export</p>
-                    </div>
-                </div>
-            </button>
+        <div class="text-center">
+            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+            </div>
+            <h2 class="text-xl font-semibold text-gray-900 mb-2">Advanced Reports & Analytics</h2>
+            <p class="text-gray-600 mb-6">Access our comprehensive reporting system with custom reports, automated scheduling, and multiple export formats.</p>
+            <a href="{{ route('admin.reports.index') }}" class="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition duration-200">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Go to Reports Dashboard
+            </a>
         </div>
     </div>
 </main>
@@ -521,18 +489,6 @@
         } else {
             alert('Please enter values for analysis');
         }
-    }
-
-    function exportReport(type) {
-        // Simulate report export
-        const reports = {
-            sales: 'Sales Report exported to PDF',
-            inventory: 'Inventory Report exported to Excel',
-            analytics: 'Analytics Report exported to PDF',
-            ml: 'ML Insights exported to JSON'
-        };
-        
-        alert(reports[type] || 'Report exported successfully');
     }
 </script>
 @endsection 

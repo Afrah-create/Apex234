@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use App\Models\User;
+use App\Models\VendorApplicant;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -29,6 +30,11 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
 
         $user = Auth::user();
+        $role = $user->getPrimaryRoleName();
+        if ($role === 'vendor' && !$user->isApproved()) {
+            Auth::logout();
+            return redirect()->route('login')->withErrors(['Your vendor account is pending admin approval.']);
+        }
         if ($user instanceof \App\Models\User) {
             $role = $user->getPrimaryRoleName();
         } else {
@@ -42,7 +48,13 @@ class AuthenticatedSessionController extends Controller
             case 'supplier':
                 return redirect()->route('dashboard.supplier');
             case 'vendor':
+                $vendorApplicant = VendorApplicant::where('email', $user->email)->latest()->first();
+                if (!$vendorApplicant || $vendorApplicant->status === 'pending') {
+                    return redirect()->route('vendor-applicant.create');
+                }
                 return redirect()->route('dashboard.vendor');
+            case 'employee':
+                return redirect()->route('dashboard.employee');
             default:
                 return redirect()->route('dashboard');
         }

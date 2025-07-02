@@ -1,51 +1,20 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="user-management-container main-content" style="flex:1; min-width:0;">
-    <h2 class="user-management-header">Manage Users</h2>
-    <div class="user-management-bar">
-        <form method="GET" action="">
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by name or email..." />
-            <button type="submit">Search</button>
-                @if(request('search'))
-                    <a href="{{ route('admin.users.index') }}" class="ml-2 text-gray-600 hover:underline">Clear</a>
-                @endif
-            </form>
-        <a href="{{ route('admin.users.create') }}" class="inline-block">Add New User</a>
+<div class="main-content p-6">
+    <h2 class="text-2xl font-bold mb-6">User Management</h2>
+    <div x-data="{ tab: 'users' }">
+        <nav class="flex border-b mb-4">
+            <button :class="tab === 'users' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'" class="px-4 py-2 font-medium focus:outline-none" @click="tab = 'users'">Users</button>
+            <button :class="tab === 'workforce' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'" class="px-4 py-2 font-medium focus:outline-none" @click="tab = 'workforce'">Workforce</button>
+        </nav>
+
+        <div x-show="tab === 'users'">
+            @include('admin.users.partials.user-table', ['users' => $users])
         </div>
-    <div class="user-table-container">
-        <table class="user-table">
-            <thead>
-                    <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Roles</th>
-                    <th>Actions</th>
-                    </tr>
-                </thead>
-            <tbody>
-                    @foreach($users as $user)
-                    <tr class="@if($loop->even) bg-gray-50 @endif">
-                        <td>{{ $user->id }}</td>
-                        <td>{{ $user->name }}</td>
-                        <td>{{ $user->email }}</td>
-                        <td>{{ $user->roles->pluck('name')->join(', ') }}</td>
-                        <td>
-                            <a href="{{ route('admin.users.edit', $user->id) }}" class="action-btn edit-btn">Edit</a>
-                                <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" class="inline">
-                                    @csrf
-                                    @method('DELETE')
-                                <button type="submit" class="action-btn delete-btn" onclick="return confirm('Are you sure?')">Delete</button>
-                                </form>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+        <div x-show="tab === 'workforce'">
+            @include('admin.users.partials.employee-table', ['employees' => $employees, 'vendors' => $vendors])
         </div>
-    <div class="flex justify-center mt-4">
-        {{ $users->links('pagination::simple-tailwind') }}
-        </div>
+    </div>
 </div>
 @endsection 
