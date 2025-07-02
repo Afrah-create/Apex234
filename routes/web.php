@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminUserController;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Http\Controllers\VendorApplicantController;
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -160,6 +161,12 @@ Route::middleware(['auth', 'verified'])->prefix('api/vendor')->group(function ()
     Route::delete('/products/{id}', [\App\Http\Controllers\VendorProductController::class, 'destroy']);
     Route::post('/products/{id}/toggle-status', [\App\Http\Controllers\VendorProductController::class, 'toggleStatus']);
 });
+
+// Vendor application form routes
+Route::get('/vendor/apply', [VendorApplicantController::class, 'create'])->name('vendor-applicant.create');
+Route::post('/vendor/apply', [VendorApplicantController::class, 'store'])->name('vendor-applicant.store');
+Route::get('/vendor/status', [VendorApplicantController::class, 'status'])->name('vendor-applicant.status');
+Route::get('/vendor/confirmation', [VendorApplicantController::class, 'confirmation'])->name('vendor-applicant.confirmation');
 
 // Vendor inventory management API routes
 Route::middleware(['auth', 'verified'])->prefix('api/vendor/inventory')->name('api.vendor.inventory.')->group(function () {

@@ -59,7 +59,7 @@ class RegisteredUserController extends Controller
             case 'supplier':
                 return redirect()->route('dashboard.supplier');
             case 'vendor':
-                return redirect()->route('dashboard.vendor');
+                return redirect()->route('vendor-applicant.create');
             default:
                 return redirect(route('dashboard', absolute: false));
         }

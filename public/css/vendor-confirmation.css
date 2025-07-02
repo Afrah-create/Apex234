@@ -1,0 +1,74 @@
+body {
+    background: linear-gradient(120deg, #f8f9fa 0%, #e9ecef 100%);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
+    margin: 0;
+}
+
+.confirmation-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 0;
+}
+
+.confirmation-card {
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(44, 62, 80, 0.10);
+    padding: 2.5rem 2rem;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+    transition: box-shadow 0.2s;
+}
+
+.confirmation-card h2 {
+    color: #27ae60;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    letter-spacing: 1px;
+}
+
+.confirmation-card p {
+    color: #34495e;
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+.btn-success {
+    background: linear-gradient(90deg, #27ae60 0%, #219150 100%);
+    border: none;
+    border-radius: 14px;
+    padding: 0.85rem 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    width: 100%;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(39, 174, 96, 0.08);
+    text-decoration: none;
+    display: inline-block;
+    transition: background 0.2s, box-shadow 0.2s;
+}
+
+.btn-success:hover {
+    background: linear-gradient(90deg, #219150 0%, #27ae60 100%);
+    box-shadow: 0 4px 16px rgba(39, 174, 96, 0.13);
+}
+
+@media (max-width: 600px) {
+    .confirmation-card {
+        padding: 1.2rem 0.5rem;
+    }
+    .confirmation-card h2 {
+        font-size: 1.3rem;
+    }
+    .confirmation-card p {
+        font-size: 1rem;
+    }
+    .btn-success {
+        font-size: 1rem;
+        padding: 0.7rem 0;
+    }
+} 
