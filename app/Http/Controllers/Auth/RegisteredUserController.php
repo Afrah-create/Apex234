@@ -48,6 +48,52 @@ class RegisteredUserController extends Controller
             $user->roles()->syncWithoutDetaching([$role->id]);
         }
 
+        // If registering as supplier, create supplier record
+        if ($request->role === 'supplier') {
+            $supplier = \App\Models\Supplier::create([
+                'user_id' => $user->id,
+                'company_name' => $request->company_name ?? 'Default Company',
+                'registration_number' => uniqid('SUP'),
+                'business_address' => $request->business_address ?? '',
+                'contact_person' => $user->name,
+                'contact_phone' => $request->contact_phone ?? '',
+                'contact_email' => $user->email,
+                'supplier_type' => 'dairy_farm',
+                'status' => 'pending',
+                'rating' => 0,
+                'certifications' => null,
+                'verification_date' => null,
+                'contract_start_date' => null,
+                'contract_end_date' => null,
+                'credit_limit' => 0,
+                'payment_terms_days' => 30,
+                'notes' => null,
+            ]);
+
+            // Create a default dairy farm for the supplier
+            \App\Models\DairyFarm::create([
+                'supplier_id' => $supplier->id,
+                'farm_name' => $supplier->company_name . ' Main Farm',
+                'farm_code' => uniqid('FARM'),
+                'farm_address' => $supplier->business_address,
+                'farm_phone' => $supplier->contact_phone,
+                'farm_email' => $supplier->contact_email,
+                'farm_manager' => $supplier->contact_person,
+                'manager_phone' => $supplier->contact_phone,
+                'manager_email' => $supplier->contact_email,
+                'total_cattle' => 0,
+                'milking_cattle' => 0,
+                'daily_milk_production' => 0,
+                'certification_status' => 'pending',
+                'certifications' => null,
+                'last_inspection_date' => null,
+                'next_inspection_date' => null,
+                'quality_rating' => 0,
+                'status' => 'active',
+                'notes' => null,
+            ]);
+        }
+
         event(new Registered($user));
 
         Auth::login($user);

@@ -77,4 +77,9 @@ class User extends Authenticatable
     {
         return $this->status === 'approved';
     }
+
+    public function supplier()
+    {
+        return $this->hasOne(\App\Models\Supplier::class);
+    }
 }
