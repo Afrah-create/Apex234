@@ -38,6 +38,7 @@ return new class extends Migration
             $table->text('delivery_notes')->nullable();
             $table->enum('customer_satisfaction', ['excellent', 'good', 'fair', 'poor'])->nullable();
             $table->text('customer_feedback')->nullable();
+            $table->string('pdf_path')->nullable();
             $table->timestamps();
             
             // Indexes for better performance

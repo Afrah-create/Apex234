@@ -33,7 +33,9 @@ class AuthenticatedSessionController extends Controller
         $role = $user->getPrimaryRoleName();
         if ($role === 'vendor' && !$user->isApproved()) {
             Auth::logout();
-            return redirect()->route('login')->withErrors(['Your vendor account is pending admin approval.']);
+            return redirect()->route('login')->withErrors([
+                'email' => 'Your vendor account is pending admin approval. Please wait for admin approval before logging in.'
+            ]);
         }
         if ($user instanceof \App\Models\User) {
             $role = $user->getPrimaryRoleName();

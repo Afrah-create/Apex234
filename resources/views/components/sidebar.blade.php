@@ -120,10 +120,7 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg>
                     Analytics & Reports
                 </a>
-                <a href="{{ route('supplier.profile') }}" class="sidebar-link flex items-center gap-2 px-4 py-2 rounded-lg transition hover:bg-blue-800">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                    Profile & Settings
-                </a>
+               
             @endif
         </div>
         <button class="sidebar-menu-btn md:hidden block absolute left-2 top-1/2 -translate-y-1/2" aria-label="Toggle menu" onclick="document.getElementById('sidebar-links').classList.toggle('open')">

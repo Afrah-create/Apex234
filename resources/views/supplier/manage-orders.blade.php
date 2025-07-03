@@ -2,13 +2,7 @@
 
 @section('content')
 <div class="max-w-7xl mx-auto py-8 px-4">
-    <div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-            <h1 class="text-2xl font-bold text-blue-900 mb-1">Manage Incoming Orders</h1>
-            <p class="text-gray-600">Review and process raw material orders from vendors. Check availability and update order status.</p>
-        </div>
-        
-    </div>
+    
 
     <!-- Order Statistics -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8" id="order-stats">

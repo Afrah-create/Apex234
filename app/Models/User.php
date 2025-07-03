@@ -21,6 +21,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'status',
     ];
 
     /**
@@ -73,6 +74,11 @@ class User extends Authenticatable
         $this->notify(new \App\Notifications\CustomResetPassword($token));
     }
 
+    /**
+     * Check if the user is approved (for vendor login).
+     *
+     * @return bool
+     */
     public function isApproved()
     {
         return $this->status === 'approved';
@@ -81,5 +87,10 @@ class User extends Authenticatable
     public function supplier()
     {
         return $this->hasOne(\App\Models\Supplier::class);
+    }
+
+    public function vendor()
+    {
+        return $this->hasOne(\App\Models\Vendor::class);
     }
 }

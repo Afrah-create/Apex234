@@ -341,4 +341,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // Supplier Track Deliveries Page
 Route::middleware(['auth', 'verified'])->get('/supplier/track-deliveries', [\App\Http\Controllers\SupplierController::class, 'trackDeliveries'])->name('supplier.track-deliveries');
 
+// API: Get all distribution centers
+Route::get('/api/distribution-centers', function() {
+    return \App\Models\DistributionCenter::select('id', 'center_name', 'center_address')->get();
+});
+
+// Vendor Deliveries Dashboard Page
+Route::middleware(['auth', 'verified'])->get('/vendor/deliveries', [\App\Http\Controllers\VendorDashboardController::class, 'deliveries'])->name('vendor.deliveries');
+
 require __DIR__.'/auth.php';

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Delivery;
 use App\Notifications\DeliveryNoteNotification;
+use Illuminate\Support\Facades\Storage;
 
 class DeliveryController extends Controller
 {
@@ -33,12 +34,18 @@ class DeliveryController extends Controller
             ]
         ));
 
+        // Generate PDF and save to storage
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('emails.delivery-note', ['delivery' => $delivery]);
+        $pdfPath = 'delivery_notes/delivery_' . $delivery->id . '_' . time() . '.pdf';
+        Storage::put('public/' . $pdfPath, $pdf->output());
+        $delivery->pdf_path = $pdfPath;
+        $delivery->save();
+
         // Send in-app notification to the vendor's user
         $vendor = \App\Models\Vendor::find($validated['vendor_id']);
         if ($vendor && $vendor->user) {
             $vendor->user->notify(new \App\Notifications\DeliveryNoteNotification($delivery));
-            // Generate PDF and send email
-            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('emails.delivery-note', ['delivery' => $delivery]);
+            // Send email with PDF attached
             \Illuminate\Support\Facades\Mail::to($vendor->user->email)->send(
                 new \App\Mail\DeliveryNoteMail($delivery, $pdf->output())
             );
