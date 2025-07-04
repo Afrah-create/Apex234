@@ -56,6 +56,15 @@
                         <option value="custom">Custom range</option>
                     </select>
                 </div>
+                <!-- Add Format Dropdown -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Format</label>
+                    <select id="export-format" name="export_format" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="pdf">PDF</option>
+                        <option value="excel">Excel</option>
+                        <option value="csv">CSV</option>
+                    </select>
+                </div>
             </div>
 
             <!-- Custom Date Range -->
@@ -565,10 +574,11 @@ function displayReportTable(data) {
 async function exportReport() {
     const form = document.getElementById('custom-report-form');
     const formData = new FormData(form);
-    
+    // Get selected format from dropdown
+    const selectedFormat = formData.get('export_format') || 'pdf';
     const exportData = {
         report_type: formData.get('report_type'),
-        format: 'pdf', // Default to PDF
+        format: selectedFormat,
         date_from: document.getElementById('date-from').value,
         date_to: document.getElementById('date-to').value,
         filters: {}
