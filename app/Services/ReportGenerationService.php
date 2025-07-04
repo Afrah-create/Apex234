@@ -155,18 +155,32 @@ class ReportGenerationService
     /**
      * Generate PDF content
      */
-    protected function generatePdfContent(array $reportData, ScheduledReport $report): string
+    public function generatePdfContent(array $reportData, ScheduledReport $report, $view = 'admin.reports.user_analysis_pdf'): string
     {
-        // For now, return JSON content as PDF is complex to generate
-        // In production, you'd use a library like DomPDF or mPDF
-        $content = [
-            'report_name' => $report->name,
-            'generated_at' => Carbon::now()->format('Y-m-d H:i:s'),
-            'summary' => $reportData['summary'] ?? [],
-            'data' => $reportData['data'] ?? []
-        ];
+        // Filter only necessary fields for the report
+        $summary = $reportData['summary'] ?? [];
+        $data = collect($reportData['data'] ?? [])->map(function ($user) {
+            return [
+                'name' => $user['name'] ?? '',
+                'email' => $user['email'] ?? '',
+                'role' => $user['role'] ?? '',
+                'status' => $user['status'] ?? '',
+            ];
+        })->toArray();
 
-        return json_encode($content, JSON_PRETTY_PRINT);
+        // Render a Blade view to HTML
+        $html = view($view, [
+            'report_name' => $report->name,
+            'generated_at' => now()->format('Y-m-d H:i:s'),
+            'summary' => $summary,
+            'data' => $data,
+        ])->render();
+
+        // Generate PDF from HTML
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML($html);
+
+        // Return the raw PDF binary content
+        return $pdf->output();
     }
 
     /**

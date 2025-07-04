@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class AdminReportController extends Controller
 {
@@ -642,6 +643,31 @@ class AdminReportController extends Controller
      */
     public function exportReport(Request $request): JsonResponse
     {
+        // If report_data is present, use it directly (for exporting current report from frontend)
+        if ($request->has('report_data')) {
+            $format = $request->input('format', 'pdf');
+            $reportData = $request->input('report_data');
+
+            // Use a dummy ScheduledReport for PDF generation
+            $report = new \App\Models\ScheduledReport([
+                'name' => 'Custom Export',
+                'report_type' => 'custom',
+                'format' => $format,
+            ]);
+
+            $reportService = app(\App\Services\ReportGenerationService::class);
+            $pdfContent = $reportService->generatePdfContent($reportData, $report);
+
+            $filename = 'custom_report_' . now()->format('Y-m-d_H-i-s') . '.pdf';
+            $filepath = 'reports/' . $filename;
+            Storage::disk('public')->put($filepath, $pdfContent);
+
+            return response()->json([
+                'success' => true,
+                'download_url' => asset('storage/' . $filepath)
+            ]);
+        }
+
         $request->validate([
             'report_type' => 'required|string',
             'format' => 'required|in:pdf,excel,csv',
@@ -664,13 +690,29 @@ class AdminReportController extends Controller
             $filename = $request->report_type . '_' . date('Y-m-d_H-i-s') . '.' . $request->format;
             $filepath = 'reports/' . $filename;
 
-            // Store report data
-            Storage::put($filepath, json_encode($reportData));
+            if ($request->format === 'pdf') {
+                $reportService = app(\App\Services\ReportGenerationService::class);
+                // Use user_analysis template for user analysis, generic for others
+                $view = $request->report_type === 'user_analysis' ? 'admin.reports.user_analysis_pdf' : 'admin.reports.generic_report_pdf';
+                $report = new \App\Models\ScheduledReport([
+                    'name' => ucfirst(str_replace('_', ' ', $request->report_type)),
+                    'report_type' => $request->report_type,
+                    'format' => 'pdf',
+                ]);
+                $pdfContent = $reportService->generatePdfContent($reportData, $report, $view);
+                Log::info('PDF content size: ' . strlen($pdfContent));
+                Log::info('Attempting to save PDF to: ' . storage_path('app/public/reports/' . $filename));
+                $written = Storage::disk('public')->put('reports/' . $filename, $pdfContent);
+                Log::info('PDF save result: ' . ($written ? 'success' : 'failure'));
+            } else {
+                // Store report data as CSV/Excel/JSON as before
+                Storage::disk('public')->put($filepath, json_encode($reportData));
+            }
 
             return response()->json([
                 'success' => true,
                 'message' => 'Report exported successfully',
-                'download_url' => route('admin.reports.download', ['filename' => $filename])
+                'download_url' => asset('storage/' . $filepath)
             ]);
         } catch (\Exception $e) {
             return response()->json([

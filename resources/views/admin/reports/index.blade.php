@@ -613,9 +613,33 @@ function exportCurrentReport() {
         alert('No report data to export');
         return;
     }
-    
-    // Implementation for exporting current report data
-    console.log('Exporting current report:', currentReportData);
+
+    // Optionally, get the format from the dropdown or default to PDF
+    const format = document.getElementById('export-format')?.value || 'pdf';
+
+    fetch('{{ route("api.reports.export") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({
+            report_data: currentReportData,
+            format: format
+        })
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            window.open(result.download_url, '_blank');
+        } else {
+            alert('Error exporting report: ' + result.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error exporting report:', error);
+        alert('Error exporting report. Please try again.');
+    });
 }
 
 // Print report
