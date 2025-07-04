@@ -141,11 +141,7 @@ class DatabaseSeeder extends Seeder
             'retailer_id' => $retailers->random()->id,
         ]);
 
-        // Seed employees
-        $this->call(EmployeeSeeder::class);
 
-        // Ensure the 'employee' role exists
-        \App\Models\Role::firstOrCreate(['name' => 'employee']);
         // Seed drivers for each supplier
         \App\Models\Supplier::all()->each(function($supplier) {
             if ($supplier->drivers()->count() < 3) {
@@ -159,5 +155,6 @@ class DatabaseSeeder extends Seeder
                 }
             }
         });
+
     }
 }

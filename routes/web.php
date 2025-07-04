@@ -74,8 +74,17 @@ Route::get('/dashboard', function () {
 
 // Role-specific dashboards
 Route::middleware(['auth', 'verified'])->group(function () {
+<<<<<<< HEAD
     Route::get('/dashboard/retailer', [\App\Http\Controllers\RetailerDashboardController::class, 'index'])->name('dashboard.retailer');
     Route::get('/dashboard/supplier', [\App\Http\Controllers\SupplierController::class, 'supplierDashboard'])->name('dashboard.supplier');
+=======
+    Route::get('/dashboard/retailer', function () {
+        return view('dashboard-retailer');
+    })->name('dashboard.retailer');
+    Route::get('/dashboard/supplier', function () {
+        return view('dashboard-supplier');
+    })->name('dashboard.supplier');
+>>>>>>> c3f66d6f08097b3e09078522c63a78571caafcb2
     Route::get('/dashboard/vendor', function () {
         return view('dashboard-vendor');
     })->name('dashboard.vendor');
