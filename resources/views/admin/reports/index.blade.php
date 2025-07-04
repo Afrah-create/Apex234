@@ -185,9 +185,47 @@ let reportChart = null;
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function() {
     loadReportTemplates();
+    populateReportTypeDropdown();
     loadReportFilters();
     setupEventListeners();
+    loadScheduledReports(); // Ensure this is called on page load
+
+    // Add toggle button above scheduled reports section
+    const scheduledReportsSection = document.getElementById('scheduled-reports');
+    const toggleBtn = document.createElement('button');
+    toggleBtn.id = 'toggle-scheduled-reports-btn';
+    toggleBtn.className = 'bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg mb-4';
+    toggleBtn.textContent = 'Hide Scheduled Reports';
+    scheduledReportsSection.parentNode.insertBefore(toggleBtn, scheduledReportsSection);
+    let scheduledReportsVisible = true;
+    toggleBtn.addEventListener('click', function() {
+        scheduledReportsVisible = !scheduledReportsVisible;
+        scheduledReportsSection.style.display = scheduledReportsVisible ? '' : 'none';
+        toggleBtn.textContent = scheduledReportsVisible ? 'Hide Scheduled Reports' : 'Show Scheduled Reports';
+    });
 });
+
+// Populate the report type dropdown on page load
+async function populateReportTypeDropdown() {
+    try {
+        const response = await fetch('{{ route("api.reports.templates") }}');
+        const templates = await response.json();
+        const reportTypeDropdown = document.getElementById('report-type');
+        if (!reportTypeDropdown) return;
+
+        // Clear existing options except the first
+        reportTypeDropdown.innerHTML = '<option value="">Select Report Type</option>';
+
+        templates.forEach(template => {
+            const option = document.createElement('option');
+            option.value = template.id;
+            option.textContent = template.name;
+            reportTypeDropdown.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error populating report type dropdown:', error);
+    }
+}
 
 // Load report templates
 async function loadReportTemplates() {
@@ -362,6 +400,11 @@ function displayReportResults(data) {
     const resultsDiv = document.getElementById('report-results');
     resultsDiv.style.display = 'block';
     
+    // Add section headings
+    document.getElementById('report-summary').innerHTML = '<h3 style="font-size:1.25rem; font-weight:600; margin-bottom:1rem;">Summary</h3>';
+    document.getElementById('report-chart').insertAdjacentHTML('afterbegin', '<h3 style="font-size:1.25rem; font-weight:600; margin-bottom:1rem;">Visualization</h3>');
+    document.getElementById('report-table').insertAdjacentHTML('afterbegin', '<h3 style="font-size:1.25rem; font-weight:600; margin-bottom:1rem;">Detailed Data</h3>');
+
     // Check if report has data
     if (!data.data || data.data.length === 0) {
         displayEmptyReport(data.summary);
@@ -567,7 +610,43 @@ function exportCurrentReport() {
 
 // Print report
 function printReport() {
-    window.print();
+    const reportContent = document.getElementById('report-results');
+    if (!reportContent) {
+        alert('No report to print!');
+        return;
+    }
+    // Gather report metadata
+    const reportType = document.getElementById('report-type').selectedOptions[0]?.textContent || 'Report';
+    const dateFrom = document.getElementById('date-from').value;
+    const dateTo = document.getElementById('date-to').value;
+    const generatedAt = new Date().toLocaleString();
+    // Build header
+    const headerHtml = `
+        <div style="text-align:center; margin-bottom: 2rem;">
+            <h1 style="font-size:2rem; font-weight:bold; margin-bottom:0.5rem;">${reportType}</h1>
+            <div style="font-size:1rem; color:#555;">Date Range: <b>${dateFrom}</b> to <b>${dateTo}</b></div>
+            <div style="font-size:1rem; color:#555;">Generated: <b>${generatedAt}</b></div>
+        </div>
+    `;
+    // Print only the report section with header
+    const printWindow = window.open('', '', 'width=900,height=650');
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>Print Report</title>
+            <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
+        </head>
+        <body>
+            ${headerHtml}
+            ${reportContent.innerHTML}
+        </body>
+        </html>
+    `);
+    injectPrintStyles(printWindow);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
 }
 
 // Schedule report
@@ -601,6 +680,7 @@ async function loadScheduledReports() {
 
 // Display scheduled reports
 function displayScheduledReports(reports) {
+    console.log('Scheduled reports received:', reports); // Debug log
     const container = document.getElementById('scheduled-reports');
     container.innerHTML = '';
     
@@ -642,6 +722,7 @@ function createScheduledReportCard(report) {
             <h3 class="font-semibold text-gray-900 text-lg">${report.name}</h3>
             ${statusBadge}
         </div>
+        <p class="text-sm text-gray-600 mb-2"><b>Receivers:</b> ${(Array.isArray(report.recipients) ? report.recipients.join(', ') : (report.recipients || 'N/A'))}</p>
         <p class="text-sm text-gray-600 mb-4 leading-relaxed">${report.description || 'No description provided'}</p>
         <div class="grid grid-cols-2 gap-4 text-sm mb-4">
             <div class="bg-gray-50 p-2 rounded">

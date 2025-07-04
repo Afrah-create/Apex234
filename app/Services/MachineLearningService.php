@@ -544,23 +544,29 @@ class MachineLearningService
             ->whereHas('inventory', function($query) {
                 $query->where('quantity', '<', 50);
             })
-            ->count();
+            ->get();
 
         $riskLevel = 'low';
         $score = 0.2;
 
-        if ($lowStockProducts > 5) {
+        if ($lowStockProducts->count() > 5) {
             $riskLevel = 'high';
             $score = 0.8;
-        } elseif ($lowStockProducts > 2) {
+        } elseif ($lowStockProducts->count() > 2) {
             $riskLevel = 'medium';
             $score = 0.5;
         }
 
+        $productNames = $lowStockProducts->pluck('product_name')->toArray();
+
         return [
             'level' => $riskLevel,
             'score' => $score,
-            'factors' => ['Low stock items: ' . $lowStockProducts]
+            'factors' => [
+                'Low stock items: ' . $lowStockProducts->count(),
+                'Products: ' . implode(', ', $productNames)
+            ],
+            'products' => $productNames
         ];
     }
 

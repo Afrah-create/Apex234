@@ -431,8 +431,8 @@ class AdminReportController extends Controller
                     break;
                     
                 case 'vendor':
-                    // Find the vendor record associated with this user
-                    $vendor = \App\Models\Vendor::where('user_id', $user->id)->first();
+                    // Use the users table directly for vendors
+                    $vendor = \App\Models\User::where('id', $user->id)->where('role', 'vendor')->first();
                     if ($vendor) {
                         $user->role_metrics = [
                             'total_products' => YogurtProduct::where('vendor_id', $vendor->id)->count(),
@@ -460,7 +460,7 @@ class AdminReportController extends Controller
                     if ($supplier) {
                         $user->role_metrics = [
                             'total_raw_materials' => \App\Models\RawMaterial::where('supplier_id', $supplier->id)->count(),
-                            'active_materials' => \App\Models\RawMaterial::where('supplier_id', $supplier->id)->where('is_active', true)->count(),
+                            'active_materials' => \App\Models\RawMaterial::where('supplier_id', $supplier->id)->count(),
                             'last_delivery' => \App\Models\RawMaterial::where('supplier_id', $supplier->id)->max('updated_at'),
                             'role_type' => 'Supplier'
                         ];

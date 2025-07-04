@@ -117,46 +117,55 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     // Cart sidebar toggle
     const cartSidebar = document.getElementById('cart-sidebar');
-    document.getElementById('cart-toggle-btn').addEventListener('click', function() {
-        cartSidebar.style.display = 'block';
-        setTimeout(() => cartSidebar.classList.remove('translate-x-full'), 10);
-        updateCartSidebar();
-    });
-    document.getElementById('cart-close-btn').addEventListener('click', function() {
-        cartSidebar.classList.add('translate-x-full');
-        setTimeout(() => cartSidebar.style.display = 'none', 300);
-    });
+    const cartToggleBtn = document.getElementById('cart-toggle-btn');
+    if (cartToggleBtn) {
+        cartToggleBtn.addEventListener('click', function() {
+            cartSidebar.style.display = 'block';
+            setTimeout(() => cartSidebar.classList.remove('translate-x-full'), 10);
+            updateCartSidebar();
+        });
+    }
+    const cartCloseBtn = document.getElementById('cart-close-btn');
+    if (cartCloseBtn) {
+        cartCloseBtn.addEventListener('click', function() {
+            cartSidebar.classList.add('translate-x-full');
+            setTimeout(() => cartSidebar.style.display = 'none', 300);
+        });
+    }
     // Place Order (frontend only)
-    document.getElementById('place-order-btn').addEventListener('click', async function() {
-        if (cart.length === 0) {
-            alert('Your cart is empty!');
-            return;
-        }
-        // Send order to backend (no delivery details needed)
-        try {
-            const res = await fetch('/retailer/orders', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({
-                    cart: cart
-                })
-            });
-            const data = await res.json();
-            if (data.success) {
-                showNotification('Order placed successfully!');
-                cart = [];
-                updateCartCount();
-                updateCartSidebar();
-                document.getElementById('cart-sidebar').classList.add('translate-x-full');
-                setTimeout(() => document.getElementById('cart-sidebar').style.display = 'none', 300);
-            } else {
-                showNotification(data.message || 'Order failed.', 'error');
+    const placeOrderBtn = document.getElementById('place-order-btn');
+    if (placeOrderBtn) {
+        placeOrderBtn.addEventListener('click', async function() {
+            if (cart.length === 0) {
+                alert('Your cart is empty!');
+                return;
             }
-        } catch (e) {
-            alert('Order failed. Please try again.');
-        }
-    });
+            // Send order to backend (no delivery details needed)
+            try {
+                const res = await fetch('/retailer/orders', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        cart: cart
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showNotification('Order placed successfully!');
+                    cart = [];
+                    updateCartCount();
+                    updateCartSidebar();
+                    document.getElementById('cart-sidebar').classList.add('translate-x-full');
+                    setTimeout(() => document.getElementById('cart-sidebar').style.display = 'none', 300);
+                } else {
+                    showNotification(data.message || 'Order failed.', 'error');
+                }
+            } catch (e) {
+                alert('Order failed. Please try again.');
+            }
+        });
+    }
 }); 

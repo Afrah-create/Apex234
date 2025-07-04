@@ -32,13 +32,13 @@ function showSlide(n) {
     slides.forEach(slide => slide.classList.remove('active'));
     indicators.forEach(indicator => indicator.classList.remove('active'));
     
-    // Show current slide
-    slides[n].classList.add('active');
-    indicators[n].classList.add('active');
+    // Show current slide (with safety checks)
+    if (slides[n]) slides[n].classList.add('active');
+    if (indicators[n]) indicators[n].classList.add('active');
     
     // Update caption
     const captionElement = document.querySelector('.slide-caption');
-    if (captionElement) {
+    if (captionElement && captions[n]) {
         captionElement.innerHTML = `
             <h3>${captions[n].title}</h3>
             <p>${captions[n].description}</p>

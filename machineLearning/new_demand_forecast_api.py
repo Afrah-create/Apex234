@@ -14,8 +14,10 @@ def run_advanced_demand_forecast(months=3):
     Run advanced demand forecasting and return JSON result
     """
     try:
-        # Initialize the advanced forecaster
-        forecaster = AdvancedDemandForecaster()
+        # Find the path to the CSV file in the same directory as this script
+        csv_path = os.path.join(os.path.dirname(__file__), 'demanForecasting.csv')
+        # Initialize the advanced forecaster with the correct csv_path
+        forecaster = AdvancedDemandForecaster(csv_path=csv_path)
         
         # Generate forecast
         result = forecaster.generate_forecast(months)

@@ -263,6 +263,16 @@ class ReportGenerationService
     }
 
     /**
+     * Generate a report for a scheduled report (stub for scheduled sending)
+     */
+    public function generateReport($scheduledReport)
+    {
+        // TODO: Implement actual report generation logic based on $scheduledReport
+        // For now, return dummy data or a string
+        return 'This is a dummy report for ' . $scheduledReport->name;
+    }
+
+    /**
      * Create a new scheduled report
      */
     public function createScheduledReport(array $data): ScheduledReport
