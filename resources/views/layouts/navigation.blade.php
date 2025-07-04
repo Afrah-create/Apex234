@@ -17,8 +17,14 @@
             </button>
             <x-dropdown align="right" width="48">
                 <x-slot name="trigger">
-                    <button class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-800 hover:bg-blue-700 focus:outline-none transition ease-in-out duration-150 text-white font-bold text-lg uppercase" title="User menu">
-                        {{ collect(explode(' ', auth()->user()->name))->map(fn($part) => strtoupper(substr($part,0,1)))->join('') }}
+                    <button class="w-10 h-10 rounded-full bg-blue-800 hover:bg-blue-700 focus:outline-none transition ease-in-out duration-150 overflow-hidden p-0 border-2 border-white" title="User menu">
+                        @if(auth()->user()->profile_photo)
+                            <img src="{{ auth()->user()->profile_photo_url }}" alt="Profile Photo" class="w-full h-full object-cover rounded-full block" />
+                        @else
+                            <span class="w-full h-full flex items-center justify-center text-white font-bold text-lg uppercase">
+                                {{ collect(explode(' ', auth()->user()->name))->map(fn($part) => strtoupper(substr($part,0,1)))->join('') }}
+                            </span>
+                        @endif
                     </button>
                 </x-slot>
                 <x-slot name="content">

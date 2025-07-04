@@ -74,6 +74,15 @@ class User extends Authenticatable
         $this->notify(new \App\Notifications\CustomResetPassword($token));
     }
 
+    public function getProfilePhotoUrlAttribute()
+    {
+        if ($this->profile_photo) {
+            return asset('storage/profile_photos/' . $this->profile_photo);
+        }
+        // Return a default avatar image (you can use a local asset or a service like ui-avatars)
+        return asset('images/default-avatar.png');
+    }
+
 
     /**
      * Check if the user is approved (for vendor login).
