@@ -81,11 +81,93 @@ class AdminUserController extends Controller
         ]);
         $validated['is_active'] = $request->has('is_active');
         $user->update($validated);
-        if ($request->has('roles')) {
-            $user->roles()->sync($request->input('roles'));
+        if ($request->has('role')) {
+            $roleId = $request->input('role');
+            $user->roles()->sync([$roleId]);
+
+            // Get the role name
+            $roleName = \App\Models\Role::find($roleId)->name;
+
+            // Auto-create profile for the assigned role if missing
+            if ($roleName === 'supplier' && !$user->supplier) {
+                \App\Models\Supplier::create([
+                    'user_id' => $user->id,
+                    'company_name' => $user->name . " Company",
+                    'registration_number' => 'REG-' . strtoupper(uniqid()),
+                    'business_address' => 'TBD',
+                    'contact_person' => $user->name,
+                    'contact_phone' => 'TBD',
+                    'contact_email' => $user->email,
+                    'supplier_type' => 'dairy_farm',
+                    'status' => 'pending',
+                    'rating' => 0,
+                    'certifications' => json_encode([]),
+                    'verification_date' => null,
+                    'contract_start_date' => null,
+                    'contract_end_date' => null,
+                    'credit_limit' => 0,
+                    'payment_terms_days' => 30,
+                    'notes' => null,
+                ]);
+            } elseif ($roleName === 'vendor' && !$user->vendor) {
+                \App\Models\Vendor::create([
+                    'user_id' => $user->id,
+                ]);
+            } elseif ($roleName === 'retailer' && !$user->retailer) {
+                \App\Models\Retailer::create([
+                    'user_id' => $user->id,
+                    'store_name' => $user->name . " Store",
+                    'store_code' => 'STORE-' . strtoupper(uniqid()),
+                    'store_address' => 'TBD',
+                    'store_phone' => 'TBD',
+                    'store_email' => $user->email,
+                    'store_manager' => $user->name,
+                    'manager_phone' => 'TBD',
+                    'manager_email' => $user->email,
+                    'store_type' => 'supermarket',
+                    'store_size' => 'small',
+                    'daily_customer_traffic' => null,
+                    'monthly_sales_volume' => null,
+                    'payment_methods' => json_encode([]),
+                    'store_hours' => json_encode([]),
+                    'certification_status' => 'pending',
+                    'certifications' => json_encode([]),
+                    'last_inspection_date' => null,
+                    'next_inspection_date' => null,
+                    'customer_rating' => 0,
+                    'status' => 'active',
+                    'notes' => null,
+                ]);
+            } elseif ($roleName === 'employee' && !$user->employee) {
+                \App\Models\Employee::create([
+                    'user_id' => $user->id,
+                    'name' => $user->name,
+                    'role' => 'Production Worker',
+                    'status' => 'active',
+                ]);
+            }
         } else {
             $user->roles()->detach();
         }
+
+        // If the updated user is the currently logged-in user, redirect to their new dashboard
+        if (auth()->id() === $user->id) {
+            switch ($roleName ?? $user->getPrimaryRoleName()) {
+                case 'supplier':
+                    return redirect()->route('dashboard.supplier')->with('status', 'User updated!');
+                case 'vendor':
+                    return redirect()->route('vendor.dashboard')->with('status', 'User updated!');
+                case 'retailer':
+                    return redirect()->route('retailer.dashboard')->with('status', 'User updated!');
+                case 'employee':
+                    return redirect()->route('employee.dashboard')->with('status', 'User updated!');
+                case 'admin':
+                    return redirect()->route('dashboard')->with('status', 'User updated!');
+                default:
+                    return redirect()->route('dashboard')->with('status', 'User updated!');
+            }
+        }
+
         return Redirect::route('admin.users.index')->with('status', 'User updated!');
     }
 

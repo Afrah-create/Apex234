@@ -95,14 +95,14 @@ class User extends Authenticatable
         return $this->hasOne(\App\Models\Vendor::class);
     }
 
-    public function supplier()
+    public function retailer()
     {
-        return $this->hasOne(\App\Models\Supplier::class);
+        return $this->hasOne(\App\Models\Retailer::class);
     }
 
-    public function isApproved()
+    public function employee()
     {
-        return $this->status === 'approved';
+        return $this->hasOne(\App\Models\Employee::class);
     }
 }
     
