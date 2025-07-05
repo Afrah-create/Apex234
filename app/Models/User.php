@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -45,6 +44,44 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Determine if the user has verified their email address.
+     * Only vendors need email verification.
+     */
+    public function hasVerifiedEmail(): bool
+    {
+        $role = $this->getPrimaryRoleName();
+        
+        // Only vendors need email verification
+        if ($role === 'vendor') {
+            return ! is_null($this->email_verified_at);
+        }
+        
+        // All other users are considered verified
+        return true;
+    }
+
+    /**
+     * Mark the given user's email as verified.
+     */
+    public function markEmailAsVerified(): bool
+    {
+        return $this->forceFill([
+            'email_verified_at' => $this->freshTimestamp(),
+        ])->save();
+    }
+
+    /**
+     * Send the email verification notification.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        // Only send verification email to vendors
+        if ($this->getPrimaryRoleName() === 'vendor') {
+            $this->notify(new \Illuminate\Auth\Notifications\VerifyEmail);
+        }
     }
 
     public function roles()

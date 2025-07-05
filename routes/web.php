@@ -65,30 +65,34 @@ Route::get('/dashboard', function () {
                 return redirect()->route('dashboard.supplier');
             case 'vendor':
                 return redirect()->route('dashboard.vendor');
+            case 'employee':
+                return redirect()->route('dashboard.employee');
             default:
-                return view('dashboard-admin');
+                // Check if user has an employee record and redirect accordingly
+                $employeeRecord = \App\Models\Employee::where('user_id', $user->id)->first();
+                if ($employeeRecord) {
+                    return redirect()->route('dashboard.employee');
+                }
+                // For users without a specific role, redirect to home or show error
+                return redirect('/')->with('error', 'Access denied. Please contact administrator.');
         }
     }
     return redirect()->route('login');
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['auth'])->name('dashboard');
 
 // Role-specific dashboards
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard/retailer', [\App\Http\Controllers\RetailerDashboardController::class, 'index'])->name('dashboard.retailer');
     Route::get('/dashboard/supplier', [\App\Http\Controllers\SupplierController::class, 'supplierDashboard'])->name('dashboard.supplier');
     // Removed direct return of dashboard-supplier view to ensure variables are always passed from the controller.
-    Route::get('/dashboard/vendor', function () {
-        return view('dashboard-vendor');
-    })->name('dashboard.vendor');
+    Route::get('/dashboard/vendor', [\App\Http\Controllers\VendorDashboardController::class, 'showDashboard'])->name('dashboard.vendor');
     Route::get('/vendor/manage-orders', function () {
         return view('vendor.manage-orders');
     })->name('vendor.manage-orders');
     Route::get('/vendor/manage-products', function () {
         return view('vendor.manage-products');
     })->name('vendor.manage-products');
-    Route::get('/dashboard/employee', function () {
-        return view('employee.dashboard');
-    })->name('dashboard.employee');
+    Route::get('/dashboard/employee', [\App\Http\Controllers\EmployeeDashboardController::class, 'index'])->name('dashboard.employee');
     Route::post('/retailer/orders', [\App\Http\Controllers\RetailerOrderController::class, 'store'])->name('retailer.orders.store');
 });
 

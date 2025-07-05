@@ -144,4 +144,11 @@ class VendorDashboardController extends Controller
             ->get();
         return view('vendor.deliveries', compact('deliveries'));
     }
+
+    public function showDashboard()
+    {
+        $vendor = auth()->user()->vendor;
+        $employees = $vendor ? $vendor->employees : collect();
+        return view('dashboard-vendor', compact('vendor', 'employees'));
+    }
 } 

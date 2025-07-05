@@ -13,7 +13,10 @@ class VendorApplicantController extends Controller
     // Show the vendor application form
     public function create()
     {
-        return view('vendor.apply');
+        // Get registration data from session if available
+        $registrationData = session('vendor_registration_data', []);
+        
+        return view('vendor.apply', compact('registrationData'));
     }
 
     // Handle the form submission and PDF upload
@@ -81,6 +84,9 @@ class VendorApplicantController extends Controller
             'visit_date' => $visitDate,
             'validation_message' => $validationMessage,
         ]);
+
+        // Clear registration data from session
+        session()->forget('vendor_registration_data');
 
         // Redirect to confirmation page with check status button
         return redirect()->route('vendor-applicant.confirmation', ['email' => $validated['email']]);

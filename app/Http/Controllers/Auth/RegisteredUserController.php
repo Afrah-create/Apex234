@@ -94,6 +94,9 @@ class RegisteredUserController extends Controller
             ]);
         }
 
+        // Note: Vendor records are created only after admin approval
+        // For vendors, we only create the user and redirect to application form
+
         event(new Registered($user));
 
         Auth::login($user);
@@ -105,6 +108,17 @@ class RegisteredUserController extends Controller
             case 'supplier':
                 return redirect()->route('dashboard.supplier');
             case 'vendor':
+                // Store registration data in session for pre-filling application form
+                $request->session()->put('vendor_registration_data', [
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    'business_name' => $request->business_name ?? '',
+                    'business_address' => $request->business_address ?? '',
+                    'phone_number' => $request->phone_number ?? '',
+                    'tax_id' => $request->tax_id ?? '',
+                    'business_license' => $request->business_license ?? '',
+                    'description' => $request->description ?? '',
+                ]);
                 return redirect()->route('vendor-applicant.create');
             default:
                 return redirect(route('dashboard', absolute: false));

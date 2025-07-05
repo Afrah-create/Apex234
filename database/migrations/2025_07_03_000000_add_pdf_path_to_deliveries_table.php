@@ -9,14 +9,19 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('deliveries', function (Blueprint $table) {
-            $table->string('pdf_path')->nullable();
+            // Only add pdf_path if it doesn't already exist
+            if (!Schema::hasColumn('deliveries', 'pdf_path')) {
+                $table->string('pdf_path')->nullable();
+            }
         });
     }
 
     public function down(): void
     {
         Schema::table('deliveries', function (Blueprint $table) {
-            $table->dropColumn('pdf_path');
+            if (Schema::hasColumn('deliveries', 'pdf_path')) {
+                $table->dropColumn('pdf_path');
+            }
         });
     }
 }; 

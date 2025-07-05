@@ -30,18 +30,13 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
 
         $user = Auth::user();
-        $role = $user->getPrimaryRoleName();
-        if ($role === 'vendor' && !$user->isApproved()) {
-            Auth::logout();
-            return redirect()->route('login')->withErrors([
-                'email' => 'Your vendor account is pending admin approval. Please wait for admin approval before logging in.'
-            ]);
-        }
+        
         if ($user instanceof \App\Models\User) {
             $role = $user->getPrimaryRoleName();
         } else {
             $role = null;
         }
+        
         switch ($role) {
             case 'admin':
                 return redirect()->route('dashboard');
@@ -52,12 +47,17 @@ class AuthenticatedSessionController extends Controller
             case 'vendor':
                 $vendorApplicant = VendorApplicant::where('email', $user->email)->latest()->first();
                 if (!$vendorApplicant || $vendorApplicant->status === 'pending') {
-                    return redirect()->route('vendor-applicant.create');
+                    return redirect()->route('vendor-applicant.status', ['email' => $user->email]);
                 }
                 return redirect()->route('dashboard.vendor');
             case 'employee':
                 return redirect()->route('dashboard.employee');
             default:
+                // Check if user has an employee record and redirect accordingly
+                $employeeRecord = \App\Models\Employee::where('user_id', $user->id)->first();
+                if ($employeeRecord) {
+                    return redirect()->route('dashboard.employee');
+                }
                 return redirect()->route('dashboard');
         }
     }

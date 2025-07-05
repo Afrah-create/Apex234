@@ -25,7 +25,7 @@
                                 <option value="">-- Unassigned --</option>
                                 @foreach($vendors as $vendor)
                                     <option value="{{ $vendor->id }}" @if($employee->vendor_id == $vendor->id) selected @endif>
-                                        {{ $vendor->name }}
+                                        {{ $vendor->business_name }}
                                     </option>
                                 @endforeach
                             </select>
