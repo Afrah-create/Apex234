@@ -73,14 +73,13 @@ class User extends Authenticatable
         $this->notify(new \App\Notifications\CustomResetPassword($token));
     }
 
-<<<<<<< HEAD
     public function supplier()
     {
         return $this->hasOne(\App\Models\Supplier::class);
-=======
+    }
+
     public function isApproved()
     {
         return $this->status === 'approved';
->>>>>>> b086cb0c900ffaa41409c246f7f6cd8ca5f154e2
     }
 }
