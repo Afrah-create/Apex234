@@ -22,6 +22,19 @@ Route::get('/test-middleware', function () {
     return 'Middleware test successful!';
 })->middleware('test');
 
+// Test mail route
+Route::get('/test-mail', function () {
+    try {
+        \Illuminate\Support\Facades\Mail::raw('Test email from Laravel', function($message) {
+            $message->to('test@example.com')
+                    ->subject('Test Email');
+        });
+        return 'Mail sent successfully!';
+    } catch (\Exception $e) {
+        return 'Mail error: ' . $e->getMessage();
+    }
+});
+
 Route::get('/dashboard', function () {
     $user = Auth::user();
     if ($user instanceof User) {
