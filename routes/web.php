@@ -106,6 +106,12 @@ Route::middleware(['auth'])->group(function () {
         return view('vendor.manage-products');
     })->name('vendor.manage-products');
     Route::get('/dashboard/employee', [\App\Http\Controllers\EmployeeDashboardController::class, 'index'])->name('dashboard.employee');
+    
+    // Role-specific employee dashboard routes
+    Route::get('/dashboard/employee/production-worker', [\App\Http\Controllers\EmployeeDashboardController::class, 'productionWorkerDashboard'])->name('dashboard.employee.production-worker');
+    Route::get('/dashboard/employee/warehouse-staff', [\App\Http\Controllers\EmployeeDashboardController::class, 'warehouseStaffDashboard'])->name('dashboard.employee.warehouse-staff');
+    Route::get('/dashboard/employee/driver', [\App\Http\Controllers\EmployeeDashboardController::class, 'driverDashboard'])->name('dashboard.employee.driver');
+    Route::get('/dashboard/employee/sales-manager', [\App\Http\Controllers\EmployeeDashboardController::class, 'salesManagerDashboard'])->name('dashboard.employee.sales-manager');
     Route::post('/retailer/orders', [\App\Http\Controllers\RetailerOrderController::class, 'store'])->name('retailer.orders.store');
 });
 
