@@ -9,6 +9,8 @@ use App\Http\Controllers\AdminUserController;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Http\Controllers\VendorApplicantController;
+use App\Http\Controllers\SupplierController;
+use App\Models\YogurtProduct;
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -75,10 +77,14 @@ Route::get('/dashboard', function () {
 // Role-specific dashboards
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard/retailer', function () {
-        return view('dashboard-retailer');
+        $products = YogurtProduct::all();
+        return view('dashboard-retailer', compact('products'));
     })->name('dashboard.retailer');
     Route::get('/dashboard/supplier', function () {
-        return view('dashboard-supplier');
+        $totalSupplied = \App\Models\OrderItem::sum('quantity');
+        $pendingDeliveries = \App\Models\Delivery::where('delivery_status', 'scheduled')->count();
+        $deliveredBatches = \App\Models\Delivery::where('delivery_status', 'delivered')->count();
+        return view('dashboard-supplier', compact('totalSupplied', 'pendingDeliveries', 'deliveredBatches'));
     })->name('dashboard.supplier');
     Route::get('/dashboard/vendor', function () {
         return view('dashboard-vendor');
@@ -109,6 +115,11 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::get('/{id}/edit', [AdminUserController::class, 'edit'])->name('edit');
     Route::post('/{id}/update', [AdminUserController::class, 'update'])->name('update');
     Route::delete('/{id}', [AdminUserController::class, 'destroy'])->name('destroy');
+});
+
+// Admin employee store route
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/employees')->name('admin.employees.')->group(function () {
+    Route::post('/', [\App\Http\Controllers\AdminEmployeeController::class, 'store'])->name('store');
 });
 
 // Admin order management
@@ -208,6 +219,11 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::get('/', [AnalyticsController::class, 'index'])->name('index');
 });
 
+// Admin reports route group
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/reports')->name('admin.reports.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\AdminReportController::class, 'index'])->name('index');
+});
+
 // Analytics API routes
 Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('api/analytics')->name('api.analytics.')->group(function () {
     Route::get('/kpi', [AnalyticsController::class, 'getKpiData'])->name('kpi');
@@ -222,5 +238,7 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::post('/what-if-analysis', [AnalyticsController::class, 'runWhatIfAnalysis'])->name('what-if-analysis');
     Route::post('/export-report', [AnalyticsController::class, 'exportReport'])->name('export-report');
 });
+
+Route::middleware(['auth', 'verified'])->get('/supplier/raw-material-inventory', [SupplierController::class, 'rawMaterialInventory'])->name('supplier.raw-material-inventory');
 
 require __DIR__.'/auth.php';

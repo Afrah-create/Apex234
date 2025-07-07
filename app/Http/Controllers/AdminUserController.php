@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Employee;
+use App\Models\Vendor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Auth;
@@ -38,7 +40,9 @@ class AdminUserController extends Controller
             $page,
             ['path' => $request->url(), 'query' => $request->query()]
         );
-        return view('admin.users.index', ['users' => $paginatedUsers]);
+        $employees = Employee::all();
+        $vendors = Vendor::all();
+        return view('admin.users.index', ['users' => $paginatedUsers, 'employees' => $employees, 'vendors' => $vendors]);
     }
 
     public function create()

@@ -24,10 +24,11 @@ class DairyFarmSeeder extends Seeder
         }
 
         // Create first dairy farm
-        DairyFarm::create([
+        DairyFarm::firstOrCreate([
+            'farm_code' => 'GVDF001'
+        ], [
             'supplier_id' => $supplier->id,
             'farm_name' => 'Green Valley Dairy Farm',
-            'farm_code' => 'GVDF001',
             'farm_address' => 'Plot 123, Green Valley Road, Kampala, Uganda',
             'farm_phone' => '+256-701-234-567',
             'farm_email' => 'info@greenvalleydairy.com',
@@ -47,10 +48,11 @@ class DairyFarmSeeder extends Seeder
         ]);
 
         // Create second dairy farm
-        DairyFarm::create([
+        DairyFarm::firstOrCreate([
+            'farm_code' => 'MVDF002'
+        ], [
             'supplier_id' => $supplier->id,
             'farm_name' => 'Mountain View Dairy Farm',
-            'farm_code' => 'MVDF002',
             'farm_address' => 'Plot 456, Mountain View Estate, Entebbe, Uganda',
             'farm_phone' => '+256-703-456-789',
             'farm_email' => 'contact@mountainviewdairy.com',
