@@ -65,5 +65,6 @@
     </div>
 
     <script src="{{ asset('js/carousel.js') }}"></script>
+    
 </body>
 </html>

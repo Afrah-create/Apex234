@@ -11,6 +11,8 @@ class RawMaterial extends Model
 
     protected $fillable = [
         'dairy_farm_id',
+        'supplier_id',
+        'vendor_id',
         'material_name',
         'material_code',
         'material_type',

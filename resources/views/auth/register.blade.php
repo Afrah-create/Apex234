@@ -124,4 +124,5 @@
             roleSelect.addEventListener('change', toggleVendorFields);
         });
     </script>
+    
 </x-guest-layout>

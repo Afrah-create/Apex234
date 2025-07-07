@@ -212,21 +212,49 @@ class SupplierOrderController extends Controller
 
         // Add to vendor's inventory (create or increment)
         $vendorId = $order->vendor_id;
-        $vendorInventory = \App\Models\RawMaterial::where('supplier_id', $vendorId)
+        $vendorInventory = \App\Models\RawMaterial::where('vendor_id', $vendorId)
             ->where('material_type', $order->material_type)
             ->where('unit_of_measure', $order->unit_of_measure)
             ->first();
+        $unitPrice = $order->unit_price ?? 0;
+        $totalCost = $unitPrice * $order->quantity;
+        // Use the first supplier batch for field values
+        $supplierBatch = $batches->first();
         if ($vendorInventory) {
             $vendorInventory->quantity += $order->quantity;
+            $vendorInventory->unit_price = $unitPrice;
+            $vendorInventory->total_cost = $vendorInventory->quantity * $unitPrice;
             $vendorInventory->status = 'available';
+            if ($supplierBatch) {
+                $vendorInventory->harvest_date = $supplierBatch->harvest_date;
+                $vendorInventory->expiry_date = $supplierBatch->expiry_date;
+                $vendorInventory->quality_grade = $supplierBatch->quality_grade;
+                $vendorInventory->temperature = $supplierBatch->temperature;
+                $vendorInventory->ph_level = $supplierBatch->ph_level;
+                $vendorInventory->fat_content = $supplierBatch->fat_content;
+                $vendorInventory->protein_content = $supplierBatch->protein_content;
+                $vendorInventory->description = $supplierBatch->description;
+                $vendorInventory->quality_notes = $supplierBatch->quality_notes;
+            }
             $vendorInventory->save();
         } else {
             \App\Models\RawMaterial::create([
-                'supplier_id' => $vendorId,
+                'vendor_id' => $vendorId,
                 'material_type' => $order->material_type,
                 'material_name' => $order->material_name,
                 'quantity' => $order->quantity,
                 'unit_of_measure' => $order->unit_of_measure,
+                'unit_price' => $unitPrice,
+                'total_cost' => $totalCost,
+                'harvest_date' => $supplierBatch ? $supplierBatch->harvest_date : now(),
+                'expiry_date' => $supplierBatch ? $supplierBatch->expiry_date : now()->addMonth(),
+                'quality_grade' => $supplierBatch ? $supplierBatch->quality_grade : 'A',
+                'temperature' => $supplierBatch ? $supplierBatch->temperature : null,
+                'ph_level' => $supplierBatch ? $supplierBatch->ph_level : null,
+                'fat_content' => $supplierBatch ? $supplierBatch->fat_content : null,
+                'protein_content' => $supplierBatch ? $supplierBatch->protein_content : null,
+                'description' => $supplierBatch ? $supplierBatch->description : null,
+                'quality_notes' => $supplierBatch ? $supplierBatch->quality_notes : null,
                 'status' => 'available',
                 'material_code' => uniqid('vendor_'),
             ]);

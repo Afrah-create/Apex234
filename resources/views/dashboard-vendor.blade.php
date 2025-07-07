@@ -2,8 +2,7 @@
 
 @section('content')
     <main class="main-content">
-        <h1>Vendor Dashboard</h1>
-        <p>Welcome, Vendor! Here is your real-time business overview.</p>
+       
 
         <!-- Inventory Summary Cards -->
         <div class="summary-cards mb-8 grid grid-cols-1 md:grid-cols-4 gap-4">
