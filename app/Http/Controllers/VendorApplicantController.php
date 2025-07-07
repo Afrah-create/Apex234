@@ -7,6 +7,7 @@ use App\Models\VendorApplicant;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Auth;
 
 class VendorApplicantController extends Controller
 {
@@ -15,8 +16,22 @@ class VendorApplicantController extends Controller
     {
         // Get registration data from session if available
         $registrationData = session('vendor_registration_data', []);
-        
-        return view('vendor.apply', compact('registrationData'));
+        $name = null;
+        $email = null;
+        if (Auth::check()) {
+            $user = Auth::user();
+            $role = null;
+            if (method_exists($user, 'getPrimaryRoleName')) {
+                $role = $user->getPrimaryRoleName();
+            } elseif (isset($user->role)) {
+                $role = $user->role;
+            }
+            if ($role === 'vendor') {
+                $name = $user->name;
+                $email = $user->email;
+            }
+        }
+        return view('vendor.apply', compact('registrationData', 'name', 'email'));
     }
 
     // Handle the form submission and PDF upload
