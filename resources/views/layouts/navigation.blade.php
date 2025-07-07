@@ -20,29 +20,13 @@
                     <div id="notificationMessages" class="p-4 max-h-64 overflow-y-auto text-sm"></div>
                 </div>
             </div>
-            <!-- Chat Icon Button with Dropdown -->
-            <div class="relative">
-                <button id="chatIconBtn" class="relative inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-800 hover:bg-blue-700 focus:outline-none transition ease-in-out duration-150 mr-1" title="Chat">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.77 9.77 0 01-4-.8l-4 1 1-3.2A7.96 7.96 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                    </svg>
-                    <span id="chatNotificationDot" class="absolute top-2 right-2 block h-5 w-5 rounded-full bg-red-500 text-xs text-white flex items-center justify-center font-bold hidden"></span>
-                </button>
-                <!-- Chat Dropdown -->
-                <div id="chatDropdown" class="hidden absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg z-50 border border-gray-200" style="min-width: 320px;">
-                    <div class="p-4 border-b flex flex-col gap-2">
-                        <label for="chatRecipient" class="text-sm font-semibold">Send to:</label>
-                        <select id="chatRecipient" class="w-full border rounded px-2 py-1 focus:outline-none focus:ring">
-                            <option value="">Select user...</option>
-                        </select>
-                    </div>
-                    <div id="chatMessages" class="p-4 h-48 overflow-y-auto bg-gray-50 text-sm" style="max-height: 16rem;"></div>
-                    <div class="p-4 border-t flex gap-2">
-                        <input id="chatMessageInput" type="text" class="flex-1 border rounded px-2 py-1 focus:outline-none focus:ring" placeholder="Type your message...">
-                        <button id="chatSendBtn" class="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition">Send</button>
-                    </div>
-                </div>
-            </div>
+            <!-- Chat Icon Button (link to /chat) -->
+            <a href="/chat" class="relative inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-500 hover:bg-blue-600 focus:outline-none transition ease-in-out duration-150 mr-1" title="Chat">
+                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M2 21l1.65-4.95A8.001 8.001 0 1 1 12 20a7.96 7.96 0 0 1-4.95-1.65L2 21zm6-9a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm4 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm4 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
+                </svg>
+                <span id="chatNotificationDot" class="absolute top-2 right-2 block h-5 w-5 rounded-full bg-red-500 text-xs text-white flex items-center justify-center font-bold hidden"></span>
+            </a>
             <x-dropdown align="right" width="48">
                 <x-slot name="trigger">
                     <button class="w-10 h-10 rounded-full bg-blue-800 hover:bg-blue-700 focus:outline-none transition ease-in-out duration-150 overflow-hidden p-0 border-2 border-white" title="User menu">
@@ -137,8 +121,18 @@
                             });
                             chatRecipient.innerHTML = '<option value="">Select user...</option>';
                             users.forEach(user => {
-                                let dot = unreadFromUsers[user.id] ? ' <span style="color:red;font-size:1.2em;">•</span>' : '';
-                                chatRecipient.innerHTML += `<option value="${user.id}">${user.name} (${user.email})${dot}</option>`;
+                                fetch(`/api/user/${user.id}`)
+                                    .then(r => r.json())
+                                    .then(userInfo => {
+                                        const photoUrl = userInfo.profile_photo_url || '/images/default-avatar.png';
+                                        let dot = unreadFromUsers[user.id] ? ' <span style="color:red;font-size:1.2em;">•</span>' : '';
+                                        chatRecipient.innerHTML += `<option value="${user.id}">
+                                            <span style='display:flex;align-items:center;'>
+                                                <img src='${photoUrl}' style='width:24px;height:24px;border-radius:50%;object-fit:cover;margin-right:8px;'>
+                                                ${user.name} (${user.email})${dot}
+                                            </span>
+                                        </option>`;
+                                    });
                             });
                         })
                         .catch(err => {
@@ -230,21 +224,67 @@
         pollingInterval = setInterval(pollUnread, 5000);
 
         // --- Notification Bell Dropdown Logic ---
+        function updateNotificationBadge() {
+            fetch('/chat/unread-counts')
+                .then(res => res.json())
+                .then(unreadCounts => {
+                    let totalUnread = 0;
+                    for (const senderId in unreadCounts) {
+                        totalUnread += unreadCounts[senderId];
+                    }
+                    const notificationDot = document.getElementById('notificationDot');
+                    if (totalUnread > 0) {
+                        notificationDot.classList.remove('hidden');
+                        notificationDot.textContent = totalUnread;
+                    } else {
+                        notificationDot.classList.add('hidden');
+                        notificationDot.textContent = '';
+                    }
+                });
+        }
+        updateNotificationBadge();
+        setInterval(updateNotificationBadge, 10000);
+
         notificationBellBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             notificationDropdown.classList.toggle('hidden');
             if (!notificationDropdown.classList.contains('hidden')) {
-                // Mark all as read when opening the dropdown
-                fetch('/chat/mark-all-read', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    }
-                }).then(() => {
-                    pollUnread();
-                    loadUnreadMessages();
-                });
+                // Load unread senders
+                fetch('/chat/unread-counts')
+                    .then(res => res.json())
+                    .then(unreadCounts => {
+                        const senderIds = Object.keys(unreadCounts);
+                        if (senderIds.length === 0) {
+                            notificationMessages.innerHTML = '<div class="text-gray-500 text-center py-4">No unread messages.</div>';
+                            return;
+                        }
+                        // Fetch sender info for each senderId
+                        Promise.all(senderIds.map(id => fetch(`/api/user/${id}`).then(r => r.json())))
+                            .then(users => {
+                                notificationMessages.innerHTML = '';
+                                users.forEach((user, idx) => {
+                                    const senderId = senderIds[idx];
+                                    const photoUrl = user.profile_photo_url || '/images/default-avatar.png';
+                                    const div = document.createElement('div');
+                                    div.className = 'mb-3 border-b pb-2 flex items-center gap-2';
+                                    div.innerHTML = `
+                                        <a href="/chat?user_id=${senderId}" class="flex-1 flex items-center gap-2 text-blue-700 font-semibold hover:underline notification-chat-link" data-user-id="${senderId}">
+                                            <img src="${photoUrl}" alt="Profile" class="w-8 h-8 rounded-full object-cover border border-gray-300" />
+                                            <span>${user.name || 'User #' + senderId}</span>
+                                            <span class="ml-2 text-xs text-red-600 font-bold">Unread message</span>
+                                        </a>
+                                    `;
+                                    notificationMessages.appendChild(div);
+                                });
+                                // Add click handler to each link to go to chat and select user
+                                document.querySelectorAll('.notification-chat-link').forEach(link => {
+                                    link.addEventListener('click', function(ev) {
+                                        ev.preventDefault();
+                                        window.location.href = this.href;
+                                    });
+                                });
+                            });
+                    });
             }
         });
         // Close notification dropdown when clicking outside
@@ -272,6 +312,74 @@
             // Mark all as read (optional: you can implement a separate endpoint for this)
         }
         // --- End Notification Bell Dropdown Logic ---
+
+        // If you have a chat icon dropdown, update its logic as follows:
+        function updateChatDropdown() {
+            fetch('/chat/unread-counts')
+                .then(res => res.json())
+                .then(unreadCounts => {
+                    const senderIds = Object.keys(unreadCounts);
+                    const chatDropdown = document.getElementById('chatDropdown');
+                    const chatMessages = document.getElementById('chatMessages');
+                    if (!chatDropdown || !chatMessages) return;
+                    if (senderIds.length === 0) {
+                        chatMessages.innerHTML = '<div class="text-gray-500">No unread messages.</div>';
+                        return;
+                    }
+                    Promise.all(senderIds.map(id => fetch(`/api/user/${id}`).then(r => r.json())))
+                        .then(users => {
+                            chatMessages.innerHTML = '';
+                            users.forEach((user, idx) => {
+                                const senderId = senderIds[idx];
+                                const photoUrl = user.profile_photo_url || '/images/default-avatar.png';
+                                const div = document.createElement('div');
+                                div.className = 'mb-3 border-b pb-2 flex items-center gap-2';
+                                div.innerHTML = `
+                                    <a href="/chat?user_id=${senderId}" class="flex-1 flex items-center gap-2 text-blue-700 font-semibold hover:underline notification-chat-link" data-user-id="${senderId}">
+                                        <img src="${photoUrl}" alt="Profile" class="w-8 h-8 rounded-full object-cover border border-gray-300" />
+                                        <span>${user.name || 'User #' + senderId}</span>
+                                        <span class="ml-2 text-xs text-red-600 font-bold">Unread: ${unreadCounts[senderId]}</span>
+                                    </a>
+                                `;
+                                chatMessages.appendChild(div);
+                            });
+                            document.querySelectorAll('.notification-chat-link').forEach(link => {
+                                link.addEventListener('click', function(ev) {
+                                    ev.preventDefault();
+                                    window.location.href = this.href;
+                                });
+                            });
+                        });
+                });
+        }
+        // Call updateChatDropdown when the chat icon is clicked (if you have a dropdown)
+        if (chatIconBtn) {
+            chatIconBtn.addEventListener('click', function(e) {
+                updateChatDropdown();
+            });
+        }
+
+        // Add logic to update the chat icon badge with unread count
+        function updateChatIconBadge() {
+            fetch('/chat/unread-counts')
+                .then(res => res.json())
+                .then(unreadCounts => {
+                    let totalUnread = 0;
+                    for (const senderId in unreadCounts) {
+                        totalUnread += unreadCounts[senderId];
+                    }
+                    const chatNotificationDot = document.getElementById('chatNotificationDot');
+                    if (totalUnread > 0) {
+                        chatNotificationDot.classList.remove('hidden');
+                        chatNotificationDot.textContent = totalUnread;
+                    } else {
+                        chatNotificationDot.classList.add('hidden');
+                        chatNotificationDot.textContent = '';
+                    }
+                });
+        }
+        updateChatIconBadge();
+        setInterval(updateChatIconBadge, 10000);
     });
 </script>
 <style>

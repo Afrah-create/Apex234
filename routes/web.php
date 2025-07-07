@@ -97,25 +97,18 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard/retailer', [\App\Http\Controllers\RetailerDashboardController::class, 'index'])->name('dashboard.retailer');
     Route::get('/dashboard/supplier', [\App\Http\Controllers\SupplierController::class, 'supplierDashboard'])->name('dashboard.supplier');
     Route::get('/dashboard/vendor', [\App\Http\Controllers\VendorDashboardController::class, 'showDashboard'])->name('dashboard.vendor');
-<<<<<<< HEAD
-    Route::get('/dashboard/employee', [\App\Http\Controllers\EmployeeDashboardController::class, 'index'])->name('dashboard.employee');
-=======
->>>>>>> b7b846c09516f674ea31e59022063a62b154202f
-    Route::get('/vendor/manage-orders', function () {
-        return view('vendor.manage-orders');
-    })->name('vendor.manage-orders');
-    Route::get('/vendor/manage-products', function () {
-        return view('vendor.manage-products');
-    })->name('vendor.manage-products');
-<<<<<<< HEAD
-=======
     Route::get('/dashboard/employee', [\App\Http\Controllers\EmployeeDashboardController::class, 'index'])->name('dashboard.employee');
     // Role-specific employee dashboard routes
     Route::get('/dashboard/employee/production-worker', [\App\Http\Controllers\EmployeeDashboardController::class, 'productionWorkerDashboard'])->name('dashboard.employee.production-worker');
     Route::get('/dashboard/employee/warehouse-staff', [\App\Http\Controllers\EmployeeDashboardController::class, 'warehouseStaffDashboard'])->name('dashboard.employee.warehouse-staff');
     Route::get('/dashboard/employee/driver', [\App\Http\Controllers\EmployeeDashboardController::class, 'driverDashboard'])->name('dashboard.employee.driver');
     Route::get('/dashboard/employee/sales-manager', [\App\Http\Controllers\EmployeeDashboardController::class, 'salesManagerDashboard'])->name('dashboard.employee.sales-manager');
->>>>>>> b7b846c09516f674ea31e59022063a62b154202f
+    Route::get('/vendor/manage-orders', function () {
+        return view('vendor.manage-orders');
+    })->name('vendor.manage-orders');
+    Route::get('/vendor/manage-products', function () {
+        return view('vendor.manage-products');
+    })->name('vendor.manage-products');
     Route::post('/retailer/orders', [\App\Http\Controllers\RetailerOrderController::class, 'store'])->name('retailer.orders.store');
 });
 
@@ -240,40 +233,6 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
 // Admin reports route group
 Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/reports')->name('admin.reports.')->group(function () {
     Route::get('/', [\App\Http\Controllers\AdminReportController::class, 'index'])->name('index');
-});
-
-// Admin vendor applicants approve route
-Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/vendor-applicants')->name('admin.vendor-applicants.')->group(function () {
-    Route::post('/{id}/approve', [\App\Http\Controllers\AdminVendorApplicantController::class, 'approve'])->name('approve');
-});
-
-// Analytics API routes
-Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('api/analytics')->name('api.analytics.')->group(function () {
-    Route::get('/kpi', [AnalyticsController::class, 'getKpiData'])->name('kpi');
-    Route::get('/predictions', [AnalyticsController::class, 'getPredictions'])->name('predictions');
-    Route::get('/demand-forecast', [AnalyticsController::class, 'getDemandForecast'])->name('demand-forecast');
-    Route::get('/customer-segmentation', [AnalyticsController::class, 'getCustomerSegmentation'])->name('customer-segmentation');
-    Route::get('/inventory-optimization', [AnalyticsController::class, 'getInventoryOptimization'])->name('inventory-optimization');
-    Route::get('/trend-analysis', [AnalyticsController::class, 'getTrendAnalysis'])->name('trend-analysis');
-    Route::get('/performance-metrics', [AnalyticsController::class, 'getPerformanceMetrics'])->name('performance-metrics');
-    Route::get('/risk-assessment', [AnalyticsController::class, 'getRiskAssessment'])->name('risk-assessment');
-    Route::post('/scenario-analysis', [AnalyticsController::class, 'runScenarioAnalysis'])->name('scenario-analysis');
-    Route::post('/what-if-analysis', [AnalyticsController::class, 'runWhatIfAnalysis'])->name('what-if-analysis');
-    Route::post('/export-report', [AnalyticsController::class, 'exportReport'])->name('export-report');
-});
-
-<<<<<<< HEAD
-// Chat routes
-Route::middleware(['auth'])->group(function () {
-    Route::get('/chat/recipients', [ChatController::class, 'getRecipients']);
-    Route::post('/chat/send', [ChatController::class, 'sendMessage']);
-    Route::get('/chat/unread-count', [ChatController::class, 'getUnreadCount']);
-    Route::get('/chat/messages', [ChatController::class, 'getMessages']);
-    Route::post('/chat/mark-all-read', [ChatController::class, 'markAllAsRead']);
-=======
-// Admin advanced reports
-Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/reports')->name('admin.reports.')->group(function () {
-    Route::get('/', [\App\Http\Controllers\AdminReportController::class, 'index'])->name('index');
     Route::get('/download/{filename}', [\App\Http\Controllers\AdminReportController::class, 'downloadReport'])->name('download');
 });
 
@@ -307,7 +266,6 @@ Route::post('/admin/employees', [\App\Http\Controllers\AdminEmployeeController::
 Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/vendor-applicants')->name('admin.vendor-applicants.')->group(function () {
     Route::get('/', [\App\Http\Controllers\AdminVendorApplicantController::class, 'index'])->name('index');
     Route::post('/{id}/approve', [\App\Http\Controllers\AdminVendorApplicantController::class, 'approve'])->name('approve');
->>>>>>> b7b846c09516f674ea31e59022063a62b154202f
 });
 
 // Supplier Milk Batch Management
@@ -399,5 +357,29 @@ Route::get('/api/distribution-centers', function() {
 
 // Vendor Deliveries Dashboard Page
 Route::middleware(['auth', 'verified'])->get('/vendor/deliveries', [\App\Http\Controllers\VendorDashboardController::class, 'deliveries'])->name('vendor.deliveries');
+
+// Chat routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/chat/recipients', [ChatController::class, 'getRecipients']);
+    Route::post('/chat/send', [ChatController::class, 'sendMessage']);
+    Route::get('/chat/unread-count', [ChatController::class, 'getUnreadCount']);
+    Route::get('/chat/messages', [ChatController::class, 'getMessages']);
+    Route::post('/chat/mark-all-read', [ChatController::class, 'markAllAsRead']);
+});
+
+Route::middleware(['auth'])->get('/chat', function () {
+    return view('chat');
+})->name('chat');
+
+Route::middleware(['auth'])->get('/chat/unread-counts', [\App\Http\Controllers\ChatController::class, 'getUnreadCountsPerUser']);
+
+Route::middleware(['auth'])->get('/api/user/{id}', function($id) {
+    $user = \App\Models\User::findOrFail($id);
+    return response()->json([
+        'id' => $user->id,
+        'name' => $user->name,
+        'profile_photo_url' => $user->profile_photo_url,
+    ]);
+});
 
 require __DIR__.'/auth.php';

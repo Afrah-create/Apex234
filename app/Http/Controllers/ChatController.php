@@ -16,19 +16,27 @@ class ChatController extends Controller
         $role = $user->getPrimaryRoleName();
 
         if ($role === 'admin') {
-            // Show all users except the current admin
+            // Admin can chat with everyone except self
             $recipients = User::where('id', '!=', $user->id)->get();
         } elseif ($role === 'supplier') {
+            // Supplier can chat with admin and vendor only
             $recipients = User::whereHas('roles', function($q) {
-                $q->whereIn('name', ['vendor', 'admin']);
+                $q->whereIn('name', ['admin', 'vendor']);
             })->get();
         } elseif ($role === 'retailer') {
+            // Retailer can chat with admin and vendor only
             $recipients = User::whereHas('roles', function($q) {
-                $q->where('name', 'admin');
+                $q->whereIn('name', ['admin', 'vendor']);
             })->get();
         } elseif ($role === 'vendor') {
+            // Vendor can chat with admin, supplier, retailer, employee
             $recipients = User::whereHas('roles', function($q) {
-                $q->whereIn('name', ['admin', 'supplier']);
+                $q->whereIn('name', ['admin', 'supplier', 'retailer', 'employee']);
+            })->get();
+        } elseif ($role === 'employee') {
+            // Employee can chat with admin and vendor only
+            $recipients = User::whereHas('roles', function($q) {
+                $q->whereIn('name', ['admin', 'vendor']);
             })->get();
         } else {
             $recipients = collect();
@@ -105,5 +113,17 @@ class ChatController extends Controller
             ->where('is_read', false)
             ->update(['is_read' => true]);
         return response()->json(['success' => true]);
+    }
+
+    // Get unread message counts per user
+    public function getUnreadCountsPerUser()
+    {
+        $userId = Auth::id();
+        $counts = \App\Models\ChatMessage::where('receiver_id', $userId)
+            ->where('is_read', false)
+            ->selectRaw('sender_id, count(*) as unread_count')
+            ->groupBy('sender_id')
+            ->pluck('unread_count', 'sender_id');
+        return response()->json($counts);
     }
 } 

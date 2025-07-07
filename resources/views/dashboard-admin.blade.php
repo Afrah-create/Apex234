@@ -337,4 +337,14 @@
         startAutoRefresh();
     });
 </script>
+
+<!-- Floating Chat Icon -->
+<!-- Remove the floating chat icon at the bottom right -->
+
+<!-- Chat Icon Button (link to /chat) for admin dashboard -->
+<a href="/chat" class="relative inline-flex items-center justify-center w-10 h-10 rounded-full bg-green-500 hover:bg-green-600 focus:outline-none transition ease-in-out duration-150 mr-1" title="Chat">
+    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M8 0a8 8 0 0 0-6.32 12.906L0 16l3.234-1.678A8 8 0 1 0 8 0zm3.993 11.403c-.2.56-1.17 1.1-1.6 1.17-.41.07-.92.1-1.48-.09-.34-.11-.78-.25-1.34-.49-2.36-.97-3.9-3.34-4.02-3.5-.12-.17-.96-1.28-.96-2.44 0-1.16.61-1.73.83-1.96.22-.23.48-.29.64-.29.16 0 .32.01.46.01.15 0 .34-.05.53.41.2.47.68 1.62.74 1.74.06.12.1.26.02.42-.08.16-.12.26-.23.4-.11.14-.23.31-.33.42-.11.11-.22.23-.1.45.12.22.54.89 1.16 1.44.8.71 1.47.93 1.7 1.03.23.1.36.09.49-.05.13-.14.56-.65.71-.87.15-.22.3-.18.5-.11.2.07 1.28.6 1.5.71.22.11.36.17.41.27.05.1.05.57-.15 1.13z"/>
+    </svg>
+</a>
 @endsection 
