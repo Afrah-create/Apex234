@@ -23,16 +23,16 @@
                 <h3 class="font-semibold text-blue-800 mb-2">Vendor Details</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium">Vendor Name</label>
-                        <input type="text" id="vendor_name" name="vendor_name" class="w-full border rounded px-3 py-2 bg-gray-100" readonly value="{{ $vendor_name ?? '' }}">
+                        <label for="vendor_name" class="block text-sm font-medium">Vendor Name</label>
+                        <input type="text" id="vendor_name" name="vendor_name" class="w-full border rounded px-3 py-2 bg-gray-100" readonly value="{{ $vendor_name ?? '' }}" title="Vendor Name" placeholder="Vendor Name">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium">Vendor Address</label>
-                        <input type="text" id="vendor_address" name="vendor_address" class="w-full border rounded px-3 py-2 bg-gray-100" readonly value="{{ $vendor_address ?? '' }}">
+                        <label for="vendor_address" class="block text-sm font-medium">Vendor Address</label>
+                        <input type="text" id="vendor_address" name="vendor_address" class="w-full border rounded px-3 py-2 bg-gray-100" readonly value="{{ $vendor_address ?? '' }}" title="Vendor Address" placeholder="Vendor Address">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium">Vendor Phone</label>
-                        <input type="text" id="vendor_phone" name="vendor_phone" class="w-full border rounded px-3 py-2 bg-gray-100" readonly value="{{ $vendor_phone ?? '' }}">
+                        <label for="vendor_phone" class="block text-sm font-medium">Vendor Phone</label>
+                        <input type="text" id="vendor_phone" name="vendor_phone" class="w-full border rounded px-3 py-2 bg-gray-100" readonly value="{{ $vendor_phone ?? '' }}" title="Vendor Phone" placeholder="Vendor Phone">
                     </div>
                 </div>
             </div>
@@ -166,12 +166,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const placeholder = document.getElementById('driver_photo_placeholder');
             if (photo) {
                 img.src = photo;
-                img.style.display = 'block';
-                placeholder.style.display = 'none';
+                img.classList.remove('hidden');
+                placeholder.classList.add('hidden');
             } else {
                 img.src = '';
-                img.style.display = 'none';
-                placeholder.style.display = 'block';
+                img.classList.add('hidden');
+                placeholder.classList.remove('hidden');
             }
         } else {
             document.getElementById('driver_phone').value = '';
@@ -183,8 +183,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const img = document.getElementById('driver_photo');
             const placeholder = document.getElementById('driver_photo_placeholder');
             img.src = '';
-            img.style.display = 'none';
-            placeholder.style.display = 'block';
+            img.classList.add('hidden');
+            placeholder.classList.remove('hidden');
         }
     });
 
@@ -225,6 +225,7 @@ deliveryForm.addEventListener('submit', function(e) {
         delivery_address: form.delivery_address.value,
         recipient_name: form.recipient_name.value,
         recipient_phone: form.recipient_phone.value,
+        recipient_email: form.recipient_email.value,
     };
     fetch('/api/deliveries', {
         method: 'POST',
