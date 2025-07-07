@@ -224,6 +224,11 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::get('/', [\App\Http\Controllers\AdminReportController::class, 'index'])->name('index');
 });
 
+// Admin vendor applicants approve route
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/vendor-applicants')->name('admin.vendor-applicants.')->group(function () {
+    Route::post('/{id}/approve', [\App\Http\Controllers\AdminVendorApplicantController::class, 'approve'])->name('approve');
+});
+
 // Analytics API routes
 Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('api/analytics')->name('api.analytics.')->group(function () {
     Route::get('/kpi', [AnalyticsController::class, 'getKpiData'])->name('kpi');
