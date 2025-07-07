@@ -120,7 +120,6 @@ class User extends Authenticatable
         return asset('images/default-avatar.png');
     }
 
-
     /**
      * Check if the user is approved (for vendor login).
      *

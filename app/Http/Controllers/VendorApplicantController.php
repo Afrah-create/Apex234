@@ -15,8 +15,16 @@ class VendorApplicantController extends Controller
     {
         // Get registration data from session if available
         $registrationData = session('vendor_registration_data', []);
-        
-        return view('vendor.apply', compact('registrationData'));
+        $name = null;
+        $email = null;
+        if (auth()->check()) {
+            $user = auth()->user();
+            if (method_exists($user, 'getPrimaryRoleName') && $user->getPrimaryRoleName() === 'vendor') {
+                $name = $user->name;
+                $email = $user->email;
+            }
+        }
+        return view('vendor.apply', compact('registrationData', 'name', 'email'));
     }
 
     // Handle the form submission and PDF upload

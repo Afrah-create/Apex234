@@ -8,11 +8,10 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminUserController;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
-<<<<<<< HEAD
 use App\Http\Controllers\ChatController;
-=======
 use App\Http\Controllers\VendorApplicantController;
->>>>>>> b086cb0c900ffaa41409c246f7f6cd8ca5f154e2
+use App\Http\Controllers\SupplierController;
+use App\Models\YogurtProduct;
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -45,8 +44,6 @@ Route::get('/dashboard', function () {
                         'total' => $order->total,
                     ];
                 });
-
-                // User statistics
                 $totalUsers = \App\Models\User::count();
                 $roles = \App\Models\Role::withCount('users')->get();
                 $roleBreakdown = $roles->map(function ($role) use ($totalUsers) {
@@ -72,12 +69,10 @@ Route::get('/dashboard', function () {
             case 'employee':
                 return redirect()->route('dashboard.employee');
             default:
-                // Check if user has an employee record and redirect accordingly
                 $employeeRecord = \App\Models\Employee::where('user_id', $user->id)->first();
                 if ($employeeRecord) {
                     return redirect()->route('dashboard.employee');
                 }
-                // For users without a specific role, redirect to home or show error
                 return redirect('/')->with('error', 'Access denied. Please contact administrator.');
         }
     }
@@ -88,15 +83,14 @@ Route::get('/dashboard', function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard/retailer', [\App\Http\Controllers\RetailerDashboardController::class, 'index'])->name('dashboard.retailer');
     Route::get('/dashboard/supplier', [\App\Http\Controllers\SupplierController::class, 'supplierDashboard'])->name('dashboard.supplier');
-    // Removed direct return of dashboard-supplier view to ensure variables are always passed from the controller.
     Route::get('/dashboard/vendor', [\App\Http\Controllers\VendorDashboardController::class, 'showDashboard'])->name('dashboard.vendor');
+    Route::get('/dashboard/employee', [\App\Http\Controllers\EmployeeDashboardController::class, 'index'])->name('dashboard.employee');
     Route::get('/vendor/manage-orders', function () {
         return view('vendor.manage-orders');
     })->name('vendor.manage-orders');
     Route::get('/vendor/manage-products', function () {
         return view('vendor.manage-products');
     })->name('vendor.manage-products');
-    Route::get('/dashboard/employee', [\App\Http\Controllers\EmployeeDashboardController::class, 'index'])->name('dashboard.employee');
     Route::post('/retailer/orders', [\App\Http\Controllers\RetailerOrderController::class, 'store'])->name('retailer.orders.store');
 });
 
@@ -114,6 +108,11 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::get('/{id}/edit', [AdminUserController::class, 'edit'])->name('edit');
     Route::post('/{id}/update', [AdminUserController::class, 'update'])->name('update');
     Route::delete('/{id}', [AdminUserController::class, 'destroy'])->name('destroy');
+});
+
+// Admin employee store route
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/employees')->name('admin.employees.')->group(function () {
+    Route::post('/', [\App\Http\Controllers\AdminEmployeeController::class, 'store'])->name('store');
 });
 
 // Admin order management
@@ -213,6 +212,16 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::get('/', [AnalyticsController::class, 'index'])->name('index');
 });
 
+// Admin reports route group
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/reports')->name('admin.reports.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\AdminReportController::class, 'index'])->name('index');
+});
+
+// Admin vendor applicants approve route
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/vendor-applicants')->name('admin.vendor-applicants.')->group(function () {
+    Route::post('/{id}/approve', [\App\Http\Controllers\AdminVendorApplicantController::class, 'approve'])->name('approve');
+});
+
 // Analytics API routes
 Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('api/analytics')->name('api.analytics.')->group(function () {
     Route::get('/kpi', [AnalyticsController::class, 'getKpiData'])->name('kpi');
@@ -228,7 +237,6 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::post('/export-report', [AnalyticsController::class, 'exportReport'])->name('export-report');
 });
 
-<<<<<<< HEAD
 // Chat routes
 Route::middleware(['auth'])->group(function () {
     Route::get('/chat/recipients', [ChatController::class, 'getRecipients']);
@@ -236,46 +244,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/chat/unread-count', [ChatController::class, 'getUnreadCount']);
     Route::get('/chat/messages', [ChatController::class, 'getMessages']);
     Route::post('/chat/mark-all-read', [ChatController::class, 'markAllAsRead']);
-=======
-// Admin advanced reports
-Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/reports')->name('admin.reports.')->group(function () {
-    Route::get('/', [\App\Http\Controllers\AdminReportController::class, 'index'])->name('index');
-    Route::get('/download/{filename}', [\App\Http\Controllers\AdminReportController::class, 'downloadReport'])->name('download');
-});
-
-// Reports API routes
-Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('api/reports')->name('api.reports.')->group(function () {
-    Route::get('/templates', [\App\Http\Controllers\AdminReportController::class, 'getReportTemplates'])->name('templates');
-    Route::get('/filters', [\App\Http\Controllers\AdminReportController::class, 'getReportFilters'])->name('filters');
-    Route::post('/generate', [\App\Http\Controllers\AdminReportController::class, 'generateCustomReport'])->name('generate');
-    Route::post('/export', [\App\Http\Controllers\AdminReportController::class, 'exportReport'])->name('export');
-    
-    // Scheduled reports routes
-    Route::get('/scheduled', [\App\Http\Controllers\AdminReportController::class, 'getScheduledReports'])->name('scheduled');
-    Route::post('/scheduled', [\App\Http\Controllers\AdminReportController::class, 'createScheduledReport'])->name('scheduled.create');
-    Route::put('/scheduled/{id}', [\App\Http\Controllers\AdminReportController::class, 'updateScheduledReport'])->name('scheduled.update');
-    Route::delete('/scheduled/{id}', [\App\Http\Controllers\AdminReportController::class, 'deleteScheduledReport'])->name('scheduled.delete');
-    Route::patch('/scheduled/{id}/toggle', [\App\Http\Controllers\AdminReportController::class, 'toggleScheduledReportStatus'])->name('scheduled.toggle');
-    Route::post('/scheduled/{id}/trigger', [\App\Http\Controllers\AdminReportController::class, 'triggerScheduledReport'])->name('scheduled.trigger');
-    
-    // Report logs routes
-    Route::get('/logs', [\App\Http\Controllers\AdminReportController::class, 'getReportLogs'])->name('logs');
-    Route::get('/statistics', [\App\Http\Controllers\AdminReportController::class, 'getReportStatistics'])->name('statistics');
-});
-
-// Workforce distribution API for admin dashboard
-Route::get('/api/workforce/distribution', [\App\Http\Controllers\AdminWorkforceController::class, 'getWorkforceDistribution'])->name('api.workforce.distribution');
-
-// User and Workforce Management (Tabbed)
-Route::get('/admin/users', [\App\Http\Controllers\AdminEmployeeController::class, 'index'])->name('admin.users.index');
-Route::post('/admin/employees/{employee}/assign-vendor', [\App\Http\Controllers\AdminEmployeeController::class, 'assignVendor'])->name('admin.employees.assignVendor');
-Route::post('/admin/employees', [\App\Http\Controllers\AdminEmployeeController::class, 'store'])->name('admin.employees.store');
-
-// Admin vendor applicant management
-Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/vendor-applicants')->name('admin.vendor-applicants.')->group(function () {
-    Route::get('/', [\App\Http\Controllers\AdminVendorApplicantController::class, 'index'])->name('index');
-    Route::post('/{id}/approve', [\App\Http\Controllers\AdminVendorApplicantController::class, 'approve'])->name('approve');
->>>>>>> b086cb0c900ffaa41409c246f7f6cd8ca5f154e2
 });
 
 // Supplier Milk Batch Management
