@@ -13,13 +13,16 @@ class VendorApplicantController extends Controller
     // Show the vendor application form
     public function create()
     {
-        $name = null;
-        $email = null;
-        if (auth()->check()) {
-            $user = auth()->user();
-            if (method_exists($user, 'getPrimaryRoleName') && $user->getPrimaryRoleName() === 'vendor') {
-                $name = $user->name;
-                $email = $user->email;
+        $name = request()->query('name');
+        $email = request()->query('email');
+        // If not present in query, fallback to logged-in vendor (if any)
+        if (!$name || !$email) {
+            if (auth()->check()) {
+                $user = auth()->user();
+                if (method_exists($user, 'getPrimaryRoleName') && $user->getPrimaryRoleName() === 'vendor') {
+                    $name = $user->name;
+                    $email = $user->email;
+                }
             }
         }
         return view('vendor.apply', compact('name', 'email'));
