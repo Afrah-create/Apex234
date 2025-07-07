@@ -15,7 +15,7 @@ class AdminVendorApplicantController extends Controller
     public function approve($id)
     {
         $applicant = VendorApplicant::findOrFail($id);
-        // Check if user already exists
+        // Only create user and approve when admin clicks Confirm
         $user = User::where('email', $applicant->email)->first();
         $password = Str::random(10);
         if (!$user) {

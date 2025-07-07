@@ -42,7 +42,8 @@ class AdminUserController extends Controller
         );
         $employees = Employee::all();
         $vendors = Vendor::all();
-        return view('admin.users.index', ['users' => $paginatedUsers, 'employees' => $employees, 'vendors' => $vendors]);
+        $vendorApplicants = \App\Models\VendorApplicant::whereIn('status', ['validated', 'pending'])->get();
+        return view('admin.users.index', ['users' => $paginatedUsers, 'employees' => $employees, 'vendors' => $vendors, 'vendorApplicants' => $vendorApplicants]);
     }
 
     public function create()

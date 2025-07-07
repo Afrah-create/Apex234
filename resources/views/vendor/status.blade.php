@@ -127,6 +127,9 @@ body {
         @if($applicant)
             <div class="status-info">
                 <span class="status-badge {{ $applicant->status }}">{{ ucfirst($applicant->status) }}</span>
+                <span class="status-badge {{ $applicant->status === 'approved' ? 'validated' : 'pending' }}">
+                    Admin Approval: {{ $applicant->status === 'approved' ? 'Approved' : 'Pending' }}
+                </span>
             </div>
             <div class="status-details">
                 <p><strong>Name:</strong> {{ $applicant->name }}</p>
