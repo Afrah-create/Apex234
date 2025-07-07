@@ -200,77 +200,7 @@
 
     <!-- Raw Materials Section -->
     <div id="raw-materials-section" class="inventory-section hidden">
-        <div class="mb-6 md:mb-8">
-            <h2 class="text-lg md:text-xl font-semibold mb-4">Add New Raw Material</h2>
-            <form id="add-raw-material-form" class="bg-white rounded-lg shadow-md p-4 md:p-6">
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div>
-                        <label for="material-name" class="block font-bold mb-1 text-sm">Material Name</label>
-                        <input type="text" id="material-name" name="material_name" class="w-full p-2 rounded border text-sm" required>
-                    </div>
-                    <div>
-                        <label for="material-type" class="block font-bold mb-1 text-sm">Material Type</label>
-                        <select id="material-type" name="material_type" class="w-full p-2 rounded border text-sm" required>
-                            <option value="milk">Milk</option>
-                            <option value="culture">Culture</option>
-                            <option value="flavoring">Flavoring</option>
-                            <option value="sweetener">Sweetener</option>
-                            <option value="stabilizer">Stabilizer</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="quantity" class="block font-bold mb-1 text-sm">Quantity</label>
-                        <input type="number" id="quantity" name="quantity" min="0" step="0.01" class="w-full p-2 rounded border text-sm" required>
-                    </div>
-                    <div>
-                        <label for="unit-of-measure" class="block font-bold mb-1 text-sm">Unit</label>
-                        <input type="text" id="unit-of-measure" name="unit_of_measure" placeholder="L, kg, g" class="w-full p-2 rounded border text-sm" required>
-                    </div>
-                    <div>
-                        <label for="unit-price" class="block font-bold mb-1 text-sm">Unit Price (UGX)</label>
-                        <input type="number" id="unit-price" name="unit_price" min="0" step="0.01" class="w-full p-2 rounded border text-sm" required>
-                    </div>
-                    <div>
-                        <label for="total-cost" class="block font-bold mb-1 text-sm">Total Cost (UGX)</label>
-                        <input type="number" id="total-cost" name="total_cost" class="w-full p-2 rounded border text-sm bg-gray-100" readonly>
-                        <p class="text-xs text-gray-500 mt-1">Auto-calculated: Unit Price × Quantity</p>
-                    </div>
-                    <div>
-                        <label for="harvest-date" class="block font-bold mb-1 text-sm">Harvest Date</label>
-                        <input type="date" id="harvest-date" name="harvest_date" class="w-full p-2 rounded border text-sm" required>
-                    </div>
-                    <div>
-                        <label for="raw-expiry-date" class="block font-bold mb-1 text-sm">Expiry Date</label>
-                        <input type="date" id="raw-expiry-date" name="expiry_date" class="w-full p-2 rounded border text-sm" required>
-                    </div>
-                    <div>
-                        <label for="quality-grade" class="block font-bold mb-1 text-sm">Quality Grade</label>
-                        <select id="quality-grade" name="quality_grade" class="w-full p-2 rounded border text-sm" required>
-                            <option value="A">A</option>
-                            <option value="B">B</option>
-                            <option value="C">C</option>
-                            <option value="D">D</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="dairy-farm-id" class="block font-bold mb-1 text-sm">Dairy Farm</label>
-                        <select id="dairy-farm-id" name="dairy_farm_id" class="w-full p-2 rounded border text-sm" required>
-                            <option value="">Select Dairy Farm</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <label for="raw-material-notes" class="block font-bold mb-1 text-sm">Quality Notes</label>
-                    <textarea id="raw-material-notes" name="quality_notes" class="w-full p-2 rounded border text-sm" rows="2"></textarea>
-                </div>
-                <div class="mt-4">
-                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg w-full text-sm md:text-base">Add Raw Material</button>
-                </div>
-            </form>
-            <div id="add-raw-material-success" class="mt-2 text-green-600 font-bold hidden text-sm">Raw material added successfully!</div>
-        </div>
-
+        
         <div>
             <h2 class="text-lg md:text-xl font-semibold mb-4">Raw Materials Inventory</h2>
             
