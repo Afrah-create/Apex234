@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('order_id')->constrained()->onDelete('cascade');
             $table->foreignId('distribution_center_id')->constrained()->onDelete('cascade');
-            $table->foreignId('retailer_id')->constrained()->onDelete('cascade');
+            $table->foreignId('vendor_id')->constrained()->onDelete('cascade');
             $table->string('delivery_number')->unique();
             $table->string('vehicle_number')->nullable();
             $table->string('driver_name');
@@ -38,6 +38,7 @@ return new class extends Migration
             $table->text('delivery_notes')->nullable();
             $table->enum('customer_satisfaction', ['excellent', 'good', 'fair', 'poor'])->nullable();
             $table->text('customer_feedback')->nullable();
+            $table->string('pdf_path')->nullable();
             $table->timestamps();
             
             // Indexes for better performance

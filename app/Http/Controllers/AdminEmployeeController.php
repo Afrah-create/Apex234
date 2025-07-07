@@ -22,6 +22,16 @@ class AdminEmployeeController extends Controller
         $request->validate(['vendor_id' => 'nullable|exists:vendors,id']);
         $employee->vendor_id = $request->vendor_id;
         $employee->save();
+
+        // Notify the employee's user (if exists)
+        if ($employee->user_id && $employee->vendor_id) {
+            $user = \App\Models\User::find($employee->user_id);
+            $vendor = Vendor::find($employee->vendor_id);
+            if ($user && $vendor) {
+                $user->notify(new \App\Notifications\EmployeeAssignedToVendor($employee->role, $vendor));
+            }
+        }
+
         return back()->with('success', 'Vendor assignment updated!');
     }
 

@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
         $vendorRole = Role::firstOrCreate(['name' => 'vendor']);
         $retailerRole = Role::firstOrCreate(['name' => 'retailer']);
         $supplierRole = Role::firstOrCreate(['name' => 'supplier']);
+        $employeeRole = Role::firstOrCreate(['name' => 'employee']);
 
         // Create permissions
         $manageUsers = Permission::firstOrCreate(['name' => 'manage users']);
@@ -103,8 +104,16 @@ class DatabaseSeeder extends Seeder
             'user_id' => $users->random()->id,
         ]);
 
-        // Seed vendors (no foreign keys)
-        $vendors = \App\Models\Vendor::factory(30)->create();
+        // Seed vendors (each linked to a user)
+        $vendorUsers = \App\Models\User::factory(5)->create(['role' => 'vendor']);
+        $vendors = \App\Models\Vendor::factory(5)->create([
+            'user_id' => $vendorUsers->random()->id,
+        ]);
+
+        // Assign vendor role to vendor users
+        foreach ($vendorUsers as $vendorUser) {
+            $vendorUser->roles()->syncWithoutDetaching([$vendorRole->id]);
+        }
 
         // Seed orders (each linked to a retailer and distribution center)
         $orders = \App\Models\Order::factory(2)->create([
@@ -141,10 +150,20 @@ class DatabaseSeeder extends Seeder
             'retailer_id' => $retailers->random()->id,
         ]);
 
-        // Seed employees
-        $this->call(EmployeeSeeder::class);
 
-        // Ensure the 'employee' role exists
-        \App\Models\Role::firstOrCreate(['name' => 'employee']);
+        // Seed drivers for each supplier
+        \App\Models\Supplier::all()->each(function($supplier) {
+            if ($supplier->drivers()->count() < 3) {
+                $drivers = [
+                    ['name' => 'John Doe', 'phone' => '+1234567891', 'license' => 'DL-12345'],
+                    ['name' => 'Jane Smith', 'phone' => '+1234567892', 'license' => 'DL-67890'],
+                    ['name' => 'Mike Brown', 'phone' => '+1234567893', 'license' => 'DL-54321'],
+                ];
+                foreach ($drivers as $driver) {
+                    $supplier->drivers()->firstOrCreate(['license' => $driver['license']], $driver);
+                }
+            }
+        });
+
     }
 }

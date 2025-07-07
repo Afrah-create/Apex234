@@ -69,31 +69,34 @@ Route::get('/dashboard', function () {
                 return redirect()->route('dashboard.supplier');
             case 'vendor':
                 return redirect()->route('dashboard.vendor');
+            case 'employee':
+                return redirect()->route('dashboard.employee');
             default:
-                return view('dashboard-admin');
+                // Check if user has an employee record and redirect accordingly
+                $employeeRecord = \App\Models\Employee::where('user_id', $user->id)->first();
+                if ($employeeRecord) {
+                    return redirect()->route('dashboard.employee');
+                }
+                // For users without a specific role, redirect to home or show error
+                return redirect('/')->with('error', 'Access denied. Please contact administrator.');
         }
     }
     return redirect()->route('login');
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['auth'])->name('dashboard');
 
 // Role-specific dashboards
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard/retailer', [\App\Http\Controllers\RetailerDashboardController::class, 'index'])->name('dashboard.retailer');
-    Route::get('/dashboard/supplier', function () {
-        return view('dashboard-supplier');
-    })->name('dashboard.supplier');
-    Route::get('/dashboard/vendor', function () {
-        return view('dashboard-vendor');
-    })->name('dashboard.vendor');
+    Route::get('/dashboard/supplier', [\App\Http\Controllers\SupplierController::class, 'supplierDashboard'])->name('dashboard.supplier');
+    // Removed direct return of dashboard-supplier view to ensure variables are always passed from the controller.
+    Route::get('/dashboard/vendor', [\App\Http\Controllers\VendorDashboardController::class, 'showDashboard'])->name('dashboard.vendor');
     Route::get('/vendor/manage-orders', function () {
         return view('vendor.manage-orders');
     })->name('vendor.manage-orders');
     Route::get('/vendor/manage-products', function () {
         return view('vendor.manage-products');
     })->name('vendor.manage-products');
-    Route::get('/dashboard/employee', function () {
-        return view('employee.dashboard');
-    })->name('dashboard.employee');
+    Route::get('/dashboard/employee', [\App\Http\Controllers\EmployeeDashboardController::class, 'index'])->name('dashboard.employee');
     Route::post('/retailer/orders', [\App\Http\Controllers\RetailerOrderController::class, 'store'])->name('retailer.orders.store');
 });
 
@@ -151,8 +154,10 @@ Route::middleware(['auth', 'verified'])->prefix('api/vendor')->name('api.vendor.
 // Vendor order management API routes
 Route::middleware(['auth', 'verified'])->prefix('api/vendor')->group(function () {
     Route::get('/suppliers', [\App\Http\Controllers\VendorOrderController::class, 'suppliers']);
+    Route::get('/available-raw-materials', [\App\Http\Controllers\VendorOrderController::class, 'availableRawMaterials']);
     Route::post('/raw-material-orders', [\App\Http\Controllers\VendorOrderController::class, 'placeRawMaterialOrder']);
     Route::get('/raw-material-orders', [\App\Http\Controllers\VendorOrderController::class, 'listRawMaterialOrders']);
+    Route::post('/raw-material-orders/{id}/cancel', [\App\Http\Controllers\VendorOrderController::class, 'cancelRawMaterialOrder']);
     Route::get('/product-orders', [\App\Http\Controllers\VendorOrderController::class, 'listProductOrders']);
     Route::post('/product-orders/{id}/confirm', [\App\Http\Controllers\VendorOrderController::class, 'confirmProductOrder']);
 });
@@ -272,5 +277,95 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::post('/{id}/approve', [\App\Http\Controllers\AdminVendorApplicantController::class, 'approve'])->name('approve');
 >>>>>>> b086cb0c900ffaa41409c246f7f6cd8ca5f154e2
 });
+
+// Supplier Milk Batch Management
+Route::post('/supplier/milk-batch', [\App\Http\Controllers\SupplierController::class, 'submitMilkBatch']);
+Route::get('/supplier/milk-batch/history', [\App\Http\Controllers\SupplierController::class, 'milkBatchHistory']);
+Route::patch('/supplier/milk-batch/{id}/status', [\App\Http\Controllers\SupplierController::class, 'updateMilkBatchStatus']);
+
+// Supplier Raw Material Inventory Blade view
+Route::middleware(['auth', 'verified'])->get('/supplier/raw-material-inventory', function () {
+    return view('supplier.raw-material-inventory');
+})->name('supplier.raw-material-inventory');
+
+// Supplier Raw Material Inventory API
+Route::middleware(['auth', 'verified'])->get('/api/supplier/raw-material-inventory', [\App\Http\Controllers\SupplierController::class, 'rawMaterialInventory']);
+Route::middleware(['auth', 'verified'])->post('/api/supplier/raw-material-inventory', [\App\Http\Controllers\SupplierController::class, 'storeRawMaterial']);
+Route::middleware(['auth', 'verified'])->put('/api/supplier/raw-material-inventory/{id}', [\App\Http\Controllers\SupplierController::class, 'updateRawMaterial']);
+
+// Supplier Add Raw Material Blade view
+Route::middleware(['auth', 'verified'])->get('/supplier/raw-material-inventory/add', function () {
+    return view('supplier.add-raw-material');
+})->name('supplier.add-raw-material');
+
+// Supplier Add Raw Material POST (Blade form)
+Route::middleware(['auth', 'verified'])->post('/supplier/raw-material-inventory/add', [\App\Http\Controllers\SupplierController::class, 'storeRawMaterialBlade'])->name('supplier.add-raw-material');
+
+// Supplier Profile Page
+Route::middleware(['auth', 'verified'])->get('/supplier/profile', [\App\Http\Controllers\SupplierController::class, 'profile'])->name('supplier.profile');
+Route::middleware(['auth', 'verified'])->put('/supplier/profile', [\App\Http\Controllers\SupplierController::class, 'updateProfile'])->name('supplier.profile.update');
+
+// Supplier Manage Orders Page
+Route::middleware(['auth', 'verified'])->get('/supplier/manage-orders', function () {
+    return view('supplier.manage-orders');
+})->name('supplier.manage-orders');
+
+// Supplier Order Management API routes
+Route::middleware(['auth', 'verified'])->prefix('api/supplier/orders')->group(function () {
+    Route::get('/incoming', [\App\Http\Controllers\SupplierOrderController::class, 'incomingOrders']);
+    Route::post('/{id}/confirm', [\App\Http\Controllers\SupplierOrderController::class, 'confirmOrder']);
+    Route::post('/{id}/process', [\App\Http\Controllers\SupplierOrderController::class, 'processOrder']);
+    Route::post('/{id}/ship', [\App\Http\Controllers\SupplierOrderController::class, 'shipOrder']);
+    Route::post('/{id}/deliver', [\App\Http\Controllers\SupplierOrderController::class, 'deliverOrder']);
+    Route::post('/{id}/reject', [\App\Http\Controllers\SupplierOrderController::class, 'rejectOrder']);
+    Route::get('/stats', [\App\Http\Controllers\SupplierOrderController::class, 'orderStats']);
+});
+
+// Supplier Dashboard
+Route::get('/supplier/dashboard', [App\Http\Controllers\SupplierController::class, 'supplierDashboard'])->name('supplier.dashboard');
+
+// Delivery API routes
+Route::middleware(['auth', 'verified'])->post('/api/deliveries', [\App\Http\Controllers\DeliveryController::class, 'store']);
+
+// Supplier Delivery Form (for testing/demo)
+Route::get('/supplier/delivery-form', function () {
+    $user = Auth::user();
+    return view('supplier.delivery-form', [
+        'order_id' => 123,
+        'distribution_center_id' => 1,
+        'vendor_id' => 45,
+        'vendor_name' => 'Acme Vendor Ltd.',
+        'vendor_address' => '123 Main St, Cityville',
+        'vendor_phone' => '+1234567890',
+        'supplier_id' => $user && $user->supplier ? $user->supplier->id : null,
+    ]);
+});
+
+// API: Get drivers for a supplier
+Route::get('/api/supplier/{supplier}/drivers', function($supplierId) {
+    $supplier = \App\Models\Supplier::findOrFail($supplierId);
+    return response()->json($supplier->drivers()->get([
+        'id', 'name', 'phone', 'license', 'photo', 'vehicle_number', 'email', 'emergency_contact'
+    ]));
+});
+
+// Supplier driver management UI
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/supplier/drivers', [\App\Http\Controllers\SupplierController::class, 'manageDrivers'])->name('supplier.drivers');
+    Route::post('/supplier/drivers', [\App\Http\Controllers\SupplierController::class, 'storeDriver'])->name('supplier.drivers.store');
+    Route::post('/supplier/drivers/{driverId}/update', [\App\Http\Controllers\SupplierController::class, 'updateDriver'])->name('supplier.drivers.update');
+    Route::post('/supplier/drivers/{driverId}/delete', [\App\Http\Controllers\SupplierController::class, 'deleteDriver'])->name('supplier.drivers.delete');
+});
+
+// Supplier Track Deliveries Page
+Route::middleware(['auth', 'verified'])->get('/supplier/track-deliveries', [\App\Http\Controllers\SupplierController::class, 'trackDeliveries'])->name('supplier.track-deliveries');
+
+// API: Get all distribution centers
+Route::get('/api/distribution-centers', function() {
+    return \App\Models\DistributionCenter::select('id', 'center_name', 'center_address')->get();
+});
+
+// Vendor Deliveries Dashboard Page
+Route::middleware(['auth', 'verified'])->get('/vendor/deliveries', [\App\Http\Controllers\VendorDashboardController::class, 'deliveries'])->name('vendor.deliveries');
 
 require __DIR__.'/auth.php';

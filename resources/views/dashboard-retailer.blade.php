@@ -2,8 +2,7 @@
 
 @section('content')
     <main class="main-content">
-        <h1>Retailer</h1>
-        <p>Welcome, Retailer! Use the sidebar to manage your stock, sales, and orders.</p>
+       
         <div class="flex justify-end mb-4">
             <button id="cart-toggle-btn" class="relative bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center">
                 <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.35 2.7A1 1 0 007 17h10a1 1 0 00.95-.68L19 13M7 13V6a1 1 0 011-1h5a1 1 0 011 1v7"></path></svg>

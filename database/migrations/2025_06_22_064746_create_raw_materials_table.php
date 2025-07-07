@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('dairy_farm_id')->constrained()->onDelete('cascade');
             $table->string('material_name');
             $table->string('material_code')->unique();
-            $table->enum('material_type', ['milk', 'culture', 'flavoring', 'sweetener', 'stabilizer', 'other']);
+            $table->enum('material_type', ['milk', 'sugar', 'fruit']);
             $table->text('description')->nullable();
             $table->decimal('quantity', 10, 2); // in appropriate units
             $table->string('unit_of_measure'); // liters, kg, grams, etc.

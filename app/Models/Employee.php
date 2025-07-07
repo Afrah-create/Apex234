@@ -10,12 +10,32 @@ class Employee extends Model
         'name',
         'role',
         'vendor_id',
-        'status',
         'user_id',
+        'status',
     ];
 
     public function vendor()
     {
         return $this->belongsTo(Vendor::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function isActive()
+    {
+        return $this->status === 'active';
+    }
+
+    public function isInactive()
+    {
+        return $this->status === 'inactive';
+    }
+
+    public function isTerminated()
+    {
+        return $this->status === 'terminated';
     }
 }
