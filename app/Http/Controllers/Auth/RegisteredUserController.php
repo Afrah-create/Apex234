@@ -96,18 +96,23 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user));
 
-        Auth::login($user);
-
-        // Redirect to role-specific dashboard
-        switch ($request->role) {
-            case 'retailer':
-                return redirect()->route('dashboard.retailer');
-            case 'supplier':
-                return redirect()->route('dashboard.supplier');
-            case 'vendor':
-                return redirect()->route('vendor-applicant.create');
-            default:
-                return redirect(route('dashboard', absolute: false));
+        if ($request->role === 'vendor') {
+            // Do not log in vendor, redirect to application form with name/email as query params
+            return redirect()->route('vendor-applicant.create', [
+                'name' => $request->name,
+                'email' => $request->email
+            ])->with('success', 'Registration successful! Please complete your application and wait for admin approval. You will receive an email when your account is ready.');
+        } else {
+            Auth::login($user);
+            // Redirect to role-specific dashboard
+            switch ($request->role) {
+                case 'retailer':
+                    return redirect()->route('dashboard.retailer');
+                case 'supplier':
+                    return redirect()->route('dashboard.supplier');
+                default:
+                    return redirect(route('dashboard', absolute: false));
+            }
         }
     }
 }

@@ -26,11 +26,11 @@
             @csrf
             <div class="mb-3">
                 <label for="name" class="form-label">Name</label>
-                <input type="text" class="form-control" id="name" name="name" value="{{ old('name') }}" required>
+                <input type="text" class="form-control" id="name" name="name" value="{{ old('name', $name ?? '') }}" required @if(isset($name) && $name) readonly @endif>
             </div>
             <div class="mb-3">
                 <label for="email" class="form-label">Email</label>
-                <input type="email" class="form-control" id="email" name="email" value="{{ old('email') }}" required>
+                <input type="email" class="form-control" id="email" name="email" value="{{ old('email', $email ?? '') }}" required @if(isset($email) && $email) readonly @endif>
             </div>
             <div class="mb-3">
                 <label for="phone" class="form-label">Phone</label>
