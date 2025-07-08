@@ -40,6 +40,7 @@ class RegisteredUserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'role' => $request->role, // Set the role column to the selected role
         ]);
 
         // Assign selected role
@@ -93,6 +94,42 @@ class RegisteredUserController extends Controller
                 'notes' => null,
             ]);
         }
+
+        // If registering as retailer, create retailer record
+        if ($request->role === 'retailer') {
+            \App\Models\Retailer::create([
+                'user_id' => $user->id,
+                'store_name' => $request->business_name ?? $user->name . ' Store',
+                'store_code' => uniqid('STORE'),
+                'store_address' => $request->business_address ?? '',
+                'store_phone' => $request->phone_number ?? '',
+                'store_email' => $user->email,
+                'store_manager' => $user->name,
+                'manager_phone' => $request->phone_number ?? '',
+                'manager_email' => $user->email,
+                'store_type' => 'convenience_store',
+                'store_size' => 'medium',
+                'daily_customer_traffic' => null,
+                'monthly_sales_volume' => null,
+                'payment_methods' => null,
+                'store_hours' => null,
+                'certification_status' => 'pending',
+                'certifications' => null,
+                'last_inspection_date' => null,
+                'next_inspection_date' => null,
+                'customer_rating' => 0,
+                'status' => 'active',
+                'notes' => null,
+                'business_name' => $request->business_name ?? $user->name . ' Store',
+                'business_address' => $request->business_address ?? '',
+                'contact_person' => $user->name,
+                'contact_email' => $user->email,
+                'contact_phone' => $request->phone_number ?? '',
+            ]);
+        }
+
+        // Note: Vendor records are created only after admin approval
+        // For vendors, we only create the user and redirect to application form
 
         event(new Registered($user));
 

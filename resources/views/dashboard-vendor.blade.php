@@ -2,8 +2,7 @@
 
 @section('content')
     <main class="main-content">
-        <h1>Vendor Dashboard</h1>
-        <p>Welcome, Vendor! Here is your real-time business overview.</p>
+       
 
         <!-- Inventory Summary Cards -->
         <div class="summary-cards mb-8 grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -135,6 +134,33 @@
             <div class="relative" style="height: 250px;">
                 <canvas id="vendorProductionChart"></canvas>
             </div>
+        </div>
+
+        <!-- Assigned Employees Table -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-900 mb-6">Assigned Employees</h2>
+            @if(isset($employees) && $employees->count())
+                <table class="min-w-full bg-white border border-gray-200 rounded">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="px-4 py-2 text-left">Name</th>
+                            <th class="px-4 py-2 text-left">Role</th>
+                            <th class="px-4 py-2 text-left">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($employees as $employee)
+                            <tr>
+                                <td class="px-4 py-2">{{ $employee->name }}</td>
+                                <td class="px-4 py-2">{{ $employee->role }}</td>
+                                <td class="px-4 py-2">{{ ucfirst($employee->status) }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @else
+                <p class="text-gray-600">No employees assigned to this vendor yet.</p>
+            @endif
         </div>
     </main>
 

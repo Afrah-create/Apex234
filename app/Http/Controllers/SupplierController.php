@@ -362,6 +362,11 @@ class SupplierController extends Controller
         $user = Auth::user();
         $supplier = $user->supplier;
 
+        if (!$supplier) {
+            // Redirect to home or another safe route with an error message
+            return redirect()->route('dashboard')->with('error', 'No supplier profile found for this user.');
+        }
+
         // Total raw materials supplied
         $totalSupplied = \App\Models\RawMaterial::whereHas('dairyFarm', function($q) use ($supplier) {
             $q->where('supplier_id', $supplier->id);

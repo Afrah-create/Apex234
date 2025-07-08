@@ -24,6 +24,19 @@ Route::get('/test-middleware', function () {
     return 'Middleware test successful!';
 })->middleware('test');
 
+// Test mail route
+Route::get('/test-mail', function () {
+    try {
+        \Illuminate\Support\Facades\Mail::raw('Test email from Laravel', function($message) {
+            $message->to('test@example.com')
+                    ->subject('Test Email');
+        });
+        return 'Mail sent successfully!';
+    } catch (\Exception $e) {
+        return 'Mail error: ' . $e->getMessage();
+    }
+});
+
 Route::get('/dashboard', function () {
     $user = Auth::user();
     if ($user instanceof User) {
@@ -67,37 +80,39 @@ Route::get('/dashboard', function () {
                 return redirect()->route('dashboard.supplier');
             case 'vendor':
                 return redirect()->route('dashboard.vendor');
+            case 'employee':
+                return redirect()->route('dashboard.employee');
             default:
-                return view('dashboard-admin');
+                // Check if user has an employee record and redirect accordingly
+                $employeeRecord = \App\Models\Employee::where('user_id', $user->id)->first();
+                if ($employeeRecord) {
+                    return redirect()->route('dashboard.employee');
+                }
+                // For users without a specific role, redirect to home or show error
+                return redirect('/')->with('error', 'Access denied. Please contact administrator.');
         }
     }
     return redirect()->route('login');
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['auth'])->name('dashboard');
 
 // Role-specific dashboards
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard/retailer', function () {
-        $products = YogurtProduct::all();
-        return view('dashboard-retailer', compact('products'));
-    })->name('dashboard.retailer');
-    Route::get('/dashboard/supplier', function () {
-        $totalSupplied = \App\Models\OrderItem::sum('quantity');
-        $pendingDeliveries = \App\Models\Delivery::where('delivery_status', 'scheduled')->count();
-        $deliveredBatches = \App\Models\Delivery::where('delivery_status', 'delivered')->count();
-        return view('dashboard-supplier', compact('totalSupplied', 'pendingDeliveries', 'deliveredBatches'));
-    })->name('dashboard.supplier');
-    Route::get('/dashboard/vendor', function () {
-        return view('dashboard-vendor');
-    })->name('dashboard.vendor');
+Route::middleware(['auth'])->group(function () {
+    Route::get('/dashboard/retailer', [\App\Http\Controllers\RetailerDashboardController::class, 'index'])->name('dashboard.retailer');
+    Route::get('/dashboard/supplier', [\App\Http\Controllers\SupplierController::class, 'supplierDashboard'])->name('dashboard.supplier');
+    // Removed direct return of dashboard-supplier view to ensure variables are always passed from the controller.
+    Route::get('/dashboard/vendor', [\App\Http\Controllers\VendorDashboardController::class, 'showDashboard'])->name('dashboard.vendor');
     Route::get('/vendor/manage-orders', function () {
         return view('vendor.manage-orders');
     })->name('vendor.manage-orders');
     Route::get('/vendor/manage-products', function () {
         return view('vendor.manage-products');
     })->name('vendor.manage-products');
-    Route::get('/dashboard/employee', function () {
-        return view('employee.dashboard');
-    })->name('dashboard.employee');
+    Route::get('/dashboard/employee', [\App\Http\Controllers\EmployeeDashboardController::class, 'index'])->name('dashboard.employee');
+    // Role-specific employee dashboard routes
+    Route::get('/dashboard/employee/production-worker', [\App\Http\Controllers\EmployeeDashboardController::class, 'productionWorkerDashboard'])->name('dashboard.employee.production-worker');
+    Route::get('/dashboard/employee/warehouse-staff', [\App\Http\Controllers\EmployeeDashboardController::class, 'warehouseStaffDashboard'])->name('dashboard.employee.warehouse-staff');
+    Route::get('/dashboard/employee/driver', [\App\Http\Controllers\EmployeeDashboardController::class, 'driverDashboard'])->name('dashboard.employee.driver');
+    Route::get('/dashboard/employee/sales-manager', [\App\Http\Controllers\EmployeeDashboardController::class, 'salesManagerDashboard'])->name('dashboard.employee.sales-manager');
     Route::post('/retailer/orders', [\App\Http\Controllers\RetailerOrderController::class, 'store'])->name('retailer.orders.store');
 });
 
@@ -244,6 +259,132 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::post('/export-report', [AnalyticsController::class, 'exportReport'])->name('export-report');
 });
 
-Route::middleware(['auth', 'verified'])->get('/supplier/raw-material-inventory', [SupplierController::class, 'rawMaterialInventory'])->name('supplier.raw-material-inventory');
+// Admin advanced reports
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/reports')->name('admin.reports.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\AdminReportController::class, 'index'])->name('index');
+    Route::get('/download/{filename}', [\App\Http\Controllers\AdminReportController::class, 'downloadReport'])->name('download');
+});
+
+// Reports API routes
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('api/reports')->name('api.reports.')->group(function () {
+    Route::get('/templates', [\App\Http\Controllers\AdminReportController::class, 'getReportTemplates'])->name('templates');
+    Route::get('/filters', [\App\Http\Controllers\AdminReportController::class, 'getReportFilters'])->name('filters');
+    Route::post('/generate', [\App\Http\Controllers\AdminReportController::class, 'generateCustomReport'])->name('generate');
+    Route::post('/export', [\App\Http\Controllers\AdminReportController::class, 'exportReport'])->name('export');
+    // Scheduled reports routes
+    Route::get('/scheduled', [\App\Http\Controllers\AdminReportController::class, 'getScheduledReports'])->name('scheduled');
+    Route::post('/scheduled', [\App\Http\Controllers\AdminReportController::class, 'createScheduledReport'])->name('scheduled.create');
+    Route::put('/scheduled/{id}', [\App\Http\Controllers\AdminReportController::class, 'updateScheduledReport'])->name('scheduled.update');
+    Route::delete('/scheduled/{id}', [\App\Http\Controllers\AdminReportController::class, 'deleteScheduledReport'])->name('scheduled.delete');
+    Route::patch('/scheduled/{id}/toggle', [\App\Http\Controllers\AdminReportController::class, 'toggleScheduledReportStatus'])->name('scheduled.toggle');
+    Route::post('/scheduled/{id}/trigger', [\App\Http\Controllers\AdminReportController::class, 'triggerScheduledReport'])->name('scheduled.trigger');
+    // Report logs routes
+    Route::get('/logs', [\App\Http\Controllers\AdminReportController::class, 'getReportLogs'])->name('logs');
+    Route::get('/statistics', [\App\Http\Controllers\AdminReportController::class, 'getReportStatistics'])->name('statistics');
+});
+
+// Workforce distribution API for admin dashboard
+Route::get('/api/workforce/distribution', [\App\Http\Controllers\AdminWorkforceController::class, 'getWorkforceDistribution'])->name('api.workforce.distribution');
+
+// User and Workforce Management (Tabbed)
+Route::get('/admin/users', [\App\Http\Controllers\AdminEmployeeController::class, 'index'])->name('admin.users.index');
+Route::post('/admin/employees/{employee}/assign-vendor', [\App\Http\Controllers\AdminEmployeeController::class, 'assignVendor'])->name('admin.employees.assignVendor');
+Route::post('/admin/employees', [\App\Http\Controllers\AdminEmployeeController::class, 'store'])->name('admin.employees.store');
+
+// Admin vendor applicant management
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/vendor-applicants')->name('admin.vendor-applicants.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\AdminVendorApplicantController::class, 'index'])->name('index');
+    Route::post('/{id}/approve', [\App\Http\Controllers\AdminVendorApplicantController::class, 'approve'])->name('approve');
+});
+
+// Supplier Milk Batch Management
+Route::post('/supplier/milk-batch', [\App\Http\Controllers\SupplierController::class, 'submitMilkBatch']);
+Route::get('/supplier/milk-batch/history', [\App\Http\Controllers\SupplierController::class, 'milkBatchHistory']);
+Route::patch('/supplier/milk-batch/{id}/status', [\App\Http\Controllers\SupplierController::class, 'updateMilkBatchStatus']);
+
+// Supplier Raw Material Inventory Blade view
+Route::middleware(['auth', 'verified'])->get('/supplier/raw-material-inventory', function () {
+    return view('supplier.raw-material-inventory');
+})->name('supplier.raw-material-inventory');
+
+// Supplier Raw Material Inventory API
+Route::middleware(['auth', 'verified'])->get('/api/supplier/raw-material-inventory', [\App\Http\Controllers\SupplierController::class, 'rawMaterialInventory']);
+Route::middleware(['auth', 'verified'])->post('/api/supplier/raw-material-inventory', [\App\Http\Controllers\SupplierController::class, 'storeRawMaterial']);
+Route::middleware(['auth', 'verified'])->put('/api/supplier/raw-material-inventory/{id}', [\App\Http\Controllers\SupplierController::class, 'updateRawMaterial']);
+
+// Supplier Add Raw Material Blade view
+Route::middleware(['auth', 'verified'])->get('/supplier/raw-material-inventory/add', function () {
+    return view('supplier.add-raw-material');
+})->name('supplier.add-raw-material');
+
+// Supplier Add Raw Material POST (Blade form)
+Route::middleware(['auth', 'verified'])->post('/supplier/raw-material-inventory/add', [\App\Http\Controllers\SupplierController::class, 'storeRawMaterialBlade'])->name('supplier.add-raw-material');
+
+// Supplier Profile Page
+Route::middleware(['auth', 'verified'])->get('/supplier/profile', [\App\Http\Controllers\SupplierController::class, 'profile'])->name('supplier.profile');
+Route::middleware(['auth', 'verified'])->put('/supplier/profile', [\App\Http\Controllers\SupplierController::class, 'updateProfile'])->name('supplier.profile.update');
+
+// Supplier Manage Orders Page
+Route::middleware(['auth', 'verified'])->get('/supplier/manage-orders', function () {
+    return view('supplier.manage-orders');
+})->name('supplier.manage-orders');
+
+// Supplier Order Management API routes
+Route::middleware(['auth', 'verified'])->prefix('api/supplier/orders')->group(function () {
+    Route::get('/incoming', [\App\Http\Controllers\SupplierOrderController::class, 'incomingOrders']);
+    Route::post('/{id}/confirm', [\App\Http\Controllers\SupplierOrderController::class, 'confirmOrder']);
+    Route::post('/{id}/process', [\App\Http\Controllers\SupplierOrderController::class, 'processOrder']);
+    Route::post('/{id}/ship', [\App\Http\Controllers\SupplierOrderController::class, 'shipOrder']);
+    Route::post('/{id}/deliver', [\App\Http\Controllers\SupplierOrderController::class, 'deliverOrder']);
+    Route::post('/{id}/reject', [\App\Http\Controllers\SupplierOrderController::class, 'rejectOrder']);
+    Route::get('/stats', [\App\Http\Controllers\SupplierOrderController::class, 'orderStats']);
+});
+
+// Supplier Dashboard
+Route::get('/supplier/dashboard', [App\Http\Controllers\SupplierController::class, 'supplierDashboard'])->name('supplier.dashboard');
+
+// Delivery API routes
+Route::middleware(['auth', 'verified'])->post('/api/deliveries', [\App\Http\Controllers\DeliveryController::class, 'store']);
+
+// Supplier Delivery Form (for testing/demo)
+Route::get('/supplier/delivery-form', function () {
+    $user = Auth::user();
+    return view('supplier.delivery-form', [
+        'order_id' => 123,
+        'distribution_center_id' => 1,
+        'vendor_id' => 45,
+        'vendor_name' => 'Acme Vendor Ltd.',
+        'vendor_address' => '123 Main St, Cityville',
+        'vendor_phone' => '+1234567890',
+        'supplier_id' => $user && $user->supplier ? $user->supplier->id : null,
+    ]);
+});
+
+// API: Get drivers for a supplier
+Route::get('/api/supplier/{supplier}/drivers', function($supplierId) {
+    $supplier = \App\Models\Supplier::findOrFail($supplierId);
+    return response()->json($supplier->drivers()->get([
+        'id', 'name', 'phone', 'license', 'photo', 'vehicle_number', 'email', 'emergency_contact'
+    ]));
+});
+
+// Supplier driver management UI
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/supplier/drivers', [\App\Http\Controllers\SupplierController::class, 'manageDrivers'])->name('supplier.drivers');
+    Route::post('/supplier/drivers', [\App\Http\Controllers\SupplierController::class, 'storeDriver'])->name('supplier.drivers.store');
+    Route::post('/supplier/drivers/{driverId}/update', [\App\Http\Controllers\SupplierController::class, 'updateDriver'])->name('supplier.drivers.update');
+    Route::post('/supplier/drivers/{driverId}/delete', [\App\Http\Controllers\SupplierController::class, 'deleteDriver'])->name('supplier.drivers.delete');
+});
+
+// Supplier Track Deliveries Page
+Route::middleware(['auth', 'verified'])->get('/supplier/track-deliveries', [\App\Http\Controllers\SupplierController::class, 'trackDeliveries'])->name('supplier.track-deliveries');
+
+// API: Get all distribution centers
+Route::get('/api/distribution-centers', function() {
+    return \App\Models\DistributionCenter::select('id', 'center_name', 'center_address')->get();
+});
+
+// Vendor Deliveries Dashboard Page
+Route::middleware(['auth', 'verified'])->get('/vendor/deliveries', [\App\Http\Controllers\VendorDashboardController::class, 'deliveries'])->name('vendor.deliveries');
 
 require __DIR__.'/auth.php';

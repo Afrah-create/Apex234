@@ -7,25 +7,32 @@ use App\Models\VendorApplicant;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Auth;
 
 class VendorApplicantController extends Controller
 {
     // Show the vendor application form
     public function create()
     {
-        $name = request()->query('name');
-        $email = request()->query('email');
-        // If not present in query, fallback to logged-in vendor (if any)
+        // Get registration data from session if available
+        $registrationData = session('vendor_registration_data', []);
+        $name = $registrationData['name'] ?? request()->query('name');
+        $email = $registrationData['email'] ?? request()->query('email');
+        // If not present, fallback to logged-in vendor (if any)
         if (!$name || !$email) {
-            if (auth()->check()) {
-                $user = auth()->user();
-                if (method_exists($user, 'getPrimaryRoleName') && $user->getPrimaryRoleName() === 'vendor') {
+            if (Auth::check()) {
+                $user = Auth::user();
+                $role = null;
+                if (property_exists($user, 'role')) {
+                    $role = $user->role;
+                }
+                if ($role === 'vendor') {
                     $name = $user->name;
                     $email = $user->email;
                 }
             }
         }
-        return view('vendor.apply', compact('name', 'email'));
+        return view('vendor.apply', compact('registrationData', 'name', 'email'));
     }
 
     // Handle the form submission and PDF upload
@@ -93,6 +100,9 @@ class VendorApplicantController extends Controller
             'visit_date' => $visitDate,
             'validation_message' => $validationMessage,
         ]);
+
+        // Clear registration data from session
+        session()->forget('vendor_registration_data');
 
         // Redirect to confirmation page with check status button
         return redirect()->route('vendor-applicant.confirmation', ['email' => $validated['email']]);
