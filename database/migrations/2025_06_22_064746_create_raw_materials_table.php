@@ -19,6 +19,10 @@ return new class extends Migration
             $table->enum('material_type', ['milk', 'sugar', 'fruit']);
             $table->text('description')->nullable();
             $table->decimal('quantity', 10, 2); // in appropriate units
+            $table->integer('available')->nullable()->after('quantity');
+            $table->integer('in_use')->nullable()->after('available');
+            $table->integer('expired')->nullable()->after('in_use');
+            $table->integer('disposed')->nullable()->after('expired');
             $table->string('unit_of_measure'); // liters, kg, grams, etc.
             $table->decimal('unit_price', 10, 2);
             $table->decimal('total_cost', 12, 2);

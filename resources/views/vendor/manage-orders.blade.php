@@ -113,6 +113,7 @@
                     </tbody>
                 </table>
             </div>
+            <div id="vendor-raw-material-orders-pagination" class="flex justify-center items-center py-4 space-x-4"></div>
         </div>
     </div>
 
@@ -379,18 +380,23 @@ function showOrderMessage(type, message) {
     }
 }
 
-// List vendor's raw material orders
-async function loadRawMaterialOrders() {
+// Remove archive/unarchive buttons and add pagination
+let vendorRawMaterialOrdersCurrentPage = 1;
+let vendorRawMaterialOrdersLastPage = 1;
+
+async function loadRawMaterialOrders(page = 1) {
     try {
-        const res = await fetch('/api/vendor/raw-material-orders');
-        const orders = await res.json();
+        const res = await fetch(`/api/vendor/raw-material-orders?page=${page}`);
+        const result = await res.json();
+        const orders = result.data;
+        vendorRawMaterialOrdersCurrentPage = result.current_page;
+        vendorRawMaterialOrdersLastPage = result.last_page;
         const tbody = document.getElementById('vendor-raw-material-orders-list');
-        
         if (orders.length === 0) {
             tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-gray-500">No orders found</td></tr>';
+            renderVendorRawMaterialOrdersPagination();
             return;
         }
-        
         tbody.innerHTML = '';
         orders.forEach(order => {
             const tr = document.createElement('tr');
@@ -416,15 +422,43 @@ async function loadRawMaterialOrders() {
                 <td class="px-4 py-3">
                     ${order.status === 'pending' || order.status === 'confirmed' ? 
                         `<button onclick="cancelOrder(${order.id})" class="text-red-600 hover:text-red-800 text-sm">Cancel</button>` : 
-                        '-'
+                        ''
                     }
                 </td>
             `;
             tbody.appendChild(tr);
         });
+        renderVendorRawMaterialOrdersPagination();
     } catch (error) {
         console.error('Error loading raw material orders:', error);
     }
+}
+
+function renderVendorRawMaterialOrdersPagination() {
+    let pagination = document.getElementById('vendor-raw-material-orders-pagination');
+    if (!pagination) {
+        pagination = document.createElement('div');
+        pagination.id = 'vendor-raw-material-orders-pagination';
+        pagination.className = 'flex justify-center items-center py-4 space-x-4';
+        document.querySelector('.mb-8 .bg-white').appendChild(pagination);
+    }
+    pagination.innerHTML = '';
+    if (vendorRawMaterialOrdersLastPage <= 1) return;
+    const prevBtn = document.createElement('button');
+    prevBtn.textContent = 'Previous';
+    prevBtn.className = 'px-3 py-1 rounded bg-gray-200 hover:bg-gray-300';
+    prevBtn.disabled = vendorRawMaterialOrdersCurrentPage === 1;
+    prevBtn.onclick = () => loadRawMaterialOrders(vendorRawMaterialOrdersCurrentPage - 1);
+    const nextBtn = document.createElement('button');
+    nextBtn.textContent = 'Next';
+    nextBtn.className = 'px-3 py-1 rounded bg-gray-200 hover:bg-gray-300';
+    nextBtn.disabled = vendorRawMaterialOrdersCurrentPage === vendorRawMaterialOrdersLastPage;
+    nextBtn.onclick = () => loadRawMaterialOrders(vendorRawMaterialOrdersCurrentPage + 1);
+    const pageInfo = document.createElement('span');
+    pageInfo.textContent = `Page ${vendorRawMaterialOrdersCurrentPage} of ${vendorRawMaterialOrdersLastPage}`;
+    pagination.appendChild(prevBtn);
+    pagination.appendChild(pageInfo);
+    pagination.appendChild(nextBtn);
 }
 
 // Get status color for badges

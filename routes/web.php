@@ -181,6 +181,8 @@ Route::middleware(['auth', 'verified'])->prefix('api/vendor')->group(function ()
     Route::post('/raw-material-orders/{id}/cancel', [\App\Http\Controllers\VendorOrderController::class, 'cancelRawMaterialOrder']);
     Route::get('/product-orders', [\App\Http\Controllers\VendorOrderController::class, 'listProductOrders']);
     Route::post('/product-orders/{id}/confirm', [\App\Http\Controllers\VendorOrderController::class, 'confirmProductOrder']);
+    Route::post('/raw-material-orders/{id}/archive', [\App\Http\Controllers\VendorOrderController::class, 'archiveRawMaterialOrder']);
+    Route::post('/raw-material-orders/{id}/unarchive', [\App\Http\Controllers\VendorOrderController::class, 'unarchiveRawMaterialOrder']);
 });
 
 // Vendor product management API routes
@@ -338,6 +340,8 @@ Route::middleware(['auth', 'verified'])->prefix('api/supplier/orders')->group(fu
     Route::post('/{id}/deliver', [\App\Http\Controllers\SupplierOrderController::class, 'deliverOrder']);
     Route::post('/{id}/reject', [\App\Http\Controllers\SupplierOrderController::class, 'rejectOrder']);
     Route::get('/stats', [\App\Http\Controllers\SupplierOrderController::class, 'orderStats']);
+    Route::post('/raw-material-orders/{id}/archive', [\App\Http\Controllers\SupplierOrderController::class, 'archiveRawMaterialOrder']);
+    Route::post('/raw-material-orders/{id}/unarchive', [\App\Http\Controllers\SupplierOrderController::class, 'unarchiveRawMaterialOrder']);
 });
 
 // Supplier Dashboard
@@ -388,3 +392,5 @@ Route::get('/api/distribution-centers', function() {
 Route::middleware(['auth', 'verified'])->get('/vendor/deliveries', [\App\Http\Controllers\VendorDashboardController::class, 'deliveries'])->name('vendor.deliveries');
 
 require __DIR__.'/auth.php';
+
+Route::get('/api/admin/raw-material-orders', [\App\Http\Controllers\AdminOrderController::class, 'allRawMaterialOrders']);

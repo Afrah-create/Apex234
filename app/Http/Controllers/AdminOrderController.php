@@ -121,4 +121,64 @@ class AdminOrderController extends Controller
             'message' => 'Order status updated successfully'
         ]);
     }
+
+    // Archive a raw material order (admin)
+    public function archiveRawMaterialOrder($id)
+    {
+        $order = \App\Models\RawMaterialOrder::find($id);
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'Order not found.'], 404);
+        }
+        if (!in_array($order->status, ['delivered', 'cancelled'])) {
+            return response()->json(['success' => false, 'message' => 'Only delivered or cancelled orders can be archived.'], 400);
+        }
+        $order->archived = true;
+        $order->save();
+        return response()->json(['success' => true, 'message' => 'Order archived successfully.']);
+    }
+
+    // Unarchive a raw material order (admin)
+    public function unarchiveRawMaterialOrder($id)
+    {
+        $order = \App\Models\RawMaterialOrder::find($id);
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'Order not found.'], 404);
+        }
+        if (!$order->archived) {
+            return response()->json(['success' => false, 'message' => 'Order is not archived.'], 400);
+        }
+        $order->archived = false;
+        $order->save();
+        return response()->json(['success' => true, 'message' => 'Order unarchived successfully.']);
+    }
+
+    // API: Get all raw material orders with vendor and supplier names
+    public function allRawMaterialOrders(Request $request)
+    {
+        $perPage = (int) $request->query('per_page', 10);
+        $page = (int) $request->query('page', 1);
+        $query = \App\Models\RawMaterialOrder::with(['vendor', 'supplier.user'])
+            ->orderByDesc('created_at');
+        $total = $query->count();
+        $orders = $query->skip(($page - 1) * $perPage)->take($perPage)->get()->map(function($order) {
+            return [
+                'id' => $order->id,
+                'vendor_name' => $order->vendor ? ($order->vendor->name ?? $order->vendor->email ?? '-') : '-',
+                'supplier_name' => $order->supplier && $order->supplier->user ? ($order->supplier->user->name ?? '-') : '-',
+                'material_type' => $order->material_type,
+                'material_name' => $order->material_name,
+                'quantity' => $order->quantity,
+                'unit_of_measure' => $order->unit_of_measure,
+                'status' => $order->status,
+                'archived' => $order->archived,
+            ];
+        });
+        return response()->json([
+            'data' => $orders,
+            'total' => $total,
+            'per_page' => $perPage,
+            'current_page' => $page,
+            'last_page' => ceil($total / $perPage),
+        ]);
+    }
 } 

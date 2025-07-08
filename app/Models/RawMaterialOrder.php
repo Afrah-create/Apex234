@@ -23,6 +23,7 @@ class RawMaterialOrder extends Model
         'order_date',
         'expected_delivery_date',
         'actual_delivery_date',
+        'archived',
     ];
 
     protected $casts = [
@@ -32,6 +33,7 @@ class RawMaterialOrder extends Model
         'quantity' => 'decimal:2',
         'unit_price' => 'decimal:2',
         'total_amount' => 'decimal:2',
+        'archived' => 'boolean',
     ];
 
     public function vendor()
