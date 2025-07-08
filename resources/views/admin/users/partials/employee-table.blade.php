@@ -15,7 +15,7 @@
         <select name="vendor_id" class="border rounded px-2 py-1">
             <option value="">Unassigned</option>
             @foreach($vendors as $vendor)
-                <option value="{{ $vendor->id }}">{{ $vendor->name }}</option>
+                <option value="{{ $vendor->id }}">{{ $vendor->business_name }}</option>
             @endforeach
         </select>
         <select name="status" required class="border rounded px-2 py-1">
@@ -49,7 +49,7 @@
                             <option value="">-- Unassigned --</option>
                             @foreach($vendors as $vendor)
                                 <option value="{{ $vendor->id }}" @if($employee->vendor_id == $vendor->id) selected @endif>
-                                    {{ $vendor->name }}
+                                    {{ $vendor->business_name }}
                                 </option>
                             @endforeach
                         </select>

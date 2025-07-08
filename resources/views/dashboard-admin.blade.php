@@ -1,5 +1,12 @@
 @extends('layouts.app')
 
+@php
+    // Set default values for variables that might not be passed
+    $recentOrders = $recentOrders ?? collect();
+    $newVendorApplicants = $newVendorApplicants ?? collect();
+    $userStatistics = $userStatistics ?? ['total_users' => 0, 'role_breakdown' => collect()];
+@endphp
+
 @section('content')
     <main class="main-content">
         <!-- Navigation Section -->

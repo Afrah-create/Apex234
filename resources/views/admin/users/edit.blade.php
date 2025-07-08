@@ -24,15 +24,13 @@
                     <input type="email" name="email" value="{{ old('email', $user->email) }}" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                 </div>
                 <div>
-                    <label class="block font-semibold mb-1">Roles</label>
-                    <div class="flex flex-wrap gap-4">
+                    <label class="block font-semibold mb-1">Role</label>
+                    <select name="role" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <option value="">Select Role</option>
                         @foreach($roles as $role)
-                            <label class="inline-flex items-center">
-                                <input type="checkbox" name="roles[]" value="{{ $role->id }}" @if($user->roles->contains($role->id)) checked @endif class="form-checkbox h-5 w-5 text-blue-600">
-                                <span class="ml-2">{{ $role->name }}</span>
-                            </label>
+                            <option value="{{ $role->id }}" @if($user->roles->contains($role->id)) selected @endif>{{ $role->name }}</option>
                         @endforeach
-                    </div>
+                    </select>
                 </div>
                 <div class="flex justify-between items-center mt-6">
                     <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 font-semibold">Update</button>

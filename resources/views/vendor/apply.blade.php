@@ -26,19 +26,19 @@
             @csrf
             <div class="mb-3">
                 <label for="name" class="form-label">Name</label>
-                <input type="text" class="form-control" id="name" name="name" value="{{ old('name', $name ?? '') }}" required @if(isset($name) && $name) readonly @endif>
+                <input type="text" class="form-control" id="name" name="name" value="{{ old('name', $registrationData['name'] ?? ($name ?? '')) }}" required @if(isset($name) && $name) readonly @endif>
             </div>
             <div class="mb-3">
                 <label for="email" class="form-label">Email</label>
-                <input type="email" class="form-control" id="email" name="email" value="{{ old('email', $email ?? '') }}" required @if(isset($email) && $email) readonly @endif>
+                <input type="email" class="form-control" id="email" name="email" value="{{ old('email', $registrationData['email'] ?? ($email ?? '')) }}" required @if(isset($email) && $email) readonly @endif>
             </div>
             <div class="mb-3">
                 <label for="phone" class="form-label">Phone</label>
-                <input type="text" class="form-control" id="phone" name="phone" value="{{ old('phone') }}" required>
+                <input type="text" class="form-control" id="phone" name="phone" value="{{ old('phone', $registrationData['phone_number'] ?? '') }}" required>
             </div>
             <div class="mb-3">
                 <label for="company_name" class="form-label">Company Name</label>
-                <input type="text" class="form-control" id="company_name" name="company_name" value="{{ old('company_name') }}" required>
+                <input type="text" class="form-control" id="company_name" name="company_name" value="{{ old('company_name', $registrationData['business_name'] ?? '') }}" required>
             </div>
             <div class="mb-3">
                 <label for="annual_revenue" class="form-label">Annual Revenue (USD)</label>
@@ -50,7 +50,7 @@
             </div>
             <div class="mb-3">
                 <label for="license_number" class="form-label">License Number</label>
-                <input type="text" class="form-control" id="license_number" name="license_number" value="{{ old('license_number') }}" required>
+                <input type="text" class="form-control" id="license_number" name="license_number" value="{{ old('license_number', $registrationData['business_license'] ?? '') }}" required>
             </div>
             <div class="mb-3">
                 <label for="compliance_certificate" class="form-label">Compliance Certificate</label>

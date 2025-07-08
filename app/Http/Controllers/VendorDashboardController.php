@@ -131,4 +131,24 @@ class VendorDashboardController extends Controller
             'units_inventory' => $unitsInInventory,
         ]);
     }
+
+    // Show all deliveries for the logged-in vendor
+    public function deliveries()
+    {
+        $vendor = auth()->user()->vendor;
+        if (!$vendor) {
+            abort(403, 'No vendor profile found.');
+        }
+        $deliveries = \App\Models\Delivery::where('vendor_id', $vendor->id)
+            ->orderByDesc('created_at')
+            ->get();
+        return view('vendor.deliveries', compact('deliveries'));
+    }
+
+    public function showDashboard()
+    {
+        $vendor = auth()->user()->vendor;
+        $employees = $vendor ? $vendor->employees : collect();
+        return view('dashboard-vendor', compact('vendor', 'employees'));
+    }
 } 

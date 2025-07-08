@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -21,6 +20,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'status',
     ];
 
     /**
@@ -44,6 +44,44 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Determine if the user has verified their email address.
+     * Only vendors need email verification.
+     */
+    public function hasVerifiedEmail(): bool
+    {
+        $role = $this->getPrimaryRoleName();
+        
+        // Only vendors need email verification
+        if ($role === 'vendor') {
+            return ! is_null($this->email_verified_at);
+        }
+        
+        // All other users are considered verified
+        return true;
+    }
+
+    /**
+     * Mark the given user's email as verified.
+     */
+    public function markEmailAsVerified(): bool
+    {
+        return $this->forceFill([
+            'email_verified_at' => $this->freshTimestamp(),
+        ])->save();
+    }
+
+    /**
+     * Send the email verification notification.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        // Only send verification email to vendors
+        if ($this->getPrimaryRoleName() === 'vendor') {
+            $this->notify(new \Illuminate\Auth\Notifications\VerifyEmail);
+        }
     }
 
     public function roles()
@@ -73,13 +111,43 @@ class User extends Authenticatable
         $this->notify(new \App\Notifications\CustomResetPassword($token));
     }
 
+    public function getProfilePhotoUrlAttribute()
+    {
+        if ($this->profile_photo) {
+            return asset('storage/profile_photos/' . $this->profile_photo);
+        }
+        // Return a default avatar image (you can use a local asset or a service like ui-avatars)
+        return asset('images/default-avatar.png');
+    }
+
+    /**
+     * Check if the user is approved (for vendor login).
+     *
+     * @return bool
+     */
+    public function isApproved()
+    {
+        return $this->status === 'approved';
+    }
+
     public function supplier()
     {
         return $this->hasOne(\App\Models\Supplier::class);
     }
 
-    public function isApproved()
+    public function vendor()
     {
-        return $this->status === 'approved';
+        return $this->hasOne(\App\Models\Vendor::class);
+    }
+
+    public function retailer()
+    {
+        return $this->hasOne(\App\Models\Retailer::class);
+    }
+
+    public function employee()
+    {
+        return $this->hasOne(\App\Models\Employee::class);
     }
 }
+    

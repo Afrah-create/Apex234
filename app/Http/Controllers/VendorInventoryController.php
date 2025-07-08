@@ -79,6 +79,7 @@ class VendorInventoryController extends Controller
                 'created_at',
                 'updated_at'
             ])
+            ->where('vendor_id', $vendorId)
             ->get()
             ->map(function($material) {
                 return [
@@ -272,61 +273,11 @@ class VendorInventoryController extends Controller
     // Create new raw material
     public function storeRawMaterial(Request $request): JsonResponse
     {
-        $request->validate([
-            'dairy_farm_id' => 'required|exists:dairy_farms,id',
-            'material_name' => 'required|string',
-            'material_type' => 'required|in:milk,culture,flavoring,sweetener,stabilizer,other',
-            'quantity' => 'required|numeric|min:0',
-            'unit_of_measure' => 'required|string',
-            'unit_price' => 'required|numeric|min:0',
-            'harvest_date' => 'required|date',
-            'expiry_date' => 'required|date|after:harvest_date',
-            'quality_grade' => 'required|in:A,B,C,D',
-            'temperature' => 'nullable|numeric|between:-10,20',
-            'ph_level' => 'nullable|numeric|between:0,14',
-            'fat_content' => 'nullable|numeric|min:0',
-            'protein_content' => 'nullable|numeric|min:0',
-            'quality_notes' => 'nullable|string',
-        ]);
-
-        $dairyFarmId = $request->dairy_farm_id;
-
-        // Calculate total cost
-        $totalCost = $request->quantity * $request->unit_price;
-
-        // Generate material code
-        $materialCode = 'RM-' . strtoupper(substr($request->material_type, 0, 3)) . '-' . uniqid();
-
-        // Create raw material
-        $rawMaterialId = DB::table('raw_materials')->insertGetId([
-            'dairy_farm_id' => $dairyFarmId,
-            'material_name' => $request->material_name,
-            'material_code' => $materialCode,
-            'material_type' => $request->material_type,
-            'description' => $request->material_name . ' - ' . $request->material_type,
-            'quantity' => $request->quantity,
-            'unit_of_measure' => $request->unit_of_measure,
-            'unit_price' => $request->unit_price,
-            'total_cost' => $totalCost,
-            'harvest_date' => $request->harvest_date,
-            'expiry_date' => $request->expiry_date,
-            'quality_grade' => $request->quality_grade,
-            'temperature' => $request->temperature,
-            'ph_level' => $request->ph_level,
-            'fat_content' => $request->fat_content,
-            'protein_content' => $request->protein_content,
-            'status' => 'available',
-            'quality_notes' => $request->quality_notes,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        $rawMaterial = DB::table('raw_materials')->find($rawMaterialId);
-
+        // Vendors are not allowed to add raw materials directly
         return response()->json([
-            'success' => true,
-            'raw_material' => $rawMaterial
-        ]);
+            'success' => false,
+            'error' => 'You are not allowed to add raw materials directly. Please order from a supplier.'
+        ], 403);
     }
 
     // Update raw material
@@ -412,8 +363,12 @@ class VendorInventoryController extends Controller
     // Delete raw material
     public function deleteRawMaterial($id): JsonResponse
     {
-        DB::table('raw_materials')->where('id', $id)->delete();
-        return response()->json(['success' => true]);
+        $vendorId = Auth::id();
+        $deleted = DB::table('raw_materials')
+            ->where('id', $id)
+            ->where('vendor_id', $vendorId)
+            ->delete();
+        return response()->json(['success' => $deleted > 0]);
     }
 
     // Get inventory summary for dashboards

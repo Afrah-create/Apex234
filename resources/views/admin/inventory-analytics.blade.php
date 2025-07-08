@@ -7,12 +7,7 @@
         <div class="flex items-center justify-between mb-4">
             <h1 class="text-2xl font-bold text-gray-900">Inventory Analytics Dashboard</h1>
             <div class="flex space-x-4">
-                <a href="{{ route('dashboard') }}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition duration-200 flex items-center">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                    </svg>
-                    Back to Dashboard
-                </a>
+                
                 <button onclick="refreshData()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition duration-200 flex items-center">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
@@ -98,52 +93,14 @@
         <div class="relative" style="height: 400px;">
             <canvas id="inventoryChart"></canvas>
         </div>
+        
+
+        
+
     </div>
 
     <!-- User Statistics and Stock Alerts -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-xl font-semibold text-gray-900 mb-6">Stock Alerts</h2>
-            <div class="space-y-4">
-                <div class="flex items-center justify-between p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                    <div class="flex items-center">
-                        <svg class="w-5 h-5 text-yellow-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-                        </svg>
-                        <span class="text-sm font-medium text-yellow-800">Low Stock Items</span>
-                    </div>
-                    <span class="text-lg font-semibold text-yellow-900" id="lowStockCount">0</span>
-                </div>
-                <div class="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200">
-                    <div class="flex items-center">
-                        <svg class="w-5 h-5 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                        <span class="text-sm font-medium text-red-800">Out of Stock</span>
-                    </div>
-                    <span class="text-lg font-semibold text-red-900" id="outOfStockCount">0</span>
-                </div>
-                <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
-                    <div class="flex items-center">
-                        <svg class="w-5 h-5 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                        <span class="text-sm font-medium text-green-800">Damaged Items</span>
-                    </div>
-                    <span class="text-lg font-semibold text-green-900" id="totalDamaged">0</span>
-                </div>
-                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
-                    <div class="flex items-center">
-                        <svg class="w-5 h-5 text-gray-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                        </svg>
-                        <span class="text-sm font-medium text-gray-800">Expired Items</span>
-                    </div>
-                    <span class="text-lg font-semibold text-gray-900" id="totalExpired">0</span>
-                </div>
-            </div>
-        </div>
-    </div>
+    
 
     <!-- Real-time Inventory Table -->
     <div class="bg-white rounded-lg shadow-md p-6">

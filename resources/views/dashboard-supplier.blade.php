@@ -5,7 +5,6 @@
     <!-- Welcome Section -->
     <div class="mb-8">
         <h1 class="text-3xl font-bold text-blue-900 mb-2">Welcome, {{ Auth::user()->name }}!</h1>
-        <p class="text-gray-700">This is your supplier dashboard. Here you can manage your supplies, deliveries, and monitor your performance at a glance.</p>
     </div>
 
     <!-- Key Metrics -->
@@ -33,21 +32,10 @@
     </div>
 
     <!-- Quick Actions -->
-    <div class="mb-8 flex flex-wrap gap-4">
-        <a href="{{ route('supplier.raw-material-inventory') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded shadow font-semibold transition">Raw Material Inventory</a>
-        <a href="{{ route('supplier.manage-orders') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded shadow font-semibold transition">Manage Orders</a>
-        <a href="{{ route('supplier.add-raw-material') }}" class="bg-purple-700 hover:bg-purple-800 text-white px-6 py-3 rounded shadow font-semibold transition">Add New Supply</a>
-        <a href="{{ route('supplier.profile') }}" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded shadow font-semibold transition">Profile & Settings</a>
-    </div>
+  
 
     <!-- Notifications/Alerts -->
-    <div class="mb-8">
-        <h2 class="text-xl font-semibold text-blue-900 mb-2">Notifications & Alerts</h2>
-        <ul class="list-disc pl-6 text-red-600">
-            <li>Low stock: Sugar below 10kg!</li>
-            <li>2 pending quality checks for recent milk batches.</li>
-        </ul>
-    </div>
+    
 
     <!-- Recent Activity -->
     <div class="bg-white rounded-lg shadow p-6">
