@@ -62,10 +62,12 @@ class DatabaseSeeder extends Seeder
             'user_id' => $vendor->id,
         ], [
             'company_name' => 'Default Vendor Co.',
+            'business_name' => 'Default Vendor Co.',
             'registration_number' => 'VEN-001',
             'business_address' => '456 Vendor Street',
             'contact_person' => 'Vendor Contact',
             'contact_phone' => '+1234567899',
+            'phone_number' => '+1234567899',
             'contact_email' => 'vendor@example.com',
         ]);
         $retailer = User::firstOrCreate([
