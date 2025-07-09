@@ -368,9 +368,13 @@ Route::middleware(['auth', 'verified'])->get('/vendor/deliveries', [\App\Http\Co
 Route::middleware(['auth'])->group(function () {
     Route::get('/chat/recipients', [ChatController::class, 'getRecipients']);
     Route::post('/chat/send', [ChatController::class, 'sendMessage']);
+    Route::post('/chat/send-file', [\App\Http\Controllers\ChatController::class, 'sendFileMessage']);
+    Route::get('/chat/file/{id}', [\App\Http\Controllers\ChatController::class, 'downloadChatFile'])->name('chat.file.download');
     Route::get('/chat/unread-count', [ChatController::class, 'getUnreadCount']);
     Route::get('/chat/messages', [ChatController::class, 'getMessages']);
     Route::post('/chat/mark-all-read', [ChatController::class, 'markAllAsRead']);
+    Route::get('/chat/background', [\App\Http\Controllers\ChatController::class, 'getChatBackground']);
+    Route::post('/chat/background', [\App\Http\Controllers\ChatController::class, 'setChatBackground']);
 });
 
 Route::middleware(['auth'])->get('/chat', function () {

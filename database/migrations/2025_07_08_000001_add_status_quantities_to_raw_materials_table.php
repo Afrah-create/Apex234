@@ -8,10 +8,10 @@ return new class extends Migration {
     public function up()
     {
         Schema::table('raw_materials', function (Blueprint $table) {
-            $table->integer('available')->nullable()->after('quantity');
-            $table->integer('in_use')->nullable()->after('available');
-            $table->integer('expired')->nullable()->after('in_use');
-            $table->integer('disposed')->nullable()->after('expired');
+            // $table->integer('available')->nullable()->after('quantity');
+            // $table->integer('in_use')->nullable()->after('available');
+            // $table->integer('expired')->nullable()->after('in_use');
+            // $table->integer('disposed')->nullable()->after('expired');
         });
     }
 
