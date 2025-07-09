@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class AdminOrderController extends Controller
 {
@@ -180,5 +181,51 @@ class AdminOrderController extends Controller
             'current_page' => $page,
             'last_page' => ceil($total / $perPage),
         ]);
+    }
+
+    // Export all raw material orders as CSV
+    public function exportRawMaterialOrdersCsv()
+    {
+        $orders = \App\Models\RawMaterialOrder::with(['vendor', 'supplier.user'])->orderByDesc('created_at')->get();
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="raw_material_orders.csv"',
+        ];
+        $columns = [
+            'Order ID', 'Vendor', 'Supplier', 'Material', 'Quantity', 'Unit', 'Unit Price', 'Total Amount', 'Status', 'Order Date', 'Expected Delivery', 'Actual Delivery', 'Created At'
+        ];
+        $callback = function() use ($orders, $columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+            foreach ($orders as $order) {
+                fputcsv($file, [
+                    $order->id,
+                    $order->vendor ? ($order->vendor->name ?? $order->vendor->email ?? '-') : '-',
+                    $order->supplier && $order->supplier->user ? ($order->supplier->user->name ?? '-') : '-',
+                    $order->material_name . ' (' . $order->material_type . ')',
+                    $order->quantity,
+                    $order->unit_of_measure,
+                    $order->unit_price,
+                    $order->total_amount,
+                    $order->status,
+                    $order->order_date ? $order->order_date->format('Y-m-d H:i:s') : '',
+                    $order->expected_delivery_date ? $order->expected_delivery_date->format('Y-m-d') : '',
+                    $order->actual_delivery_date ? $order->actual_delivery_date->format('Y-m-d') : '',
+                    $order->created_at ? $order->created_at->format('Y-m-d H:i:s') : '',
+                ]);
+            }
+            fclose($file);
+        };
+        return response()->stream($callback, 200, $headers);
+    }
+
+    // Export all raw material orders as PDF
+    public function exportRawMaterialOrdersPdf()
+    {
+        $orders = \App\Models\RawMaterialOrder::with(['vendor', 'supplier.user'])->orderByDesc('created_at')->get();
+        $pdf = Pdf::loadView('admin.reports.raw_material_orders_pdf', [
+            'orders' => $orders
+        ])->setPaper('a4', 'landscape');
+        return $pdf->download('raw_material_orders.pdf');
     }
 } 

@@ -14,7 +14,7 @@ class AdminEmployeeController extends Controller
     {
         $users = User::with('roles')->paginate(10);
         $employees = Employee::with('vendor')->get();
-        $vendors = Vendor::all();
+        $vendors = Vendor::where('status', 'approved')->get();
         return view('admin.users.index', compact('users', 'employees', 'vendors'));
     }
 
@@ -75,5 +75,64 @@ class AdminEmployeeController extends Controller
         ]);
 
         return redirect()->route('admin.users.index')->with('success', 'Employee created!');
+    }
+
+    // Export filtered employee assignments as CSV
+    public function exportCsv(Request $request)
+    {
+        $query = \App\Models\Employee::with(['user', 'vendor']);
+        if ($request->filled('from')) {
+            $query->whereDate('created_at', '>=', $request->input('from'));
+        }
+        if ($request->filled('to')) {
+            $query->whereDate('created_at', '<=', $request->input('to'));
+        }
+        if ($request->filled('vendor_id')) {
+            $query->where('vendor_id', $request->input('vendor_id'));
+        }
+        $employees = $query->orderByDesc('created_at')->get();
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="employee_assignments.csv"',
+        ];
+        $columns = [
+            'Date Assigned', 'Vendor', 'Employee Name', 'Employee Email', 'Role/Position', 'Status'
+        ];
+        $callback = function() use ($employees, $columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+            foreach ($employees as $employee) {
+                fputcsv($file, [
+                    $employee->created_at ? $employee->created_at->format('Y-m-d') : '',
+                    $employee->vendor ? $employee->vendor->name : '-',
+                    $employee->user ? $employee->user->name : '-',
+                    $employee->user ? $employee->user->email : '-',
+                    $employee->role ?? '-',
+                    $employee->status ?? '-',
+                ]);
+            }
+            fclose($file);
+        };
+        return response()->stream($callback, 200, $headers);
+    }
+
+    // Export filtered employee assignments as PDF
+    public function exportPdf(Request $request)
+    {
+        $query = \App\Models\Employee::with(['user', 'vendor']);
+        if ($request->filled('from')) {
+            $query->whereDate('created_at', '>=', $request->input('from'));
+        }
+        if ($request->filled('to')) {
+            $query->whereDate('created_at', '<=', $request->input('to'));
+        }
+        if ($request->filled('vendor_id')) {
+            $query->where('vendor_id', $request->input('vendor_id'));
+        }
+        $employees = $query->orderByDesc('created_at')->get();
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.reports.employee_assignments_pdf', [
+            'employees' => $employees
+        ])->setPaper('a4', 'landscape');
+        return $pdf->download('employee_assignments.pdf');
     }
 }

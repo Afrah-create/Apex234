@@ -130,7 +130,13 @@
 
     <!-- Raw Material Orders Table -->
     <div class="mt-12">
-        <h2 class="text-lg font-semibold text-blue-800 mb-4">Raw Material Orders</h2>
+        <div class="flex items-center justify-between mb-2">
+            <h2 class="text-lg font-semibold text-blue-800 mb-4">Raw Material Orders</h2>
+            <div class="flex space-x-2">
+                <a href="/admin/raw-material-orders/export-csv" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition duration-200 text-sm" download>Export CSV</a>
+                <a href="/admin/raw-material-orders/export-pdf" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition duration-200 text-sm" download>Export PDF</a>
+            </div>
+        </div>
         <div class="bg-white rounded-lg shadow-md overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="min-w-full w-full divide-y divide-gray-200 text-sm">
