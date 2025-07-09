@@ -26,8 +26,8 @@
             <input type="number" name="price" id="price" class="w-full p-2 rounded border text-sm" value="{{ $product->selling_price }}" min="0" step="0.01" required>
         </div>
         <div class="mb-4">
-            <label class="block font-bold mb-1 text-sm">Stock</label>
-            <input type="number" name="stock" id="stock" class="w-full p-2 rounded border text-sm" value="{{ $product->stock }}" min="0">
+            <label class="block font-bold mb-1 text-sm">Stock (Total)</label>
+            <input type="number" name="stock" id="stock" class="w-full p-2 rounded border text-sm bg-gray-100" value="{{ $product->stock }}" min="0" readonly>
         </div>
         
         <!-- Inventory Management Section -->
@@ -37,7 +37,7 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="mb-4">
                     <label class="block font-bold mb-1 text-sm text-green-700">Available Quantity</label>
-                    <input type="number" name="quantity_available" id="quantity_available" class="w-full p-2 rounded border text-sm" value="{{ $inventory->quantity_available ?? 0 }}" min="0">
+                    <input type="number" name="quantity_available" id="quantity_available" class="w-full p-2 rounded border text-sm bg-gray-100" value="{{ $inventory->quantity_available ?? 0 }}" min="0" readonly>
                     <p class="text-xs text-gray-500 mt-1">Ready for sale</p>
                 </div>
                 
@@ -53,6 +53,8 @@
                     <p class="text-xs text-gray-500 mt-1">Not sellable</p>
                 </div>
             </div>
+            
+            <div id="stock-warning" class="text-red-600 font-bold text-sm hidden">The sum of Reserved and Damaged must not exceed the total stock.</div>
             
             <div class="mt-4 p-3 bg-blue-50 rounded border-l-4 border-blue-400">
                 <div class="flex justify-between items-center">
@@ -93,7 +95,30 @@
     </form>
 </main>
 <script>
+function recalculateProductAvailable() {
+    const stock = parseInt(document.getElementById('stock').value) || 0;
+    const reserved = parseInt(document.getElementById('quantity_reserved').value) || 0;
+    const damaged = parseInt(document.getElementById('quantity_damaged').value) || 0;
+    const sum = reserved + damaged;
+    const available = stock - sum;
+    document.getElementById('quantity_available').value = available >= 0 ? available : 0;
+    const warning = document.getElementById('stock-warning');
+    if (sum > stock) {
+        warning.classList.remove('hidden');
+        return false;
+    } else {
+        warning.classList.add('hidden');
+        return true;
+    }
+}
+['quantity_reserved', 'quantity_damaged'].forEach(id => {
+    document.getElementById(id).addEventListener('input', recalculateProductAvailable);
+});
 document.getElementById('edit-product-form').addEventListener('submit', function(e) {
+    if (!recalculateProductAvailable()) {
+        e.preventDefault();
+        return;
+    }
     e.preventDefault();
     const form = e.target;
     const id = document.getElementById('product-id').value;

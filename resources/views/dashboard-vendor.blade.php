@@ -87,27 +87,7 @@
         <!-- Raw Material Statistics -->
         <div class="bg-white rounded-lg shadow-md p-6 mb-8">
             <h2 class="text-xl font-semibold text-gray-900 mb-6">Raw Material Statistics</h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                <div class="raw-material-card bg-blue-50 p-4 rounded-lg text-center">
-                    <p class="text-blue-600 font-bold">Milk Available</p>
-                    <p id="vendor-raw-milk-available">-</p>
-                </div>
-                <div class="raw-material-card bg-green-50 p-4 rounded-lg text-center">
-                    <p class="text-green-600 font-bold">Milk In Use</p>
-                    <p id="vendor-raw-milk-inuse">-</p>
-                </div>
-                <div class="raw-material-card bg-red-50 p-4 rounded-lg text-center">
-                    <p class="text-red-600 font-bold">Expired Milk</p>
-                    <p id="vendor-raw-milk-expired">-</p>
-                </div>
-                <div class="raw-material-card bg-gray-50 p-4 rounded-lg text-center">
-                    <p class="text-gray-600 font-bold">Disposed Milk</p>
-                    <p id="vendor-raw-milk-disposed">-</p>
-                </div>
-            </div>
-            <div class="relative" style="height: 250px;">
-                <canvas id="vendorRawMaterialChart"></canvas>
-            </div>
+            <div id="vendorRawMaterialDoughnuts" class="flex flex-wrap gap-6 justify-center"></div>
         </div>
 
         <!-- Production Summary -->
@@ -254,40 +234,49 @@
         let vendorRawMaterialChart;
         async function loadVendorRawMaterialStats() {
             const data = await fetchJSON('/api/vendor/raw-material-stats');
-            document.getElementById('vendor-raw-milk-available').textContent = data.available ?? 0;
-            document.getElementById('vendor-raw-milk-inuse').textContent = data.in_use ?? 0;
-            document.getElementById('vendor-raw-milk-expired').textContent = data.expired ?? 0;
-            document.getElementById('vendor-raw-milk-disposed').textContent = data.disposed ?? 0;
-            // Chart
+            // Prepare data for grouped bar chart
+            const materials = Object.keys(data);
+            const statuses = ['available', 'in_use', 'expired', 'disposed'];
+            const statusLabels = {
+                available: 'Available',
+                in_use: 'In Use',
+                expired: 'Expired',
+                disposed: 'Disposed'
+            };
+            const colorMap = {
+                available: 'rgba(34, 197, 94, 0.8)',
+                in_use: 'rgba(59, 130, 246, 0.8)',
+                expired: 'rgba(239, 68, 68, 0.8)',
+                disposed: 'rgba(156, 163, 175, 0.8)'
+            };
+
+            const datasets = statuses.map(status => ({
+                label: statusLabels[status],
+                data: materials.map(material => data[material][status] ?? 0),
+                backgroundColor: colorMap[status]
+            }));
+
+            // Restore single canvas for bar chart
+            const container = document.getElementById('vendorRawMaterialDoughnuts');
+            container.innerHTML = '<canvas id="vendorRawMaterialChart"></canvas>';
             const ctx = document.getElementById('vendorRawMaterialChart').getContext('2d');
             if (vendorRawMaterialChart) vendorRawMaterialChart.destroy();
             vendorRawMaterialChart = new Chart(ctx, {
-                type: 'pie',
+                type: 'bar',
                 data: {
-                    labels: ['Available', 'In Use', 'Expired', 'Disposed'],
-                    datasets: [{
-                        data: [data.available ?? 0, data.in_use ?? 0, data.expired ?? 0, data.disposed ?? 0],
-                        backgroundColor: [
-                            'rgba(34, 197, 94, 0.8)',
-                            'rgba(59, 130, 246, 0.8)',
-                            'rgba(239, 68, 68, 0.8)',
-                            'rgba(156, 163, 175, 0.8)'
-                        ],
-                        borderColor: [
-                            'rgba(34, 197, 94, 1)',
-                            'rgba(59, 130, 246, 1)',
-                            'rgba(239, 68, 68, 1)',
-                            'rgba(156, 163, 175, 1)'
-                        ],
-                        borderWidth: 2
-                    }]
+                    labels: materials,
+                    datasets: datasets
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'bottom' },
-                        title: { display: true, text: 'Raw Milk Status' }
+                        legend: { position: 'top' },
+                        title: { display: true, text: 'Raw Material Status by Type' }
+                    },
+                    scales: {
+                        x: { stacked: false, title: { display: true, text: 'Raw Material' } },
+                        y: { stacked: false, beginAtZero: true, title: { display: true, text: 'Quantity' } }
                     }
                 }
             });

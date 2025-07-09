@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminUserController;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\VendorApplicantController;
 use App\Http\Controllers\SupplierController;
 use App\Models\YogurtProduct;
@@ -56,8 +57,6 @@ Route::get('/dashboard', function () {
                         'total' => $order->total,
                     ];
                 });
-
-                // User statistics
                 $totalUsers = \App\Models\User::count();
                 $roles = \App\Models\Role::withCount('users')->get();
                 $roleBreakdown = $roles->map(function ($role) use ($totalUsers) {
@@ -83,12 +82,10 @@ Route::get('/dashboard', function () {
             case 'employee':
                 return redirect()->route('dashboard.employee');
             default:
-                // Check if user has an employee record and redirect accordingly
                 $employeeRecord = \App\Models\Employee::where('user_id', $user->id)->first();
                 if ($employeeRecord) {
                     return redirect()->route('dashboard.employee');
                 }
-                // For users without a specific role, redirect to home or show error
                 return redirect('/')->with('error', 'Access denied. Please contact administrator.');
         }
     }
@@ -99,20 +96,19 @@ Route::get('/dashboard', function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard/retailer', [\App\Http\Controllers\RetailerDashboardController::class, 'index'])->name('dashboard.retailer');
     Route::get('/dashboard/supplier', [\App\Http\Controllers\SupplierController::class, 'supplierDashboard'])->name('dashboard.supplier');
-    // Removed direct return of dashboard-supplier view to ensure variables are always passed from the controller.
     Route::get('/dashboard/vendor', [\App\Http\Controllers\VendorDashboardController::class, 'showDashboard'])->name('dashboard.vendor');
-    Route::get('/vendor/manage-orders', function () {
-        return view('vendor.manage-orders');
-    })->name('vendor.manage-orders');
-    Route::get('/vendor/manage-products', function () {
-        return view('vendor.manage-products');
-    })->name('vendor.manage-products');
     Route::get('/dashboard/employee', [\App\Http\Controllers\EmployeeDashboardController::class, 'index'])->name('dashboard.employee');
     // Role-specific employee dashboard routes
     Route::get('/dashboard/employee/production-worker', [\App\Http\Controllers\EmployeeDashboardController::class, 'productionWorkerDashboard'])->name('dashboard.employee.production-worker');
     Route::get('/dashboard/employee/warehouse-staff', [\App\Http\Controllers\EmployeeDashboardController::class, 'warehouseStaffDashboard'])->name('dashboard.employee.warehouse-staff');
     Route::get('/dashboard/employee/driver', [\App\Http\Controllers\EmployeeDashboardController::class, 'driverDashboard'])->name('dashboard.employee.driver');
     Route::get('/dashboard/employee/sales-manager', [\App\Http\Controllers\EmployeeDashboardController::class, 'salesManagerDashboard'])->name('dashboard.employee.sales-manager');
+    Route::get('/vendor/manage-orders', function () {
+        return view('vendor.manage-orders');
+    })->name('vendor.manage-orders');
+    Route::get('/vendor/manage-products', function () {
+        return view('vendor.manage-products');
+    })->name('vendor.manage-products');
     Route::post('/retailer/orders', [\App\Http\Controllers\RetailerOrderController::class, 'store'])->name('retailer.orders.store');
 });
 
@@ -181,6 +177,8 @@ Route::middleware(['auth', 'verified'])->prefix('api/vendor')->group(function ()
     Route::post('/raw-material-orders/{id}/cancel', [\App\Http\Controllers\VendorOrderController::class, 'cancelRawMaterialOrder']);
     Route::get('/product-orders', [\App\Http\Controllers\VendorOrderController::class, 'listProductOrders']);
     Route::post('/product-orders/{id}/confirm', [\App\Http\Controllers\VendorOrderController::class, 'confirmProductOrder']);
+    Route::post('/raw-material-orders/{id}/archive', [\App\Http\Controllers\VendorOrderController::class, 'archiveRawMaterialOrder']);
+    Route::post('/raw-material-orders/{id}/unarchive', [\App\Http\Controllers\VendorOrderController::class, 'unarchiveRawMaterialOrder']);
 });
 
 // Vendor product management API routes
@@ -237,31 +235,6 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
 // Admin reports route group
 Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/reports')->name('admin.reports.')->group(function () {
     Route::get('/', [\App\Http\Controllers\AdminReportController::class, 'index'])->name('index');
-});
-
-// Admin vendor applicants approve route
-Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/vendor-applicants')->name('admin.vendor-applicants.')->group(function () {
-    Route::post('/{id}/approve', [\App\Http\Controllers\AdminVendorApplicantController::class, 'approve'])->name('approve');
-});
-
-// Analytics API routes
-Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('api/analytics')->name('api.analytics.')->group(function () {
-    Route::get('/kpi', [AnalyticsController::class, 'getKpiData'])->name('kpi');
-    Route::get('/predictions', [AnalyticsController::class, 'getPredictions'])->name('predictions');
-    Route::get('/demand-forecast', [AnalyticsController::class, 'getDemandForecast'])->name('demand-forecast');
-    Route::get('/customer-segmentation', [AnalyticsController::class, 'getCustomerSegmentation'])->name('customer-segmentation');
-    Route::get('/inventory-optimization', [AnalyticsController::class, 'getInventoryOptimization'])->name('inventory-optimization');
-    Route::get('/trend-analysis', [AnalyticsController::class, 'getTrendAnalysis'])->name('trend-analysis');
-    Route::get('/performance-metrics', [AnalyticsController::class, 'getPerformanceMetrics'])->name('performance-metrics');
-    Route::get('/risk-assessment', [AnalyticsController::class, 'getRiskAssessment'])->name('risk-assessment');
-    Route::post('/scenario-analysis', [AnalyticsController::class, 'runScenarioAnalysis'])->name('scenario-analysis');
-    Route::post('/what-if-analysis', [AnalyticsController::class, 'runWhatIfAnalysis'])->name('what-if-analysis');
-    Route::post('/export-report', [AnalyticsController::class, 'exportReport'])->name('export-report');
-});
-
-// Admin advanced reports
-Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/reports')->name('admin.reports.')->group(function () {
-    Route::get('/', [\App\Http\Controllers\AdminReportController::class, 'index'])->name('index');
     Route::get('/download/{filename}', [\App\Http\Controllers\AdminReportController::class, 'downloadReport'])->name('download');
 });
 
@@ -290,6 +263,8 @@ Route::get('/api/workforce/distribution', [\App\Http\Controllers\AdminWorkforceC
 Route::get('/admin/users', [\App\Http\Controllers\AdminEmployeeController::class, 'index'])->name('admin.users.index');
 Route::post('/admin/employees/{employee}/assign-vendor', [\App\Http\Controllers\AdminEmployeeController::class, 'assignVendor'])->name('admin.employees.assignVendor');
 Route::post('/admin/employees', [\App\Http\Controllers\AdminEmployeeController::class, 'store'])->name('admin.employees.store');
+Route::get('/admin/employees/export-csv', [\App\Http\Controllers\AdminEmployeeController::class, 'exportCsv'])->name('admin.employees.export-csv');
+Route::get('/admin/employees/export-pdf', [\App\Http\Controllers\AdminEmployeeController::class, 'exportPdf'])->name('admin.employees.export-pdf');
 
 // Admin vendor applicant management
 Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/vendor-applicants')->name('admin.vendor-applicants.')->group(function () {
@@ -338,6 +313,8 @@ Route::middleware(['auth', 'verified'])->prefix('api/supplier/orders')->group(fu
     Route::post('/{id}/deliver', [\App\Http\Controllers\SupplierOrderController::class, 'deliverOrder']);
     Route::post('/{id}/reject', [\App\Http\Controllers\SupplierOrderController::class, 'rejectOrder']);
     Route::get('/stats', [\App\Http\Controllers\SupplierOrderController::class, 'orderStats']);
+    Route::post('/raw-material-orders/{id}/archive', [\App\Http\Controllers\SupplierOrderController::class, 'archiveRawMaterialOrder']);
+    Route::post('/raw-material-orders/{id}/unarchive', [\App\Http\Controllers\SupplierOrderController::class, 'unarchiveRawMaterialOrder']);
 });
 
 // Supplier Dashboard
@@ -387,4 +364,36 @@ Route::get('/api/distribution-centers', function() {
 // Vendor Deliveries Dashboard Page
 Route::middleware(['auth', 'verified'])->get('/vendor/deliveries', [\App\Http\Controllers\VendorDashboardController::class, 'deliveries'])->name('vendor.deliveries');
 
+// Chat routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/chat/recipients', [ChatController::class, 'getRecipients']);
+    Route::post('/chat/send', [ChatController::class, 'sendMessage']);
+    Route::post('/chat/send-file', [\App\Http\Controllers\ChatController::class, 'sendFileMessage']);
+    Route::get('/chat/file/{id}', [\App\Http\Controllers\ChatController::class, 'downloadChatFile'])->name('chat.file.download');
+    Route::get('/chat/unread-count', [ChatController::class, 'getUnreadCount']);
+    Route::get('/chat/messages', [ChatController::class, 'getMessages']);
+    Route::post('/chat/mark-all-read', [ChatController::class, 'markAllAsRead']);
+    Route::get('/chat/background', [\App\Http\Controllers\ChatController::class, 'getChatBackground']);
+    Route::post('/chat/background', [\App\Http\Controllers\ChatController::class, 'setChatBackground']);
+});
+
+Route::middleware(['auth'])->get('/chat', function () {
+    return view('chat');
+})->name('chat');
+
+Route::middleware(['auth'])->get('/chat/unread-counts', [\App\Http\Controllers\ChatController::class, 'getUnreadCountsPerUser']);
+
+Route::middleware(['auth'])->get('/api/user/{id}', function($id) {
+    $user = \App\Models\User::findOrFail($id);
+    return response()->json([
+        'id' => $user->id,
+        'name' => $user->name,
+        'profile_photo_url' => $user->profile_photo_url,
+    ]);
+});
+
 require __DIR__.'/auth.php';
+
+Route::get('/api/admin/raw-material-orders', [\App\Http\Controllers\AdminOrderController::class, 'allRawMaterialOrders']);
+Route::get('/admin/raw-material-orders/export-csv', [\App\Http\Controllers\AdminOrderController::class, 'exportRawMaterialOrdersCsv']);
+Route::get('/admin/raw-material-orders/export-pdf', [\App\Http\Controllers\AdminOrderController::class, 'exportRawMaterialOrdersPdf']);
