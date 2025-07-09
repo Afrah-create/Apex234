@@ -56,6 +56,18 @@ class DatabaseSeeder extends Seeder
             'password' => bcrypt('password'),
             'chat_background' => '',
         ]);
+
+        // Ensure vendor@example.com has a Vendor profile
+        \App\Models\Vendor::firstOrCreate([
+            'user_id' => $vendor->id,
+        ], [
+            'company_name' => 'Default Vendor Co.',
+            'registration_number' => 'VEN-001',
+            'business_address' => '456 Vendor Street',
+            'contact_person' => 'Vendor Contact',
+            'contact_phone' => '+1234567899',
+            'contact_email' => 'vendor@example.com',
+        ]);
         $retailer = User::firstOrCreate([
             'email' => 'retailer@example.com',
         ], [
