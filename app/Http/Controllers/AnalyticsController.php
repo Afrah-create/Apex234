@@ -84,6 +84,14 @@ class AnalyticsController extends Controller
     }
 
     /**
+     * API endpoint for KPI data (for dashboard JS fetch)
+     */
+    public function kpi(): \Illuminate\Http\JsonResponse
+    {
+        return $this->getKpiData();
+    }
+
+    /**
      * Get machine learning predictions
      */
     public function getPredictions(): JsonResponse

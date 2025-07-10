@@ -143,6 +143,9 @@ body {
                     <p><strong>Validation Message:</strong><br>{{ $applicant->validation_message }}</p>
                 @endif
             </div>
+            <div class="status-actions" style="margin-top: 1.5rem;">
+                <a href="/" class="btn">Return to Welcome Page</a>
+            </div>
         @endif
     </div>
 </div>

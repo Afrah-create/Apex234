@@ -393,7 +393,7 @@
 
     function loadAnalyticsData() {
         // Load KPI data
-        fetch('{{ route("api.analytics.kpi") }}')
+        fetch('/api/analytics/kpi')
             .then(response => response.json())
             .then(data => {
                 document.getElementById('revenueGrowth').textContent = data.revenue_growth;
@@ -404,7 +404,7 @@
             .catch(error => console.error('Error loading KPI data:', error));
 
         // Load ML predictions
-        fetch('{{ route("api.analytics.predictions") }}')
+        fetch('/api/analytics/predictions')
             .then(response => response.json())
             .then(data => {
                 // Update demand forecast chart
@@ -414,7 +414,7 @@
             .catch(error => console.error('Error loading predictions:', error));
 
         // Load trend analysis data
-        fetch('{{ route("api.analytics.trend-analysis") }}')
+        fetch('/api/analytics/trend-analysis')
             .then(response => response.json())
             .then(data => {
                 // Update trend analysis chart with real data

@@ -113,7 +113,7 @@ class RegisteredUserController extends Controller
                 'monthly_sales_volume' => null,
                 'payment_methods' => null,
                 'store_hours' => null,
-                'certification_status' => 'pending',
+                'certification_status' => 'certified',
                 'certifications' => null,
                 'last_inspection_date' => null,
                 'next_inspection_date' => null,
