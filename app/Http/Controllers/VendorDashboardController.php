@@ -101,19 +101,30 @@ class VendorDashboardController extends Controller
         return response()->json($statuses);
     }
 
-    // Raw material statistics for vendor (milk only)
+    // Raw material statistics for vendor (all materials)
     public function rawMaterialStats(): JsonResponse
     {
-        $vendorId = Auth::id();
-        $rawMaterials = DB::table('raw_materials')
-            ->where('material_type', 'milk')
+        $vendorId = auth()->id();
+        $materialTypes = ['milk', 'sugar', 'fruit'];
+        $result = [];
+        foreach ($materialTypes as $type) {
+            $stats = DB::table('raw_materials')
+                ->where('material_type', $type)
+                ->where('vendor_id', $vendorId)
             ->select(
-                DB::raw("SUM(CASE WHEN status = 'available' THEN quantity ELSE 0 END) as available"),
-                DB::raw("SUM(CASE WHEN status = 'in_use' THEN quantity ELSE 0 END) as in_use"),
-                DB::raw("SUM(CASE WHEN status = 'expired' THEN quantity ELSE 0 END) as expired"),
-                DB::raw("SUM(CASE WHEN status = 'disposed' THEN quantity ELSE 0 END) as disposed")
+                    DB::raw('SUM(available) as available'),
+                    DB::raw('SUM(in_use) as in_use'),
+                    DB::raw('SUM(expired) as expired'),
+                    DB::raw('SUM(disposed) as disposed')
             )->first();
-        return response()->json($rawMaterials);
+            $result[ucfirst($type)] = [
+                'available' => (int)($stats->available ?? 0),
+                'in_use' => (int)($stats->in_use ?? 0),
+                'expired' => (int)($stats->expired ?? 0),
+                'disposed' => (int)($stats->disposed ?? 0),
+            ];
+        }
+        return response()->json($result);
     }
 
     // Production summary for vendor

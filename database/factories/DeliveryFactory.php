@@ -14,6 +14,7 @@ class DeliveryFactory extends Factory
             'order_id' => 1, // Should be set to a real order in seeder
             'distribution_center_id' => 1, // Should be set to a real center in seeder
             'retailer_id' => 1, // Should be set to a real retailer in seeder
+            'vendor_id' => \App\Models\Vendor::inRandomOrder()->first()?->id ?? \App\Models\Vendor::factory()->create()->id,
             'delivery_number' => $this->faker->unique()->bothify('DEL-#####'),
             'vehicle_number' => $this->faker->optional()->bothify('VEH-####'),
             'driver_name' => $this->faker->name(),

@@ -17,6 +17,9 @@ return new class extends Migration
             $table->unsignedBigInteger('receiver_id');
             $table->text('message');
             $table->boolean('is_read')->default(false);
+            $table->string('file_path')->nullable();
+            $table->string('file_type')->nullable();
+            $table->string('original_name')->nullable();
             $table->timestamps();
 
             $table->foreign('sender_id')->references('id')->on('users')->onDelete('cascade');

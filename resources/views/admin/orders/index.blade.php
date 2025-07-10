@@ -127,6 +127,48 @@
                     <p class="mt-2 text-sm text-gray-500">No orders found</p>
                 </div>
             </div>
+
+    <!-- Raw Material Orders Table -->
+    <div class="mt-12">
+        <div class="flex items-center justify-between mb-2">
+            <h2 class="text-lg font-semibold text-blue-800 mb-4">Raw Material Orders</h2>
+            <div class="flex space-x-2">
+                <a href="/admin/raw-material-orders/export-csv" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition duration-200 text-sm" download>Export CSV</a>
+                <a href="/admin/raw-material-orders/export-pdf" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition duration-200 text-sm" download>Export PDF</a>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full w-full divide-y divide-gray-200 text-sm">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-2 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
+                            <th class="px-2 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Vendor</th>
+                            <th class="px-2 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Supplier</th>
+                            <th class="px-2 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Material</th>
+                            <th class="px-2 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                            <th class="px-2 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-2 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="raw-material-orders-table-body" class="bg-white divide-y divide-gray-200">
+                        <!-- Raw material orders will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="raw-material-orders-loading" class="px-6 py-12 text-center">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+                <p class="mt-2 text-sm text-gray-500">Loading raw material orders...</p>
+            </div>
+            <div id="raw-material-orders-empty" class="px-6 py-12 text-center hidden">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <p class="mt-2 text-sm text-gray-500">No raw material orders found</p>
+            </div>
+            <div id="raw-material-orders-pagination" class="flex justify-center items-center py-4 space-x-4"></div>
+        </div>
+    </div>
         </div>
 </main>
 
@@ -370,6 +412,108 @@
             loadOrderStatistics();
         }
 
+        // --- Raw Material Orders Section ---
+        let rawMaterialOrdersData = [];
+        let rawMaterialOrdersCurrentPage = 1;
+        let rawMaterialOrdersLastPage = 1;
+
+        async function loadRawMaterialOrdersData(page = 1) {
+            try {
+                const response = await fetch(`/api/admin/raw-material-orders?page=${page}`);
+                const result = await response.json();
+                rawMaterialOrdersData = result.data;
+                rawMaterialOrdersCurrentPage = result.current_page;
+                rawMaterialOrdersLastPage = result.last_page;
+                renderRawMaterialOrdersTable();
+                renderRawMaterialOrdersPagination();
+            } catch (error) {
+                console.error('Error loading raw material orders:', error);
+            }
+        }
+
+        function renderRawMaterialOrdersTable() {
+            const tbody = document.getElementById('raw-material-orders-table-body');
+            const loadingState = document.getElementById('raw-material-orders-loading');
+            const emptyState = document.getElementById('raw-material-orders-empty');
+            tbody.innerHTML = '';
+            if (!rawMaterialOrdersData.length) {
+                loadingState.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            loadingState.classList.add('hidden');
+            emptyState.classList.add('hidden');
+            rawMaterialOrdersData.forEach(order => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-2 py-2 whitespace-nowrap">${order.id}</td>
+                    <td class="px-2 py-2 whitespace-nowrap">${order.vendor_name || '-'}</td>
+                    <td class="px-2 py-2 whitespace-nowrap">${order.supplier_name || '-'}</td>
+                    <td class="px-2 py-2 whitespace-nowrap">${order.material_name} (${order.material_type})</td>
+                    <td class="px-2 py-2 whitespace-nowrap">${order.quantity} ${order.unit_of_measure}</td>
+                    <td class="px-2 py-2 whitespace-nowrap">${order.status}</td>
+                    <td class="px-2 py-2 whitespace-nowrap">
+                        ${
+                            order.archived === true
+                                ? `<button class='bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded mr-2' onclick='unarchiveRawMaterialOrder(${order.id})'>Unarchive</button>`
+                                : (
+                            order.archived === false &&
+                            (typeof order.status === 'string' && ['delivered', 'cancelled'].includes(order.status.trim().toLowerCase()))
+                        )
+                            ? `<button class='bg-blue-600 hover:bg-blue-800 text-white px-3 py-1 rounded mr-2 border border-blue-800' onclick='archiveRawMaterialOrder(${order.id})'>Archive</button>`
+                            : '<span class="text-gray-400">No action</span>'
+                        }
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderRawMaterialOrdersPagination() {
+            const pagination = document.getElementById('raw-material-orders-pagination');
+            pagination.innerHTML = '';
+            if (rawMaterialOrdersLastPage <= 1) return;
+            const prevBtn = document.createElement('button');
+            prevBtn.textContent = 'Previous';
+            prevBtn.className = 'px-3 py-1 rounded bg-gray-200 hover:bg-gray-300';
+            prevBtn.disabled = rawMaterialOrdersCurrentPage === 1;
+            prevBtn.onclick = () => loadRawMaterialOrdersData(rawMaterialOrdersCurrentPage - 1);
+            const nextBtn = document.createElement('button');
+            nextBtn.textContent = 'Next';
+            nextBtn.className = 'px-3 py-1 rounded bg-gray-200 hover:bg-gray-300';
+            nextBtn.disabled = rawMaterialOrdersCurrentPage === rawMaterialOrdersLastPage;
+            nextBtn.onclick = () => loadRawMaterialOrdersData(rawMaterialOrdersCurrentPage + 1);
+            const pageInfo = document.createElement('span');
+            pageInfo.textContent = `Page ${rawMaterialOrdersCurrentPage} of ${rawMaterialOrdersLastPage}`;
+            pagination.appendChild(prevBtn);
+            pagination.appendChild(pageInfo);
+            pagination.appendChild(nextBtn);
+        }
+
+        async function archiveRawMaterialOrder(orderId) {
+            if (!confirm('Are you sure you want to archive this order?')) return;
+            try {
+                const response = await fetch(`/admin/raw-material-orders/${orderId}/archive`, { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } });
+                const data = await response.json();
+                alert(data.message);
+                loadRawMaterialOrdersData();
+            } catch (error) {
+                alert('Failed to archive order.');
+            }
+        }
+
+        async function unarchiveRawMaterialOrder(orderId) {
+            if (!confirm('Are you sure you want to unarchive this order?')) return;
+            try {
+                const response = await fetch(`/admin/raw-material-orders/${orderId}/unarchive`, { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } });
+                const data = await response.json();
+                alert(data.message);
+                loadRawMaterialOrdersData();
+            } catch (error) {
+                alert('Failed to unarchive order.');
+            }
+        }
+
         // Event listeners
         document.addEventListener('DOMContentLoaded', function() {
             loadOrdersData();
@@ -382,6 +526,9 @@
 
             // Set up status form
             document.getElementById('status-form').addEventListener('submit', updateOrderStatus);
+
+            // Call this on page load
+            loadRawMaterialOrdersData();
         });
     </script>
 @endsection 

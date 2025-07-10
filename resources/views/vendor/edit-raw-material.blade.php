@@ -22,8 +22,31 @@
             <input type="text" name="material_type" class="w-full p-2 rounded border text-sm" value="{{ $rawMaterial->material_type }}">
         </div>
         <div class="mb-4">
-            <label class="block font-bold mb-1 text-sm">Quantity</label>
-            <input type="number" name="quantity" id="quantity" class="w-full p-2 rounded border text-sm" value="{{ $rawMaterial->quantity }}" min="0" step="0.01" required>
+            <label class="block font-bold mb-1 text-sm">Quantity (Delivered)</label>
+            <input type="number" name="quantity" id="quantity" class="w-full p-2 rounded border text-sm bg-gray-100" value="{{ $rawMaterial->quantity }}" min="0" step="0.01" readonly required>
+        </div>
+        <!-- Inventory Management Section -->
+        <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Inventory Management</h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="mb-4">
+                    <label class="block font-bold mb-1 text-sm text-green-700">Available Quantity</label>
+                    <input type="number" name="available" id="available" class="w-full p-2 rounded border text-sm bg-gray-100" value="{{ $rawMaterial->available ?? 0 }}" min="0" readonly>
+                </div>
+                <div class="mb-4">
+                    <label class="block font-bold mb-1 text-sm text-blue-700">In Use Quantity</label>
+                    <input type="number" name="in_use" id="in_use" class="w-full p-2 rounded border text-sm" value="{{ $rawMaterial->in_use ?? 0 }}" min="0">
+                </div>
+                <div class="mb-4">
+                    <label class="block font-bold mb-1 text-sm text-red-700">Expired Quantity</label>
+                    <input type="number" name="expired" id="expired" class="w-full p-2 rounded border text-sm" value="{{ $rawMaterial->expired ?? 0 }}" min="0">
+                </div>
+                <div class="mb-4">
+                    <label class="block font-bold mb-1 text-sm text-gray-700">Disposed Quantity</label>
+                    <input type="number" name="disposed" id="disposed" class="w-full p-2 rounded border text-sm" value="{{ $rawMaterial->disposed ?? 0 }}" min="0">
+                </div>
+            </div>
+            <div id="quantity-warning" class="text-red-600 font-bold text-sm hidden">The sum of In Use, Expired, and Disposed must not exceed the delivered quantity.</div>
         </div>
         <div class="mb-4">
             <label class="block font-bold mb-1 text-sm">Unit of Measure</label>
@@ -84,8 +107,30 @@
     </form>
 </main>
 <script>
+function recalculateAvailable() {
+    const delivered = parseFloat(document.getElementById('quantity').value) || 0;
+    const inUse = parseFloat(document.getElementById('in_use').value) || 0;
+    const expired = parseFloat(document.getElementById('expired').value) || 0;
+    const disposed = parseFloat(document.getElementById('disposed').value) || 0;
+    const sum = inUse + expired + disposed;
+    const available = delivered - sum;
+    document.getElementById('available').value = available >= 0 ? available : 0;
+    const warning = document.getElementById('quantity-warning');
+    if (sum > delivered) {
+        warning.classList.remove('hidden');
+        return false;
+    } else {
+        warning.classList.add('hidden');
+        return true;
+    }
+}
+['in_use', 'expired', 'disposed'].forEach(id => {
+    document.getElementById(id).addEventListener('input', recalculateAvailable);
+});
 document.getElementById('edit-raw-material-form').addEventListener('submit', function(e) {
+    if (!recalculateAvailable()) {
     e.preventDefault();
+    }
     
     const form = e.target;
     const id = document.getElementById('raw-material-id').value;

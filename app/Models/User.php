@@ -21,6 +21,8 @@ class User extends Authenticatable
         'email',
         'password',
         'status',
+        'profile_photo',
+        'chat_background',
     ];
 
     /**
@@ -118,6 +120,11 @@ class User extends Authenticatable
         }
         // Return a default avatar image (you can use a local asset or a service like ui-avatars)
         return asset('images/default-avatar.png');
+    }
+
+    public function getChatBackgroundValueAttribute()
+    {
+        return $this->chat_background;
     }
 
     /**
