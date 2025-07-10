@@ -151,4 +151,15 @@ class VendorDashboardController extends Controller
         $employees = $vendor ? $vendor->employees : collect();
         return view('dashboard-vendor', compact('vendor', 'employees'));
     }
+
+    public function saveInventoryStatusRanges(Request $request)
+    {
+        $request->validate([
+            'warning_max' => 'required|integer|min:1',
+            'low_max' => 'required|integer|gt:warning_max',
+        ]);
+        session(['inventory_warning_max' => $request->warning_max]);
+        session(['inventory_low_max' => $request->low_max]);
+        return back()->with('range_success', 'Inventory status ranges updated!');
+    }
 } 

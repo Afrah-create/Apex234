@@ -496,4 +496,23 @@ class SupplierController extends Controller
         }
         return view('supplier.track-deliveries', compact('deliveries'));
     }
+
+    /**
+     * Update stock for a product by name (from supplier dashboard form)
+     */
+    public function updateStock(Request $request)
+    {
+        $request->validate([
+            'product_name' => 'required|string',
+            'quantity' => 'required|integer|min:0',
+        ]);
+        $product = \App\Models\YogurtProduct::where('product_name', $request->product_name)->first();
+        if (!$product) {
+            return back()->withErrors(['product_name' => 'Product not found.']);
+        }
+        $product->stock = $request->quantity;
+        $product->stock_input_date = now();
+        $product->save();
+        return back()->with('stock_success', 'Stock updated for ' . $product->product_name . '!');
+    }
 }

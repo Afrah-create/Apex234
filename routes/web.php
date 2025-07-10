@@ -387,4 +387,10 @@ Route::get('/api/distribution-centers', function() {
 // Vendor Deliveries Dashboard Page
 Route::middleware(['auth', 'verified'])->get('/vendor/deliveries', [\App\Http\Controllers\VendorDashboardController::class, 'deliveries'])->name('vendor.deliveries');
 
+// Vendor inventory status ranges
+Route::post('/vendor/inventory-status-ranges', [\App\Http\Controllers\VendorDashboardController::class, 'saveInventoryStatusRanges'])->name('vendor.inventory-status-ranges');
+
+// Supplier stock update form
+Route::post('/supplier/update-stock', [\App\Http\Controllers\SupplierController::class, 'updateStock'])->name('supplier.update-stock');
+
 require __DIR__.'/auth.php';

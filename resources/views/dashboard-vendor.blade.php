@@ -4,6 +4,13 @@
     <main class="main-content">
        
 
+        <!-- Welcome Vendor Section -->
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+            <h2 class="text-2xl font-bold text-blue-900 text-center">
+                WELCOME {{ strtoupper(Auth::user()->name) }}
+            </h2>
+        </div>
+
         <!-- Inventory Summary Cards -->
         <div class="summary-cards mb-8 grid grid-cols-1 md:grid-cols-4 gap-4">
             <div class="summary-card" style="--summary-card-border: #22c55e;">
@@ -81,32 +88,6 @@
             </div>
             <div class="relative" style="height: 250px;">
                 <canvas id="vendorOrderStatusChart"></canvas>
-            </div>
-        </div>
-
-        <!-- Raw Material Statistics -->
-        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h2 class="text-xl font-semibold text-gray-900 mb-6">Raw Material Statistics</h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                <div class="raw-material-card bg-blue-50 p-4 rounded-lg text-center">
-                    <p class="text-blue-600 font-bold">Milk Available</p>
-                    <p id="vendor-raw-milk-available">-</p>
-                </div>
-                <div class="raw-material-card bg-green-50 p-4 rounded-lg text-center">
-                    <p class="text-green-600 font-bold">Milk In Use</p>
-                    <p id="vendor-raw-milk-inuse">-</p>
-                </div>
-                <div class="raw-material-card bg-red-50 p-4 rounded-lg text-center">
-                    <p class="text-red-600 font-bold">Expired Milk</p>
-                    <p id="vendor-raw-milk-expired">-</p>
-                </div>
-                <div class="raw-material-card bg-gray-50 p-4 rounded-lg text-center">
-                    <p class="text-gray-600 font-bold">Disposed Milk</p>
-                    <p id="vendor-raw-milk-disposed">-</p>
-                </div>
-            </div>
-            <div class="relative" style="height: 250px;">
-                <canvas id="vendorRawMaterialChart"></canvas>
             </div>
         </div>
 
@@ -250,49 +231,6 @@
             });
         }
 
-        // Raw Material Stats Cards & Chart
-        let vendorRawMaterialChart;
-        async function loadVendorRawMaterialStats() {
-            const data = await fetchJSON('/api/vendor/raw-material-stats');
-            document.getElementById('vendor-raw-milk-available').textContent = data.available ?? 0;
-            document.getElementById('vendor-raw-milk-inuse').textContent = data.in_use ?? 0;
-            document.getElementById('vendor-raw-milk-expired').textContent = data.expired ?? 0;
-            document.getElementById('vendor-raw-milk-disposed').textContent = data.disposed ?? 0;
-            // Chart
-            const ctx = document.getElementById('vendorRawMaterialChart').getContext('2d');
-            if (vendorRawMaterialChart) vendorRawMaterialChart.destroy();
-            vendorRawMaterialChart = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: ['Available', 'In Use', 'Expired', 'Disposed'],
-                    datasets: [{
-                        data: [data.available ?? 0, data.in_use ?? 0, data.expired ?? 0, data.disposed ?? 0],
-                        backgroundColor: [
-                            'rgba(34, 197, 94, 0.8)',
-                            'rgba(59, 130, 246, 0.8)',
-                            'rgba(239, 68, 68, 0.8)',
-                            'rgba(156, 163, 175, 0.8)'
-                        ],
-                        borderColor: [
-                            'rgba(34, 197, 94, 1)',
-                            'rgba(59, 130, 246, 1)',
-                            'rgba(239, 68, 68, 1)',
-                            'rgba(156, 163, 175, 1)'
-                        ],
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom' },
-                        title: { display: true, text: 'Raw Milk Status' }
-                    }
-                }
-            });
-        }
-
         // Production Summary Cards & Chart
         let vendorProductionChart;
         async function loadVendorProductionSummary() {
@@ -342,7 +280,6 @@
             loadVendorInventorySummary();
             loadVendorInventoryChart();
             loadVendorOrderStatus();
-            loadVendorRawMaterialStats();
             loadVendorProductionSummary();
         });
     </script>
