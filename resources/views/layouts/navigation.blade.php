@@ -223,24 +223,22 @@
         pollUnread();
         pollingInterval = setInterval(pollUnread, 5000);
 
-        // --- Notification Bell Dropdown Logic ---
+        // --- Enhanced Notification Bell Dropdown Logic ---
         function updateNotificationBadge() {
-            fetch('/chat/unread-counts')
-                .then(res => res.json())
-                .then(unreadCounts => {
-                    let totalUnread = 0;
-                    for (const senderId in unreadCounts) {
-                        totalUnread += unreadCounts[senderId];
-                    }
-                    const notificationDot = document.getElementById('notificationDot');
-                    if (totalUnread > 0) {
-                        notificationDot.classList.remove('hidden');
-                        notificationDot.textContent = totalUnread;
-                    } else {
-                        notificationDot.classList.add('hidden');
-                        notificationDot.textContent = '';
-                    }
-                });
+            Promise.all([
+                fetch('/chat/unread-count').then(res => res.json()),
+                fetch('/api/notifications/unread').then(res => res.json())
+            ]).then(([chatData, notifData]) => {
+                const totalUnread = (chatData.unread_count || 0) + (notifData.length || 0);
+                const notificationDot = document.getElementById('notificationDot');
+                if (totalUnread > 0) {
+                    notificationDot.classList.remove('hidden');
+                    notificationDot.textContent = totalUnread;
+                } else {
+                    notificationDot.classList.add('hidden');
+                    notificationDot.textContent = '';
+                }
+            });
         }
         updateNotificationBadge();
         setInterval(updateNotificationBadge, 10000);
@@ -249,41 +247,43 @@
             e.stopPropagation();
             notificationDropdown.classList.toggle('hidden');
             if (!notificationDropdown.classList.contains('hidden')) {
-                // Load unread senders
-                fetch('/chat/unread-counts')
+                // Load unread transaction notifications
+                fetch('/api/notifications/unread')
                     .then(res => res.json())
-                    .then(unreadCounts => {
-                        const senderIds = Object.keys(unreadCounts);
-                        if (senderIds.length === 0) {
-                            notificationMessages.innerHTML = '<div class="text-gray-500 text-center py-4">No unread messages.</div>';
+                    .then(notifs => {
+                        if (!Array.isArray(notifs) || notifs.length === 0) {
+                            notificationMessages.innerHTML = '<div class="text-gray-500 text-center py-4">No unread transaction notifications.</div>';
                             return;
                         }
-                        // Fetch sender info for each senderId
-                        Promise.all(senderIds.map(id => fetch(`/api/user/${id}`).then(r => r.json())))
-                            .then(users => {
-                                notificationMessages.innerHTML = '';
-                                users.forEach((user, idx) => {
-                                    const senderId = senderIds[idx];
-                                    const photoUrl = user.profile_photo_url || '/images/default-avatar.png';
-                                    const div = document.createElement('div');
-                                    div.className = 'mb-3 border-b pb-2 flex items-center gap-2';
-                                    div.innerHTML = `
-                                        <a href="/chat?user_id=${senderId}" class="flex-1 flex items-center gap-2 text-blue-700 font-semibold hover:underline notification-chat-link" data-user-id="${senderId}">
-                                            <img src="${photoUrl}" alt="Profile" class="w-8 h-8 rounded-full object-cover border border-gray-300" />
-                                            <span>${user.name || 'User #' + senderId}</span>
-                                            <span class="ml-2 text-xs text-red-600 font-bold">Unread message</span>
-                                        </a>
-                                    `;
-                                    notificationMessages.appendChild(div);
-                                });
-                                // Add click handler to each link to go to chat and select user
-                                document.querySelectorAll('.notification-chat-link').forEach(link => {
-                                    link.addEventListener('click', function(ev) {
-                                        ev.preventDefault();
-                                        window.location.href = this.href;
-                                    });
-                                });
+                        notificationMessages.innerHTML = '';
+                        notifs.forEach(notif => {
+                            const senderId = notif.data.sender_id;
+                            const senderName = notif.data.sender_name || 'User #' + senderId;
+                            const message = notif.data.message || 'You have a new notification.';
+                            const orderNumber = notif.data.order_number ? `<div class='text-xs text-gray-500'>Order #: ${notif.data.order_number}</div>` : '';
+                            const deliveryNumber = notif.data.delivery_number ? `<div class='text-xs text-gray-500'>Delivery #: ${notif.data.delivery_number}</div>` : '';
+                            const div = document.createElement('div');
+                            div.className = 'mb-3 border-b pb-2 flex flex-col gap-1';
+                            div.innerHTML = `
+                                <div class="flex items-center gap-2">
+                                    <img src="/images/default-avatar.png" alt="Profile" class="w-8 h-8 rounded-full object-cover border border-gray-300" />
+                                    <span class="font-semibold text-blue-700">${senderName}</span>
+                                </div>
+                                <div class="text-gray-700">${message}</div>
+                                ${orderNumber}
+                                ${deliveryNumber}
+                                <button class="reply-btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded mt-1 w-max" data-user-id="${senderId}">Reply</button>
+                            `;
+                            notificationMessages.appendChild(div);
+                        });
+                        // Add click handler to each reply button
+                        document.querySelectorAll('.reply-btn').forEach(btn => {
+                            btn.addEventListener('click', function(ev) {
+                                ev.preventDefault();
+                                const userId = this.getAttribute('data-user-id');
+                                window.location.href = `/chat?user_id=${userId}`;
                             });
+                        });
                     });
             }
         });

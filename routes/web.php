@@ -382,4 +382,12 @@ Route::middleware(['auth'])->get('/api/user/{id}', function($id) {
     ]);
 });
 
+Route::middleware(['auth'])->get('/api/notifications/unread', function() {
+    $user = auth()->user();
+    $notifications = $user->unreadNotifications->filter(function($notification) {
+        return in_array(class_basename($notification->type), ['OrderPlacedNotification', 'DeliveryNoteNotification']);
+    })->values();
+    return response()->json($notifications);
+});
+
 require __DIR__.'/auth.php';

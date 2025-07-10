@@ -76,6 +76,13 @@ class RetailerOrderController extends Controller
             }
 
             DB::commit();
+
+            // Notify admin (or vendor) about the new order
+            $admin = \App\Models\User::whereHas('roles', function($q) { $q->where('name', 'admin'); })->first();
+            if ($admin) {
+                $admin->notify(new \App\Notifications\OrderPlacedNotification($order, $user));
+            }
+
             return response()->json(['success' => true, 'order_id' => $order->id]);
         } catch (\Exception $e) {
             DB::rollBack();
