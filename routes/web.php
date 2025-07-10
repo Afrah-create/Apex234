@@ -405,3 +405,10 @@ require __DIR__.'/auth.php';
 Route::get('/api/admin/raw-material-orders', [\App\Http\Controllers\AdminOrderController::class, 'allRawMaterialOrders']);
 Route::get('/admin/raw-material-orders/export-csv', [\App\Http\Controllers\AdminOrderController::class, 'exportRawMaterialOrdersCsv']);
 Route::get('/admin/raw-material-orders/export-pdf', [\App\Http\Controllers\AdminOrderController::class, 'exportRawMaterialOrdersPdf']);
+
+// Vendor Production Batch Management
+Route::middleware(['auth', 'verified'])->prefix('vendor/production')->group(function () {
+    Route::get('/', [\App\Http\Controllers\VendorProductionController::class, 'index'])->name('vendor.production.index');
+    Route::get('/create', [\App\Http\Controllers\VendorProductionController::class, 'create'])->name('vendor.production.create');
+    Route::post('/store', [\App\Http\Controllers\VendorProductionController::class, 'store'])->name('vendor.production.store');
+});
