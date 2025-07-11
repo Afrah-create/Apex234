@@ -390,3 +390,7 @@ Route::middleware(['auth'])->get('/chat/recipients', [\App\Http\Controllers\Chat
 Route::middleware(['auth'])->get('/chat/unread-counts', [\App\Http\Controllers\ChatController::class, 'getUnreadCountsPerUser']);
 Route::middleware(['auth'])->get('/chat/background', [\App\Http\Controllers\ChatController::class, 'getChatBackground']);
 Route::middleware(['auth'])->post('/chat/background', [\App\Http\Controllers\ChatController::class, 'setChatBackground']);
+
+Route::get('/privacy-policy', function () {
+    return view('privacy-policy');
+})->name('privacy.policy');
