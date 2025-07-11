@@ -148,7 +148,7 @@
                 </div>
                 <div class="flex space-x-4">
                     <a href="{{ route('privacy.policy') }}" class="hover:underline hover:text-blue-200">Privacy Policy</a>
-                    <a href="#" class="hover:underline hover:text-blue-200">Terms of Service</a>
+                    <a href="{{ route('terms.use') }}" class="hover:underline hover:text-blue-200">Terms of Service</a>
                     <a href="#" class="hover:underline hover:text-blue-200">Contact</a>
                 </div>
             </div>
