@@ -398,3 +398,7 @@ Route::get('/privacy-policy', function () {
 Route::get('/terms-of-use', function () {
     return view('terms-of-use');
 })->name('terms.use');
+
+Route::get('/contact', function () {
+    return view('contact');
+})->name('contact');
