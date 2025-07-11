@@ -384,3 +384,5 @@ Route::middleware(['auth', 'verified'])->post('/vendor/inventory-status-ranges',
 
 Route::middleware(['auth', 'verified'])->get('/vendor/production', [\App\Http\Controllers\VendorProductionController::class, 'index'])->name('vendor.production.index');
 Route::middleware(['auth', 'verified'])->post('/vendor/production', [\App\Http\Controllers\VendorProductionController::class, 'store'])->name('vendor.production.store');
+
+Route::middleware(['auth'])->get('/chat', [\App\Http\Controllers\ChatController::class, 'index'])->name('chat');
