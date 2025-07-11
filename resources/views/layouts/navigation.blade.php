@@ -26,6 +26,8 @@
                                     {{ $notif['name'] }} ({{ $notif['quantity'] }} {{ $notif['unit'] }})
                                 </div>
                             @endforeach
+                        @else
+                            <div class="text-gray-500 text-center py-4">No notifications available.</div>
                         @endif
                     </div>
                 </div>
