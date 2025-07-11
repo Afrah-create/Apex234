@@ -83,3 +83,23 @@
 </nav>
 
 <!-- Your existing JavaScript and styles below this line -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const bellBtn = document.getElementById('notificationBellBtn');
+    const dropdown = document.getElementById('notificationDropdown');
+
+    if (bellBtn && dropdown) {
+        bellBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            dropdown.classList.toggle('hidden');
+        });
+
+        // Hide dropdown when clicking outside
+        document.addEventListener('click', function (e) {
+            if (!dropdown.contains(e.target) && !bellBtn.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+    }
+});
+</script>
