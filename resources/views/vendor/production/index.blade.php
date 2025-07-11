@@ -31,7 +31,7 @@
                         <input type="number" name="raw_materials[{{ $rm->id }}][quantity]" id="qty-{{ $rm->id }}" min="1" max="{{ $rm->quantity }}" class="border rounded w-24 p-1" placeholder="Qty" disabled>
                     </div>
                 @empty
-                    <div class="text-red-600">No raw materials available. Please contact vendor to add raw materials.</div>
+                    <div class="text-red-600">No raw materials available. Please add raw materials.</div>
                 @endforelse
             </div>
         </div>
