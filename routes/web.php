@@ -383,3 +383,4 @@ Route::get('/admin/raw-material-orders/export-pdf', [\App\Http\Controllers\Admin
 Route::middleware(['auth', 'verified'])->post('/vendor/inventory-status-ranges', [\App\Http\Controllers\VendorDashboardController::class, 'saveInventoryStatusRanges'])->name('vendor.inventory-status-ranges');
 
 Route::middleware(['auth', 'verified'])->get('/vendor/production', [\App\Http\Controllers\VendorProductionController::class, 'index'])->name('vendor.production.index');
+Route::middleware(['auth', 'verified'])->post('/vendor/production', [\App\Http\Controllers\VendorProductionController::class, 'store'])->name('vendor.production.store');
