@@ -374,4 +374,5 @@ Route::get('/api/admin/raw-material-orders', [\App\Http\Controllers\AdminOrderCo
 Route::get('/admin/raw-material-orders/export-csv', [\App\Http\Controllers\AdminOrderController::class, 'exportRawMaterialOrdersCsv']);
 Route::get('/admin/raw-material-orders/export-pdf', [\App\Http\Controllers\AdminOrderController::class, 'exportRawMaterialOrdersPdf']);
 
+// Vendor inventory status ranges
 Route::middleware(['auth', 'verified'])->post('/vendor/inventory-status-ranges', [\App\Http\Controllers\VendorDashboardController::class, 'saveInventoryStatusRanges'])->name('vendor.inventory-status-ranges');

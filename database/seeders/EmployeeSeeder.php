@@ -20,6 +20,7 @@ class EmployeeSeeder extends Seeder
             'name' => 'Test Employee',
             'email' => 'employee@example.com',
             'password' => bcrypt('password'),
+            'chat_background' => '',
         ]);
         // Assign the 'employee' role
         $employeeRole = Role::where('name', 'employee')->first();
