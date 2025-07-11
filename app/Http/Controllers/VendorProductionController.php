@@ -16,7 +16,7 @@ class VendorProductionController extends Controller
         $vendor = Auth::user()->vendor;
         $batches = ProductionBatch::where('vendor_id', $vendor->id)->with('product', 'rawMaterials')->latest()->get();
         $products = \App\Models\YogurtProduct::all();
-        $rawMaterials = \App\Models\RawMaterial::where('status', 'available')->get();
+        $rawMaterials = \App\Models\RawMaterial::where('vendor_id', $vendor->id)->where('status', 'available')->get();
         return view('vendor.production.index', compact('batches', 'products', 'rawMaterials'));
     }
 
@@ -24,7 +24,7 @@ class VendorProductionController extends Controller
     {
         $vendor = Auth::user()->vendor;
         $products = YogurtProduct::all();
-        $rawMaterials = RawMaterial::where('status', 'available')->get();
+        $rawMaterials = \App\Models\RawMaterial::where('vendor_id', $vendor->id)->where('status', 'available')->get();
         return view('vendor.production.create', compact('products', 'rawMaterials'));
     }
 
