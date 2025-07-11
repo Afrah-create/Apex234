@@ -133,23 +133,29 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user));
 
-        if ($request->role === 'vendor') {
-            // Do not log in vendor, redirect to application form with name/email as query params
-            return redirect()->route('vendor-applicant.create', [
-                'name' => $request->name,
-                'email' => $request->email
-            ])->with('success', 'Registration successful! Please complete your application and wait for admin approval. You will receive an email when your account is ready.');
-        } else {
-            Auth::login($user);
-            // Redirect to role-specific dashboard
-            switch ($request->role) {
-                case 'retailer':
-                    return redirect()->route('dashboard.retailer');
-                case 'supplier':
-                    return redirect()->route('dashboard.supplier');
-                default:
-                    return redirect(route('dashboard', absolute: false));
-            }
+        Auth::login($user);
+
+        // Redirect to role-specific dashboard
+        switch ($request->role) {
+            case 'retailer':
+                return redirect()->route('dashboard.retailer');
+            case 'supplier':
+                return redirect()->route('dashboard.supplier');
+            case 'vendor':
+                // Store registration data in session for pre-filling application form
+                $request->session()->put('vendor_registration_data', [
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    'business_name' => $request->business_name ?? '',
+                    'business_address' => $request->business_address ?? '',
+                    'phone_number' => $request->phone_number ?? '',
+                    'tax_id' => $request->tax_id ?? '',
+                    'business_license' => $request->business_license ?? '',
+                    'description' => $request->description ?? '',
+                ]);
+                return redirect()->route('vendor-applicant.create');
+            default:
+                return redirect(route('dashboard', absolute: false));
         }
     }
 }

@@ -149,33 +149,40 @@ class VendorOrderController extends Controller
     }
 
     // List vendor's raw material orders
-    public function listRawMaterialOrders(): JsonResponse
+    public function listRawMaterialOrders(Request $request): JsonResponse
     {
-        $orders = RawMaterialOrder::with(['supplier.user'])
+        $perPage = (int) $request->query('per_page', 10);
+        $page = (int) $request->query('page', 1);
+        $query = RawMaterialOrder::with(['supplier.user'])
             ->where('vendor_id', Auth::id())
-            ->orderByDesc('created_at')
-            ->get()
-            ->map(function($order) {
-                return [
-                    'id' => $order->id,
-                    'material_type' => $order->material_type,
-                    'material_name' => $order->material_name,
-                    'quantity' => $order->quantity,
-                    'unit_of_measure' => $order->unit_of_measure,
-                    'unit_price' => $order->unit_price,
-                    'total_amount' => $order->total_amount,
-                    'supplier_name' => $order->supplier->user->name ?? 'Supplier',
-                    'supplier_email' => $order->supplier->user->email ?? '',
-                    'status' => $order->status,
-                    'notes' => $order->notes,
-                    'order_date' => $order->order_date->format('Y-m-d H:i:s'),
-                    'expected_delivery_date' => $order->expected_delivery_date?->format('Y-m-d'),
-                    'actual_delivery_date' => $order->actual_delivery_date?->format('Y-m-d'),
-                    'created_at' => $order->created_at->format('Y-m-d H:i:s'),
-                ];
-            });
-
-        return response()->json($orders);
+            ->orderByDesc('created_at');
+        $total = $query->count();
+        $orders = $query->skip(($page - 1) * $perPage)->take($perPage)->get()->map(function($order) {
+            return [
+                'id' => $order->id,
+                'material_type' => $order->material_type,
+                'material_name' => $order->material_name,
+                'quantity' => $order->quantity,
+                'unit_of_measure' => $order->unit_of_measure,
+                'unit_price' => $order->unit_price,
+                'total_amount' => $order->total_amount,
+                'supplier_name' => $order->supplier->user->name ?? 'Supplier',
+                'supplier_email' => $order->supplier->user->email ?? '',
+                'status' => $order->status,
+                'notes' => $order->notes,
+                'order_date' => $order->order_date->format('Y-m-d H:i:s'),
+                'expected_delivery_date' => $order->expected_delivery_date?->format('Y-m-d'),
+                'actual_delivery_date' => $order->actual_delivery_date?->format('Y-m-d'),
+                'created_at' => $order->created_at->format('Y-m-d H:i:s'),
+            ];
+        });
+        return response()->json([
+            'data' => $orders,
+            'total' => $total,
+            'per_page' => $perPage,
+            'current_page' => $page,
+            'last_page' => ceil($total / $perPage),
+        ]);
     }
 
     // Cancel a raw material order
@@ -199,6 +206,48 @@ class VendorOrderController extends Controller
         ]);
 
         return response()->json(['success' => true, 'message' => 'Order cancelled successfully.']);
+    }
+
+    // Archive a raw material order
+    public function archiveRawMaterialOrder($id): \Illuminate\Http\JsonResponse
+    {
+        $order = \App\Models\RawMaterialOrder::where('vendor_id', Auth::id())
+            ->where('id', $id)
+            ->first();
+
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'Order not found.'], 404);
+        }
+
+        if (!in_array($order->status, ['delivered', 'cancelled'])) {
+            return response()->json(['success' => false, 'message' => 'Only delivered or cancelled orders can be archived.'], 400);
+        }
+
+        $order->archived = true;
+        $order->save();
+
+        return response()->json(['success' => true, 'message' => 'Order archived successfully.']);
+    }
+
+    // Unarchive a raw material order
+    public function unarchiveRawMaterialOrder($id): \Illuminate\Http\JsonResponse
+    {
+        $order = \App\Models\RawMaterialOrder::where('vendor_id', Auth::id())
+            ->where('id', $id)
+            ->first();
+
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'Order not found.'], 404);
+        }
+
+        if (!$order->archived) {
+            return response()->json(['success' => false, 'message' => 'Order is not archived.'], 400);
+        }
+
+        $order->archived = false;
+        $order->save();
+
+        return response()->json(['success' => true, 'message' => 'Order unarchived successfully.']);
     }
 
     // List product orders from retailers

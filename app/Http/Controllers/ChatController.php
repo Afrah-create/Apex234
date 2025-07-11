@@ -42,6 +42,20 @@ class ChatController extends Controller
             $recipients = collect();
         }
 
+        // Ensure profile_photo_url is included in the response and order by latest chat
+        $userId = $user->id;
+        $recipients = $recipients->map(function($user) {
+            $user->profile_photo_url = $user->profile_photo_url;
+            return $user;
+        })->sortByDesc(function($recipient) use ($userId) {
+            $latestMessage = \App\Models\ChatMessage::where(function($q) use ($userId, $recipient) {
+                $q->where('sender_id', $userId)->where('receiver_id', $recipient->id);
+            })->orWhere(function($q) use ($userId, $recipient) {
+                $q->where('sender_id', $recipient->id)->where('receiver_id', $userId);
+            })->orderBy('created_at', 'desc')->first();
+            return $latestMessage ? strtotime($latestMessage->created_at) : 0;
+        })->values();
+
         return response()->json($recipients);
     }
 
@@ -58,6 +72,30 @@ class ChatController extends Controller
             'receiver_id' => $request->receiver_id,
             'message' => $request->message,
             'is_read' => false,
+        ]);
+
+        return response()->json(['success' => true, 'message' => $message]);
+    }
+
+    // Send a file message
+    public function sendFileMessage(Request $request)
+    {
+        $request->validate([
+            'receiver_id' => 'required|exists:users,id',
+            'file' => 'required|file|max:10240', // max 10MB
+        ]);
+
+        $file = $request->file('file');
+        $path = $file->store('chat_files', 'public');
+
+        $message = ChatMessage::create([
+            'sender_id' => Auth::id(),
+            'receiver_id' => $request->receiver_id,
+            'message' => $request->input('message', '') ?? '',
+            'is_read' => false,
+            'file_path' => $path,
+            'file_type' => $file->getClientMimeType(),
+            'original_name' => $file->getClientOriginalName(),
         ]);
 
         return response()->json(['success' => true, 'message' => $message]);
@@ -125,5 +163,42 @@ class ChatController extends Controller
             ->groupBy('sender_id')
             ->pluck('unread_count', 'sender_id');
         return response()->json($counts);
+    }
+
+    // Get the authenticated user's chat background
+    public function getChatBackground()
+    {
+        $user = Auth::user();
+        return response()->json(['chat_background' => $user->chat_background]);
+    }
+
+    // Set the authenticated user's chat background
+    public function setChatBackground(Request $request)
+    {
+        $request->validate([
+            'chat_background' => 'nullable|string|max:65535',
+        ]);
+        $user = Auth::user();
+        $user->chat_background = $request->chat_background;
+        $user->save();
+        return response()->json(['success' => true, 'chat_background' => $user->chat_background]);
+    }
+
+    // Securely serve a chat file if the user is sender or receiver
+    public function downloadChatFile($id)
+    {
+        $userId = Auth::id();
+        $msg = ChatMessage::findOrFail($id);
+        if ($msg->sender_id !== $userId && $msg->receiver_id !== $userId) {
+            abort(403, 'Unauthorized');
+        }
+        if (!$msg->file_path) {
+            abort(404, 'File not found');
+        }
+        $storagePath = storage_path('app/public/' . $msg->file_path);
+        if (!file_exists($storagePath)) {
+            abort(404, 'File not found');
+        }
+        return response()->download($storagePath, $msg->original_name);
     }
 } 

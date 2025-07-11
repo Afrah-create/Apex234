@@ -146,15 +146,34 @@
         <div style="padding: 24px; color: #888; text-align: center;" id="userListLoading">Loading users...</div>
     </div>
     <!-- Chat Main -->
-    <div class="chat-main">
-        <div class="chat-header" id="chatHeader">
-            Select a user to start chatting
+    <div class="chat-main" id="chatMain">
+        <div class="chat-header" id="chatHeader" style="position:relative;">
+            <span>Select a user to start chatting</span>
+            <div style="margin-left:auto;display:flex;align-items:center;gap:8px;position:relative;">
+                <button id="bgOptionsBtn" title="Chat options" style="background:none;border:none;cursor:pointer;padding:4px 8px;font-size:1.8em;line-height:1;">
+                    &#8942;
+                </button>
+                <div id="bgOptionsMenu" style="display:none;position:absolute;right:0;top:40px;background:#fff;border:1px solid #eee;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);padding:12px 0;z-index:10;min-width:200px;max-width:240px;">
+                    <div style="font-weight:600;font-size:1em;margin-bottom:8px;text-align:center;">Chat Background</div>
+                    <ul style="list-style:none;padding:0;margin:0;">
+                        <li><a href="#" id="bgColorText" style="display:block;padding:10px 24px;color:#222;text-decoration:none;cursor:pointer;transition:background 0.2s;">Change Background Color</a></li>
+                        <li><a href="#" id="bgImageText" style="display:block;padding:10px 24px;color:#222;text-decoration:none;cursor:pointer;transition:background 0.2s;">Change Background Image</a></li>
+                        <li><a href="#" id="bgRemoveText" style="display:block;padding:10px 24px;color:#e53e3e;text-decoration:none;cursor:pointer;transition:background 0.2s;font-weight:500;">Remove Background</a></li>
+                    </ul>
+                    <input type="color" id="bgColorPicker" style="display:none;">
+                    <input type="file" id="bgImagePicker" accept="image/*" style="display:none;">
+                </div>
+            </div>
         </div>
         <div class="chat-messages" id="chatMessages">
             <div style="color: #aaa; text-align: center;">No conversation selected.</div>
         </div>
         <form class="chat-input" id="chatForm" style="display:none;">
             <input type="text" id="chatInput" placeholder="Type a message..." autocomplete="off" />
+            <input type="file" id="chatFileInput" style="display:none;" />
+            <button type="button" id="attachFileBtn" title="Attach file" style="background:#eee;color:#222;border:none;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;cursor:pointer;margin-right:4px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 13.5a3.5 3.5 0 0 0 7 0V3a2.5 2.5 0 0 1 5 0v10a4.5 4.5 0 0 1-9 0V4.5a.5.5 0 0 1 1 0V13.5a3.5 3.5 0 0 0 7 0V3a1.5 1.5 0 0 0-3 0v10.5a.5.5 0 0 1-1 0V3a2.5 2.5 0 0 1 5 0v10.5a5.5 5.5 0 0 1-11 0V4.5a1.5 1.5 0 0 1 3 0V13.5a2.5 2.5 0 0 0 5 0V3a.5.5 0 0 1 1 0v10.5a3.5 3.5 0 0 1-7 0V4.5a.5.5 0 0 1 1 0V13.5z"/></svg>
+            </button>
             <button type="submit">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
                     <path d="M15.854.146a.5.5 0 0 0-.527-.116l-15 6a.5.5 0 0 0 .019.938l6.13 1.751 1.751 6.13a.5.5 0 0 0 .938.019l6-15a.5.5 0 0 0-.116-.527zM6.832 8.41l-4.917-1.404 12.02-4.808-7.103 6.212zm.758.758l6.212-7.103-4.808 12.02-1.404-4.917z"/>
@@ -175,6 +194,8 @@
     const chatMessages = document.getElementById('chatMessages');
     const chatForm = document.getElementById('chatForm');
     const chatInput = document.getElementById('chatInput');
+    const chatFileInput = document.getElementById('chatFileInput');
+    const attachFileBtn = document.getElementById('attachFileBtn');
 
     // Fetch users and unread counts
     function loadUsersAndBadges() {
@@ -237,36 +258,6 @@
         loadMessages();
     }
 
-    function loadMessages() {
-        if (!currentUserId) return;
-        fetch(`/chat/messages?with_user_id=${currentUserId}`)
-            .then(res => res.json())
-            .then(messages => {
-                // Only update if still viewing the same user
-                if (currentUserId !== lastLoadedUserId) return;
-                chatMessages.innerHTML = '';
-                if (!messages.length) {
-                    chatMessages.innerHTML = '<div style="color: #aaa; text-align: center;">No messages yet.</div>';
-                }
-                let lastMsg = null;
-                messages.forEach(msg => {
-                    const sent = msg.sender_id === currentUser.id ? 'received' : 'sent';
-                    const time = new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                    const div = document.createElement('div');
-                    div.className = `message ${sent}`;
-                    div.innerHTML = `${msg.message}<div class="message-time">${time}</div>`;
-                    chatMessages.appendChild(div);
-                    lastMsg = msg;
-                });
-                // Update last message and time in user list
-                if (lastMsg) {
-                    document.getElementById('last-message-' + currentUserId).textContent = lastMsg.message;
-                    document.getElementById('last-time-' + currentUserId).textContent = new Date(lastMsg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                }
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            });
-    }
-
     chatForm.onsubmit = function(e) {
         e.preventDefault();
         const message = chatInput.value.trim();
@@ -298,6 +289,33 @@
         });
     };
 
+    attachFileBtn.addEventListener('click', function(e) {
+        chatFileInput.click();
+    });
+
+    chatFileInput.addEventListener('change', function(e) {
+        const file = chatFileInput.files[0];
+        if (!file || !currentUserId) return;
+        const formData = new FormData();
+        formData.append('receiver_id', currentUserId);
+        formData.append('file', file);
+        // Optionally, add a message
+        formData.append('message', chatInput.value || '');
+        fetch('/chat/send-file', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            chatInput.value = '';
+            chatFileInput.value = '';
+            loadMessages();
+        });
+    });
+
     // Poll for new messages and unread counts every 10 seconds, but only update if a user is selected
     setInterval(() => {
         if (currentUserId) loadMessages();
@@ -316,6 +334,176 @@
             const user = users.find(u => u.id == userId);
             if (user) selectUser(user);
         }
+    }
+
+    // Background logic
+    const chatMain = document.getElementById('chatMain');
+    const bgColorPicker = document.getElementById('bgColorPicker');
+    const bgImagePicker = document.getElementById('bgImagePicker');
+
+    function applyChatBackground(bg) {
+        if (!bg) {
+            chatMain.style.background = '#f4fdf7';
+            chatMain.style.backgroundImage = '';
+            chatMain.style.backgroundSize = '';
+            chatMain.style.backgroundRepeat = '';
+            chatMain.style.backgroundPosition = '';
+            return;
+        }
+        if (bg.startsWith('#')) {
+            chatMain.style.background = bg;
+            chatMain.style.backgroundImage = '';
+            chatMain.style.backgroundSize = '';
+            chatMain.style.backgroundRepeat = '';
+            chatMain.style.backgroundPosition = '';
+        } else if (bg.startsWith('data:image') || bg.match(/^https?:\/\//)) {
+            chatMain.style.background = '';
+            chatMain.style.backgroundImage = `url('${bg}')`;
+            chatMain.style.backgroundSize = 'cover';
+            chatMain.style.backgroundRepeat = 'no-repeat';
+            chatMain.style.backgroundPosition = 'center';
+        } else {
+            chatMain.style.background = '#f4fdf7';
+            chatMain.style.backgroundImage = '';
+            chatMain.style.backgroundSize = '';
+            chatMain.style.backgroundRepeat = '';
+            chatMain.style.backgroundPosition = '';
+        }
+    }
+
+    // Simple text menu logic
+    const bgColorText = document.getElementById('bgColorText');
+    const bgImageText = document.getElementById('bgImageText');
+    const bgRemoveText = document.getElementById('bgRemoveText');
+
+    bgColorText.addEventListener('click', function(e) {
+        e.preventDefault();
+        bgColorPicker.click();
+    });
+    bgImageText.addEventListener('click', function(e) {
+        e.preventDefault();
+        bgImagePicker.click();
+    });
+    bgRemoveText.addEventListener('click', function(e) {
+        e.preventDefault();
+        applyChatBackground('');
+        fetch('/chat/background', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({ chat_background: '' })
+        });
+    });
+
+    function loadChatBackground() {
+        fetch('/chat/background')
+            .then(res => res.json())
+            .then(data => {
+                applyChatBackground(data.chat_background);
+                if (data.chat_background && data.chat_background.startsWith('#')) {
+                    bgColorPicker.value = data.chat_background;
+                    // bgColorPreview.style.background = data.chat_background; // Removed preview
+                    // bgImagePreview.style.backgroundImage = ''; // Removed preview
+                } else if (data.chat_background && (data.chat_background.startsWith('data:image') || data.chat_background.match(/^https?:\/\//))) {
+                    // bgImagePreview.style.backgroundImage = `url('${data.chat_background}')`; // Removed preview
+                    // bgColorPreview.style.background = '#f4fdf7'; // Removed preview
+                } else {
+                    // bgColorPreview.style.background = '#f4fdf7'; // Removed preview
+                    // bgImagePreview.style.backgroundImage = ''; // Removed preview
+                }
+            });
+    }
+
+    loadChatBackground();
+
+    // Background options menu logic
+    const bgOptionsBtn = document.getElementById('bgOptionsBtn');
+    const bgOptionsMenu = document.getElementById('bgOptionsMenu');
+    bgOptionsBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        bgOptionsMenu.style.display = bgOptionsMenu.style.display === 'none' ? 'block' : 'none';
+    });
+    document.addEventListener('click', function(e) {
+        if (!bgOptionsMenu.contains(e.target) && e.target !== bgOptionsBtn) {
+            bgOptionsMenu.style.display = 'none';
+        }
+    });
+
+    bgColorPicker.addEventListener('input', function(e) {
+        const color = e.target.value;
+        applyChatBackground(color);
+        fetch('/chat/background', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({ chat_background: color })
+        });
+    });
+
+    bgImagePicker.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            const dataUrl = ev.target.result;
+            applyChatBackground(dataUrl);
+            fetch('/chat/background', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ chat_background: dataUrl })
+            });
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // Update message rendering to display file messages
+    function loadMessages() {
+        if (!currentUserId) return;
+        fetch(`/chat/messages?with_user_id=${currentUserId}`)
+            .then(res => res.json())
+            .then(messages => {
+                if (currentUserId !== lastLoadedUserId) return;
+                chatMessages.innerHTML = '';
+                if (!messages.length) {
+                    chatMessages.innerHTML = '<div style="color: #aaa; text-align: center;">No messages yet.</div>';
+                }
+                let lastMsg = null;
+                messages.forEach(msg => {
+                    const sent = msg.sender_id === currentUser.id ? 'received' : 'sent';
+                    const time = new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    const div = document.createElement('div');
+                    div.className = `message ${sent}`;
+                    let content = '';
+                    if (msg.file_path) {
+                        const fileUrl = `/chat/file/${msg.id}`;
+                        if (msg.file_type && msg.file_type.startsWith('image/')) {
+                            content += `<a href="${fileUrl}" target="_blank"><img src="${fileUrl}" alt="${msg.original_name || 'Image'}" style="max-width:180px;max-height:180px;border-radius:8px;display:block;margin-bottom:6px;"></a>`;
+                        } else {
+                            content += `<a href="${fileUrl}" target="_blank" style="display:inline-block;margin-bottom:6px;"><span style="font-size:1.2em;">📎</span> ${msg.original_name || 'Download file'}</a><br/>`;
+                        }
+                    }
+                    if (msg.message) {
+                        content += msg.message;
+                    }
+                    content += `<div class="message-time">${time}</div>`;
+                    div.innerHTML = content;
+                    chatMessages.appendChild(div);
+                    lastMsg = msg;
+                });
+                // Update last message and time in user list
+                if (lastMsg) {
+                    document.getElementById('last-message-' + currentUserId).textContent = lastMsg.message || (lastMsg.file_path ? '[File]' : '');
+                    document.getElementById('last-time-' + currentUserId).textContent = new Date(lastMsg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                }
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            });
     }
 </script>
 @endsection 

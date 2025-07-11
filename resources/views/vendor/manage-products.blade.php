@@ -155,7 +155,7 @@
             </div>
 
             <!-- Desktop Table -->
-            <div class="hidden lg:block bg-white rounded-lg shadow-md p-4 overflow-x-auto">
+            <div class="lg:block bg-white rounded-lg shadow-md p-4 overflow-x-auto">
                 <table class="user-table w-full text-left">
                     <thead>
                         <tr class="border-b">
@@ -226,7 +226,7 @@
             </div>
 
             <!-- Desktop Table -->
-            <div class="hidden lg:block bg-white rounded-lg shadow-md p-4 overflow-x-auto">
+            <div class="lg:block bg-white rounded-lg shadow-md p-4 overflow-x-auto">
                 <table class="user-table w-full text-left">
                     <thead>
                         <tr class="border-b">

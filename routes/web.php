@@ -180,6 +180,8 @@ Route::middleware(['auth', 'verified'])->prefix('api/vendor')->group(function ()
     Route::post('/raw-material-orders/{id}/cancel', [\App\Http\Controllers\VendorOrderController::class, 'cancelRawMaterialOrder']);
     Route::get('/product-orders', [\App\Http\Controllers\VendorOrderController::class, 'listProductOrders']);
     Route::post('/product-orders/{id}/confirm', [\App\Http\Controllers\VendorOrderController::class, 'confirmProductOrder']);
+    Route::post('/raw-material-orders/{id}/archive', [\App\Http\Controllers\VendorOrderController::class, 'archiveRawMaterialOrder']);
+    Route::post('/raw-material-orders/{id}/unarchive', [\App\Http\Controllers\VendorOrderController::class, 'unarchiveRawMaterialOrder']);
 });
 
 // Vendor product management API routes
@@ -264,6 +266,8 @@ Route::get('/api/workforce/distribution', [\App\Http\Controllers\AdminWorkforceC
 Route::get('/admin/users', [\App\Http\Controllers\AdminEmployeeController::class, 'index'])->name('admin.users.index');
 Route::post('/admin/employees/{employee}/assign-vendor', [\App\Http\Controllers\AdminEmployeeController::class, 'assignVendor'])->name('admin.employees.assignVendor');
 Route::post('/admin/employees', [\App\Http\Controllers\AdminEmployeeController::class, 'store'])->name('admin.employees.store');
+Route::get('/admin/employees/export-csv', [\App\Http\Controllers\AdminEmployeeController::class, 'exportCsv'])->name('admin.employees.export-csv');
+Route::get('/admin/employees/export-pdf', [\App\Http\Controllers\AdminEmployeeController::class, 'exportPdf'])->name('admin.employees.export-pdf');
 
 // Admin vendor applicant management
 Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/vendor-applicants')->name('admin.vendor-applicants.')->group(function () {
@@ -312,6 +316,8 @@ Route::middleware(['auth', 'verified'])->prefix('api/supplier/orders')->group(fu
     Route::post('/{id}/deliver', [\App\Http\Controllers\SupplierOrderController::class, 'deliverOrder']);
     Route::post('/{id}/reject', [\App\Http\Controllers\SupplierOrderController::class, 'rejectOrder']);
     Route::get('/stats', [\App\Http\Controllers\SupplierOrderController::class, 'orderStats']);
+    Route::post('/raw-material-orders/{id}/archive', [\App\Http\Controllers\SupplierOrderController::class, 'archiveRawMaterialOrder']);
+    Route::post('/raw-material-orders/{id}/unarchive', [\App\Http\Controllers\SupplierOrderController::class, 'unarchiveRawMaterialOrder']);
 });
 
 // Supplier Dashboard
@@ -365,9 +371,13 @@ Route::middleware(['auth', 'verified'])->get('/vendor/deliveries', [\App\Http\Co
 Route::middleware(['auth'])->group(function () {
     Route::get('/chat/recipients', [ChatController::class, 'getRecipients']);
     Route::post('/chat/send', [ChatController::class, 'sendMessage']);
+    Route::post('/chat/send-file', [\App\Http\Controllers\ChatController::class, 'sendFileMessage']);
+    Route::get('/chat/file/{id}', [\App\Http\Controllers\ChatController::class, 'downloadChatFile'])->name('chat.file.download');
     Route::get('/chat/unread-count', [ChatController::class, 'getUnreadCount']);
     Route::get('/chat/messages', [ChatController::class, 'getMessages']);
     Route::post('/chat/mark-all-read', [ChatController::class, 'markAllAsRead']);
+    Route::get('/chat/background', [\App\Http\Controllers\ChatController::class, 'getChatBackground']);
+    Route::post('/chat/background', [\App\Http\Controllers\ChatController::class, 'setChatBackground']);
 });
 
 Route::middleware(['auth'])->get('/chat', function () {
@@ -388,3 +398,14 @@ Route::middleware(['auth'])->get('/api/user/{id}', function($id) {
 Route::get('/help', [\App\Http\Controllers\HelpController::class, 'index'])->name('help');
 
 require __DIR__.'/auth.php';
+
+Route::get('/api/admin/raw-material-orders', [\App\Http\Controllers\AdminOrderController::class, 'allRawMaterialOrders']);
+Route::get('/admin/raw-material-orders/export-csv', [\App\Http\Controllers\AdminOrderController::class, 'exportRawMaterialOrdersCsv']);
+Route::get('/admin/raw-material-orders/export-pdf', [\App\Http\Controllers\AdminOrderController::class, 'exportRawMaterialOrdersPdf']);
+
+// Vendor Production Batch Management
+Route::middleware(['auth', 'verified'])->prefix('vendor/production')->group(function () {
+    Route::get('/', [\App\Http\Controllers\VendorProductionController::class, 'index'])->name('vendor.production.index');
+    Route::get('/create', [\App\Http\Controllers\VendorProductionController::class, 'create'])->name('vendor.production.create');
+    Route::post('/store', [\App\Http\Controllers\VendorProductionController::class, 'store'])->name('vendor.production.store');
+});

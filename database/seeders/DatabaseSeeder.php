@@ -47,24 +47,54 @@ class DatabaseSeeder extends Seeder
         ], [
             'name' => 'Admin User',
             'password' => bcrypt('password'),
+            'chat_background' => '',
         ]);
         $vendor = User::firstOrCreate([
             'email' => 'vendor@example.com',
         ], [
             'name' => 'Vendor User',
             'password' => bcrypt('password'),
+            'chat_background' => '',
+        ]);
+
+        
+        \App\Models\Vendor::firstOrCreate([
+            'user_id' => $vendor->id,
+        ], [
+            'company_name' => 'Default Vendor Co.',
+            'business_name' => 'Default Vendor Co.',
+            'registration_number' => 'VEN-001',
+            'business_address' => '456 Vendor Street',
+            'contact_person' => 'Vendor Contact',
+            'contact_phone' => '+1234567899',
+            'phone_number' => '+1234567899',
+            'contact_email' => 'vendor@example.com',
         ]);
         $retailer = User::firstOrCreate([
             'email' => 'retailer@example.com',
         ], [
             'name' => 'Retailer User',
             'password' => bcrypt('password'),
+            'chat_background' => '',
         ]);
         $supplier = User::firstOrCreate([
             'email' => 'supplier@example.com',
         ], [
             'name' => 'Supplier User',
             'password' => bcrypt('password'),
+            'chat_background' => '',
+        ]);
+
+        // Ensure supplier@example.com has a Supplier profile
+        \App\Models\Supplier::firstOrCreate([
+            'user_id' => $supplier->id,
+        ], [
+            'company_name' => 'Default Supplier Co.',
+            'registration_number' => 'SUP-001',
+            'business_address' => '123 Supplier Lane',
+            'contact_person' => 'Supplier Contact',
+            'contact_phone' => '+1234567890',
+            'contact_email' => 'supplier@example.com',
         ]);
 
         // Assign roles to users
@@ -106,9 +136,11 @@ class DatabaseSeeder extends Seeder
 
         // Seed vendors (each linked to a user)
         $vendorUsers = \App\Models\User::factory(5)->create(['role' => 'vendor']);
-        $vendors = \App\Models\Vendor::factory(5)->create([
-            'user_id' => $vendorUsers->random()->id,
-        ]);
+        foreach ($vendorUsers as $vendorUser) {
+            \App\Models\Vendor::factory()->create([
+                'user_id' => $vendorUser->id,
+            ]);
+        }
 
         // Assign vendor role to vendor users
         foreach ($vendorUsers as $vendorUser) {
