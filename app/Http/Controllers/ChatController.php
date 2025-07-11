@@ -201,4 +201,9 @@ class ChatController extends Controller
         }
         return response()->download($storagePath, $msg->original_name);
     }
+
+    public function index()
+    {
+        return view('chat');
+    }
 } 
