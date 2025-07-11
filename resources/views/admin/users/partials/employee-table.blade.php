@@ -56,12 +56,13 @@
                         <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition">Assign</button>
                     </form>
                 </td>
-                <td class="px-4 py-2 text-gray-700">
-                    @if($employee->vendor)
-                        <span class="inline-block bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Assigned</span>
-                    @else
-                        <span class="inline-block bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">Unassigned</span>
-                    @endif
+                <td class="px-4 py-2 text-gray-700 flex gap-2">
+                    <a href="{{ route('admin.employees.edit', $employee->id) }}" class="bg-yellow-400 text-white px-3 py-1 rounded hover:bg-yellow-500 transition">Edit</a>
+                    <form action="{{ route('admin.employees.destroy', $employee->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this employee?');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition">Delete</button>
+                    </form>
                 </td>
             </tr>
             @endforeach

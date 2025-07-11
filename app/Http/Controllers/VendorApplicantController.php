@@ -20,15 +20,15 @@ class VendorApplicantController extends Controller
         $email = $registrationData['email'] ?? request()->query('email');
         // If not present, fallback to logged-in vendor (if any)
         if (!$name || !$email) {
-            if (Auth::check()) {
-                $user = Auth::user();
-                $role = null;
+        if (Auth::check()) {
+            $user = Auth::user();
+            $role = null;
                 if (property_exists($user, 'role')) {
-                    $role = $user->role;
-                }
-                if ($role === 'vendor') {
-                    $name = $user->name;
-                    $email = $user->email;
+                $role = $user->role;
+            }
+            if ($role === 'vendor') {
+                $name = $user->name;
+                $email = $user->email;
                 }
             }
         }

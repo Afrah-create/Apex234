@@ -131,6 +131,9 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
 // Admin employee store route
 Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/employees')->name('admin.employees.')->group(function () {
     Route::post('/', [\App\Http\Controllers\AdminEmployeeController::class, 'store'])->name('store');
+    Route::get('/{employee}/edit', [\App\Http\Controllers\AdminEmployeeController::class, 'edit'])->name('edit');
+    Route::put('/{employee}', [\App\Http\Controllers\AdminEmployeeController::class, 'update'])->name('update');
+    Route::delete('/{employee}', [\App\Http\Controllers\AdminEmployeeController::class, 'destroy'])->name('destroy');
 });
 
 // Admin order management
@@ -381,5 +384,7 @@ Route::middleware(['auth'])->get('/api/user/{id}', function($id) {
         'profile_photo_url' => $user->profile_photo_url,
     ]);
 });
+
+Route::get('/help', [\App\Http\Controllers\HelpController::class, 'index'])->name('help');
 
 require __DIR__.'/auth.php';
