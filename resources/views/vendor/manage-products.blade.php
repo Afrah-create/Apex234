@@ -120,7 +120,7 @@
             <div id="add-product-inventory-success" class="mt-2 text-green-600 font-bold hidden text-sm">Product inventory added successfully!</div>
         </div>
 
-<<<<<<< HEAD
+
         <!-- Product Inventory Statistics Table -->
         <div class="bg-white rounded-lg shadow-md p-4 md:p-6 mb-8">
             <h2 class="text-lg md:text-xl font-semibold mb-4">Product Inventory Statistics</h2>
@@ -163,7 +163,7 @@
                             <td class="px-4 py-2 border-r border-gray-200">{{ $product->product_name }}</td>
                             <td class="px-4 py-2 border-r border-gray-200">{{ $quantity }}</td>
                             <td class="px-4 py-2">@if($status === 'Out of Stock')<span class="text-red-600 font-semibold">{{ $status }}</span>@elseif($status === 'Warning')<span class="text-yellow-600 font-semibold">{{ $status }}</span>@elseif($status === 'Low')<span class="text-orange-600 font-semibold">{{ $status }}</span>@else<span class="text-green-600 font-semibold">{{ $status }}</span>@endif</td>
-=======
+
         <div>
             <h2 class="text-lg md:text-xl font-semibold mb-4">Product Inventory</h2>
             
@@ -202,7 +202,7 @@
                             <th class="pb-2 text-sm font-semibold">Value (UGX)</th>
                             <th class="pb-2 text-sm font-semibold">Expiry</th>
                             <th class="pb-2 text-sm font-semibold">Actions</th>
->>>>>>> ea8a867b4687e9b8fd18e35a14a2bced025da181
+
                         </tr>
                     @empty
                         <tr>

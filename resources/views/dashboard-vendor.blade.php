@@ -91,15 +91,12 @@
             </div>
         </div>
 
-<<<<<<< HEAD
-=======
         <!-- Raw Material Statistics -->
         <div class="bg-white rounded-lg shadow-md p-6 mb-8">
             <h2 class="text-xl font-semibold text-gray-900 mb-6">Raw Material Statistics</h2>
             <div id="vendorRawMaterialDoughnuts" class="flex flex-wrap gap-6 justify-center"></div>
         </div>
 
->>>>>>> ea8a867b4687e9b8fd18e35a14a2bced025da181
         <!-- Production Summary -->
         <div class="bg-white rounded-lg shadow-md p-6 mb-8">
             <h2 class="text-xl font-semibold text-gray-900 mb-6">Production Summary</h2>
@@ -240,8 +237,6 @@
             });
         }
 
-<<<<<<< HEAD
-=======
         // Raw Material Stats Cards & Chart
         let vendorRawMaterialChart;
         async function loadVendorRawMaterialStats() {
@@ -294,7 +289,6 @@
             });
         }
 
->>>>>>> ea8a867b4687e9b8fd18e35a14a2bced025da181
         // Production Summary Cards & Chart
         let vendorProductionChart;
         async function loadVendorProductionSummary() {
@@ -345,6 +339,37 @@
             loadVendorInventoryChart();
             loadVendorOrderStatus();
             loadVendorProductionSummary();
+            loadVendorRawMaterialStats(); // Added this line to load raw material stats
+
+            // Load cart from backend
+            fetch('/api/cart')
+              .then(res => res.json())
+              .then(data => {
+                cart = data.cart || [];
+                updateCartCount();
+                updateCartSidebar();
+              });
+
+            // Save to Cart
+            document.querySelectorAll('.save-to-cart-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const card = this.closest('.product-card');
+                    const id = parseInt(card.getAttribute('data-product-id'));
+                    const name = card.querySelector('.font-bold.text-lg').textContent;
+                    const price = parseFloat(card.querySelector('.text-blue-600.font-bold').textContent.replace('UGX','').replace(/,/g,''));
+                    let item = cart.find(i => i.id === id);
+                    if (item) {
+                        // Optionally, you can prompt to update quantity or just notify it's already saved
+                        showNotification('Already saved to cart!');
+                    } else {
+                        cart.push({id, name, price, quantity: 1});
+                        updateCartCount();
+                        updateCartSidebar();
+                        saveCartToServer();
+                        showNotification('Saved to cart!');
+                    }
+                });
+            });
         });
     </script>
 @endsection 
