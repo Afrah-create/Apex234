@@ -29,6 +29,36 @@ document.addEventListener('DOMContentLoaded', function() {
 // Retailer Cart Logic
 let cart = [];
 
+// Load cart from backend on page load
+function loadCartFromServer() {
+    fetch('/api/cart')
+      .then(res => res.json())
+      .then(data => {
+        cart = data.cart || [];
+        updateCartCount();
+        updateCartSidebar();
+      });
+}
+
+// Save cart to backend after every change
+function saveCartToServer() {
+    fetch('/api/cart', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({ cart })
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log('Cart save response:', data);
+    })
+    .catch(err => {
+        console.error('Cart save error:', err);
+    });
+}
+
 function updateCartCount() {
     document.getElementById('cart-count').textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
 }
@@ -60,6 +90,7 @@ function updateCartSidebar() {
             cart = cart.filter(item => item.id !== id);
             updateCartCount();
             updateCartSidebar();
+            saveCartToServer(); // Save after remove
         });
     });
     showCheckoutForm();
@@ -97,6 +128,9 @@ function showNotification(message, type = 'success') {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Load cart from backend on page load
+    loadCartFromServer();
+
     // Add to Cart
     document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -112,9 +146,31 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             updateCartCount();
             updateCartSidebar();
+            saveCartToServer(); // Save after add
             showNotification('Added to cart!');
         });
     });
+
+    // Save to Cart
+    document.querySelectorAll('.save-to-cart-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const card = this.closest('.product-card');
+            const id = parseInt(card.getAttribute('data-product-id'));
+            const name = card.querySelector('.font-bold.text-lg').textContent;
+            const price = parseFloat(card.querySelector('.text-blue-600.font-bold').textContent.replace('UGX','').replace(/,/g,''));
+            let item = cart.find(i => i.id === id);
+            if (item) {
+                showNotification('Already saved to cart!');
+            } else {
+                cart.push({id, name, price, quantity: 1});
+                updateCartCount();
+                updateCartSidebar();
+                saveCartToServer();
+                showNotification('Saved to cart!');
+            }
+        });
+    });
+
     // Cart sidebar toggle
     const cartSidebar = document.getElementById('cart-sidebar');
     const cartToggleBtn = document.getElementById('cart-toggle-btn');
@@ -158,6 +214,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     cart = [];
                     updateCartCount();
                     updateCartSidebar();
+                    saveCartToServer(); // Save after clear
                     document.getElementById('cart-sidebar').classList.add('translate-x-full');
                     setTimeout(() => document.getElementById('cart-sidebar').style.display = 'none', 300);
                 } else {

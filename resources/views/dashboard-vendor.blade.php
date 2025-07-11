@@ -4,6 +4,13 @@
     <main class="main-content">
        
 
+        <!-- Welcome Vendor Section -->
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+            <h2 class="text-2xl font-bold text-blue-900 text-center">
+                WELCOME {{ strtoupper(Auth::user()->name) }}
+            </h2>
+        </div>
+
         <!-- Inventory Summary Cards -->
         <div class="summary-cards mb-8 grid grid-cols-1 md:grid-cols-4 gap-4">
             <div class="summary-card" style="--summary-card-border: #22c55e;">
@@ -331,8 +338,38 @@
             loadVendorInventorySummary();
             loadVendorInventoryChart();
             loadVendorOrderStatus();
-            loadVendorRawMaterialStats();
             loadVendorProductionSummary();
+            loadVendorRawMaterialStats(); // Added this line to load raw material stats
+
+            // Load cart from backend
+            fetch('/api/cart')
+              .then(res => res.json())
+              .then(data => {
+                cart = data.cart || [];
+                updateCartCount();
+                updateCartSidebar();
+              });
+
+            // Save to Cart
+            document.querySelectorAll('.save-to-cart-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const card = this.closest('.product-card');
+                    const id = parseInt(card.getAttribute('data-product-id'));
+                    const name = card.querySelector('.font-bold.text-lg').textContent;
+                    const price = parseFloat(card.querySelector('.text-blue-600.font-bold').textContent.replace('UGX','').replace(/,/g,''));
+                    let item = cart.find(i => i.id === id);
+                    if (item) {
+                        // Optionally, you can prompt to update quantity or just notify it's already saved
+                        showNotification('Already saved to cart!');
+                    } else {
+                        cart.push({id, name, price, quantity: 1});
+                        updateCartCount();
+                        updateCartSidebar();
+                        saveCartToServer();
+                        showNotification('Saved to cart!');
+                    }
+                });
+            });
         });
     </script>
 @endsection 

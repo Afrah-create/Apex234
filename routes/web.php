@@ -131,6 +131,9 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
 // Admin employee store route
 Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/employees')->name('admin.employees.')->group(function () {
     Route::post('/', [\App\Http\Controllers\AdminEmployeeController::class, 'store'])->name('store');
+    Route::get('/{employee}/edit', [\App\Http\Controllers\AdminEmployeeController::class, 'edit'])->name('edit');
+    Route::put('/{employee}', [\App\Http\Controllers\AdminEmployeeController::class, 'update'])->name('update');
+    Route::delete('/{employee}', [\App\Http\Controllers\AdminEmployeeController::class, 'destroy'])->name('destroy');
 });
 
 // Admin order management
@@ -364,33 +367,11 @@ Route::get('/api/distribution-centers', function() {
 // Vendor Deliveries Dashboard Page
 Route::middleware(['auth', 'verified'])->get('/vendor/deliveries', [\App\Http\Controllers\VendorDashboardController::class, 'deliveries'])->name('vendor.deliveries');
 
-// Chat routes
-Route::middleware(['auth'])->group(function () {
-    Route::get('/chat/recipients', [ChatController::class, 'getRecipients']);
-    Route::post('/chat/send', [ChatController::class, 'sendMessage']);
-    Route::post('/chat/send-file', [\App\Http\Controllers\ChatController::class, 'sendFileMessage']);
-    Route::get('/chat/file/{id}', [\App\Http\Controllers\ChatController::class, 'downloadChatFile'])->name('chat.file.download');
-    Route::get('/chat/unread-count', [ChatController::class, 'getUnreadCount']);
-    Route::get('/chat/messages', [ChatController::class, 'getMessages']);
-    Route::post('/chat/mark-all-read', [ChatController::class, 'markAllAsRead']);
-    Route::get('/chat/background', [\App\Http\Controllers\ChatController::class, 'getChatBackground']);
-    Route::post('/chat/background', [\App\Http\Controllers\ChatController::class, 'setChatBackground']);
-});
+// Cart API routes
+Route::middleware(['auth'])->get('/api/cart', [\App\Http\Controllers\CartController::class, 'getCart']);
+Route::middleware(['auth'])->post('/api/cart', [\App\Http\Controllers\CartController::class, 'saveCart']);
 
-Route::middleware(['auth'])->get('/chat', function () {
-    return view('chat');
-})->name('chat');
-
-Route::middleware(['auth'])->get('/chat/unread-counts', [\App\Http\Controllers\ChatController::class, 'getUnreadCountsPerUser']);
-
-Route::middleware(['auth'])->get('/api/user/{id}', function($id) {
-    $user = \App\Models\User::findOrFail($id);
-    return response()->json([
-        'id' => $user->id,
-        'name' => $user->name,
-        'profile_photo_url' => $user->profile_photo_url,
-    ]);
-});
+Route::get('/help', [\App\Http\Controllers\HelpController::class, 'index'])->name('help');
 
 require __DIR__.'/auth.php';
 
@@ -398,9 +379,5 @@ Route::get('/api/admin/raw-material-orders', [\App\Http\Controllers\AdminOrderCo
 Route::get('/admin/raw-material-orders/export-csv', [\App\Http\Controllers\AdminOrderController::class, 'exportRawMaterialOrdersCsv']);
 Route::get('/admin/raw-material-orders/export-pdf', [\App\Http\Controllers\AdminOrderController::class, 'exportRawMaterialOrdersPdf']);
 
-// Vendor Production Batch Management
-Route::middleware(['auth', 'verified'])->prefix('vendor/production')->group(function () {
-    Route::get('/', [\App\Http\Controllers\VendorProductionController::class, 'index'])->name('vendor.production.index');
-    Route::get('/create', [\App\Http\Controllers\VendorProductionController::class, 'create'])->name('vendor.production.create');
-    Route::post('/store', [\App\Http\Controllers\VendorProductionController::class, 'store'])->name('vendor.production.store');
-});
+// Vendor inventory status ranges
+Route::middleware(['auth', 'verified'])->post('/vendor/inventory-status-ranges', [\App\Http\Controllers\VendorDashboardController::class, 'saveInventoryStatusRanges'])->name('vendor.inventory-status-ranges');

@@ -16,19 +16,20 @@ class VendorApplicantController extends Controller
     {
         // Get registration data from session if available
         $registrationData = session('vendor_registration_data', []);
-        $name = null;
-        $email = null;
+        $name = $registrationData['name'] ?? request()->query('name');
+        $email = $registrationData['email'] ?? request()->query('email');
+        // If not present, fallback to logged-in vendor (if any)
+        if (!$name || !$email) {
         if (Auth::check()) {
             $user = Auth::user();
             $role = null;
-            if (method_exists($user, 'getPrimaryRoleName')) {
-                $role = $user->getPrimaryRoleName();
-            } elseif (isset($user->role)) {
+                if (property_exists($user, 'role')) {
                 $role = $user->role;
             }
             if ($role === 'vendor') {
                 $name = $user->name;
                 $email = $user->email;
+                }
             }
         }
         return view('vendor.apply', compact('registrationData', 'name', 'email'));

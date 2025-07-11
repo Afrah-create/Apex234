@@ -275,11 +275,34 @@ class VendorOrderController extends Controller
     }
 
     // Confirm/mark as processed a retailer order
-    public function confirmProductOrder($id): JsonResponse
+    public function confirmProductOrder($id): \Illuminate\Http\JsonResponse
     {
-        $order = Order::findOrFail($id);
+        $order = \App\Models\Order::with('orderItems.yogurtProduct')->findOrFail($id);
+
+        // Check inventory for each item
+        foreach ($order->orderItems as $item) {
+            $product = $item->yogurtProduct;
+            if (!$product || $product->stock < $item->quantity) {
+                // Mark order as failed/cancelled
+                $order->order_status = 'cancelled';
+                $order->notes = ($order->notes ?? '') . ' [Order failed: ' . ($product->product_name ?? 'Product') . ' out of stock]';
+                $order->save();
+
+                // Optionally, notify the retailer here
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Order failed: ' . ($product->product_name ?? 'Product') . ' out of stock'
+                ], 400);
+            }
+        }
+
+        // If all products are in stock, confirm the order
         $order->order_status = 'confirmed';
         $order->save();
+
+        // Optionally, deduct stock here
+
         return response()->json(['success' => true]);
     }
 } 

@@ -2,6 +2,10 @@
 
 @section('content')
     <main class="main-content">
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold text-green-700">You are most welcome, {{ strtoupper(auth()->user()->name) }}</h2>
+        </div>
+        <h3 class="text-xl font-semibold mb-4 text-gray-800">Products Offered</h3>
        
         <div class="flex justify-end mb-4">
             <button id="cart-toggle-btn" class="relative bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center">
@@ -33,6 +37,14 @@
             <div class="flex justify-between items-center border-t pt-4">
                 <span class="font-bold">Total:</span>
                 <span id="cart-total" class="text-lg font-bold text-blue-700">UGX 0.00</span>
+            </div>
+            <div class="mt-4">
+                <label for="payment-method" class="block font-semibold mb-1">Payment Method</label>
+                <select id="payment-method" class="w-full border rounded px-3 py-2" required>
+                    <option value="">Select payment method</option>
+                    <option value="mobilemoney">Mobile Money</option>
+                    <option value="bank">Bank</option>
+                </select>
             </div>
             <button id="place-order-btn" class="mt-6 w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-bold">Place Order</button>
         </div>
