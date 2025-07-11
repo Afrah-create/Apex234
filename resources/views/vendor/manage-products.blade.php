@@ -120,6 +120,7 @@
             <div id="add-product-inventory-success" class="mt-2 text-green-600 font-bold hidden text-sm">Product inventory added successfully!</div>
         </div>
 
+<<<<<<< HEAD
         <!-- Product Inventory Statistics Table -->
         <div class="bg-white rounded-lg shadow-md p-4 md:p-6 mb-8">
             <h2 class="text-lg md:text-xl font-semibold mb-4">Product Inventory Statistics</h2>
@@ -162,6 +163,46 @@
                             <td class="px-4 py-2 border-r border-gray-200">{{ $product->product_name }}</td>
                             <td class="px-4 py-2 border-r border-gray-200">{{ $quantity }}</td>
                             <td class="px-4 py-2">@if($status === 'Out of Stock')<span class="text-red-600 font-semibold">{{ $status }}</span>@elseif($status === 'Warning')<span class="text-yellow-600 font-semibold">{{ $status }}</span>@elseif($status === 'Low')<span class="text-orange-600 font-semibold">{{ $status }}</span>@else<span class="text-green-600 font-semibold">{{ $status }}</span>@endif</td>
+=======
+        <div>
+            <h2 class="text-lg md:text-xl font-semibold mb-4">Product Inventory</h2>
+            
+            <!-- Search and Filter -->
+            <div class="mb-4 flex flex-col sm:flex-row gap-4">
+                <div class="flex-1">
+                    <input type="text" id="product-search" placeholder="Search products..." class="w-full p-2 rounded border text-sm">
+                </div>
+                <div class="flex gap-2">
+                    <select id="product-status-filter" class="p-2 rounded border text-sm">
+                        <option value="">All Status</option>
+                        <option value="available">Available</option>
+                        <option value="low_stock">Low Stock</option>
+                        <option value="out_of_stock">Out of Stock</option>
+                    </select>
+                    <select id="product-sort" class="p-2 rounded border text-sm">
+                        <option value="name">Sort by Name</option>
+                        <option value="quantity">Sort by Quantity</option>
+                        <option value="expiry">Sort by Expiry</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Desktop Table -->
+            <div class="lg:block bg-white rounded-lg shadow-md p-4 overflow-x-auto">
+                <table class="user-table w-full text-left">
+                    <thead>
+                        <tr class="border-b">
+                            <th class="pb-2 text-sm font-semibold">Product</th>
+                            <th class="pb-2 text-sm font-semibold">Batch</th>
+                            <th class="pb-2 text-sm font-semibold">Available</th>
+                            <th class="pb-2 text-sm font-semibold">Reserved</th>
+                            <th class="pb-2 text-sm font-semibold">Damaged</th>
+                            <th class="pb-2 text-sm font-semibold">Expired</th>
+                            <th class="pb-2 text-sm font-semibold">Status</th>
+                            <th class="pb-2 text-sm font-semibold">Value (UGX)</th>
+                            <th class="pb-2 text-sm font-semibold">Expiry</th>
+                            <th class="pb-2 text-sm font-semibold">Actions</th>
+>>>>>>> ea8a867b4687e9b8fd18e35a14a2bced025da181
                         </tr>
                     @empty
                         <tr>
@@ -228,7 +269,7 @@
             </div>
 
             <!-- Desktop Table -->
-            <div class="hidden lg:block bg-white rounded-lg shadow-md p-4 overflow-x-auto">
+            <div class="lg:block bg-white rounded-lg shadow-md p-4 overflow-x-auto">
                 <table class="user-table w-full text-left">
                     <thead>
                         <tr class="border-b">

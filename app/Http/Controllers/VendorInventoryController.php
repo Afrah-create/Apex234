@@ -347,6 +347,18 @@ class VendorInventoryController extends Controller
         if ($request->filled('quality_notes')) {
             $updateData['quality_notes'] = $request->quality_notes;
         }
+        if ($request->filled('available')) {
+            $updateData['available'] = $request->available;
+        }
+        if ($request->filled('in_use')) {
+            $updateData['in_use'] = $request->in_use;
+        }
+        if ($request->filled('expired')) {
+            $updateData['expired'] = $request->expired;
+        }
+        if ($request->filled('disposed')) {
+            $updateData['disposed'] = $request->disposed;
+        }
 
         DB::table('raw_materials')
             ->where('id', $id)

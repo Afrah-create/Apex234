@@ -106,9 +106,11 @@ class DatabaseSeeder extends Seeder
 
         // Seed vendors (each linked to a user)
         $vendorUsers = \App\Models\User::factory(5)->create(['role' => 'vendor']);
-        $vendors = \App\Models\Vendor::factory(5)->create([
-            'user_id' => $vendorUsers->random()->id,
-        ]);
+        foreach ($vendorUsers as $vendorUser) {
+            \App\Models\Vendor::factory()->create([
+                'user_id' => $vendorUser->id,
+            ]);
+        }
 
         // Assign vendor role to vendor users
         foreach ($vendorUsers as $vendorUser) {

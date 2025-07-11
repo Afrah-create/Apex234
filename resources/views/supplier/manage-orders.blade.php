@@ -190,14 +190,20 @@ async function loadOrderStats() {
     }
 }
 
-// Load incoming orders
-async function loadIncomingOrders() {
+// Remove archive/unarchive buttons and add pagination
+let supplierOrdersCurrentPage = 1;
+let supplierOrdersLastPage = 1;
+
+async function loadIncomingOrders(page = 1) {
     try {
-        const res = await fetch('/api/supplier/orders/incoming');
+        const res = await fetch(`/api/supplier/orders/incoming?page=${page}`);
         const data = await res.json();
         allOrders = data.orders || [];
+        supplierOrdersCurrentPage = data.current_page;
+        supplierOrdersLastPage = data.last_page;
         filteredOrders = allOrders;
         renderOrders();
+        renderSupplierOrdersPagination();
     } catch (error) {
         console.error('Error loading orders:', error);
         document.getElementById('orders-body').innerHTML = `
@@ -268,6 +274,33 @@ function renderOrders() {
     });
 }
 
+function renderSupplierOrdersPagination() {
+    let pagination = document.getElementById('supplier-orders-pagination');
+    if (!pagination) {
+        pagination = document.createElement('div');
+        pagination.id = 'supplier-orders-pagination';
+        pagination.className = 'flex justify-center items-center py-4 space-x-4';
+        document.querySelector('.bg-white.rounded-lg.shadow.overflow-hidden').appendChild(pagination);
+    }
+    pagination.innerHTML = '';
+    if (supplierOrdersLastPage <= 1) return;
+    const prevBtn = document.createElement('button');
+    prevBtn.textContent = 'Previous';
+    prevBtn.className = 'px-3 py-1 rounded bg-gray-200 hover:bg-gray-300';
+    prevBtn.disabled = supplierOrdersCurrentPage === 1;
+    prevBtn.onclick = () => loadIncomingOrders(supplierOrdersCurrentPage - 1);
+    const nextBtn = document.createElement('button');
+    nextBtn.textContent = 'Next';
+    nextBtn.className = 'px-3 py-1 rounded bg-gray-200 hover:bg-gray-300';
+    nextBtn.disabled = supplierOrdersCurrentPage === supplierOrdersLastPage;
+    nextBtn.onclick = () => loadIncomingOrders(supplierOrdersCurrentPage + 1);
+    const pageInfo = document.createElement('span');
+    pageInfo.textContent = `Page ${supplierOrdersCurrentPage} of ${supplierOrdersLastPage}`;
+    pagination.appendChild(prevBtn);
+    pagination.appendChild(pageInfo);
+    pagination.appendChild(nextBtn);
+}
+
 // Get status color for badges
 function getStatusColor(status) {
     const colors = {
@@ -282,10 +315,9 @@ function getStatusColor(status) {
     return colors[status] || 'bg-gray-100 text-gray-800';
 }
 
-// Get action buttons based on order status
+// Update getActionButtons to include archive/unarchive
 function getActionButtons(order) {
     let buttons = '';
-    
     switch (order.status) {
         case 'pending':
             buttons += `<button onclick="confirmOrder(${order.id})" class="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded text-xs">Confirm</button>`;
@@ -302,10 +334,16 @@ function getActionButtons(order) {
             buttons += `<button onclick="deliverOrder(${order.id})" class="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded text-xs">Deliver</button>`;
             buttons += `<a href="/supplier/delivery-form?order_id=${order.id}&distribution_center_id=${order.distribution_center_id || ''}&vendor_id=${order.vendor_id || ''}&vendor_name=${encodeURIComponent(order.vendor_name || '')}&vendor_address=${encodeURIComponent(order.vendor_address || '')}&vendor_phone=${encodeURIComponent(order.vendor_phone || '')}" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs ml-1">Create Delivery</a>`;
             break;
-        default:
-            buttons += `<span class="text-gray-400 text-xs">No actions</span>`;
     }
-    
+    // Archive/Unarchive logic
+    if (order.archived === true) {
+        buttons += `<button onclick="unarchiveRawMaterialOrder(${order.id})" class="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded text-xs ml-1">Unarchive</button>`;
+    } else if (order.archived === false && (typeof order.status === 'string' && ['delivered', 'cancelled'].includes(order.status.trim().toLowerCase()))) {
+        buttons += `<button onclick="archiveRawMaterialOrder(${order.id})" class="bg-blue-600 hover:bg-blue-800 text-white px-2 py-1 rounded text-xs ml-1">Archive</button>`;
+    }
+    if (!buttons) {
+        buttons = '<span class="text-gray-400 text-xs">No actions</span>';
+    }
     return buttons;
 }
 
@@ -572,5 +610,37 @@ document.getElementById('create-delivery-form').addEventListener('submit', async
         document.getElementById('create-delivery-error').classList.remove('hidden');
     }
 });
+
+// Add archive/unarchive functions
+async function archiveRawMaterialOrder(orderId) {
+    if (!confirm('Are you sure you want to archive this order?')) return;
+    try {
+        const res = await fetch(`/raw-material-orders/${orderId}/archive`, {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=\'csrf-token\']').getAttribute('content') }
+        });
+        const data = await res.json();
+        showMessage(data.success ? 'Order archived successfully!' : data.message, data.success ? 'success' : 'error');
+        loadIncomingOrders();
+        loadOrderStats();
+    } catch (error) {
+        showMessage('Failed to archive order.', 'error');
+    }
+}
+async function unarchiveRawMaterialOrder(orderId) {
+    if (!confirm('Are you sure you want to unarchive this order?')) return;
+    try {
+        const res = await fetch(`/raw-material-orders/${orderId}/unarchive`, {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=\'csrf-token\']').getAttribute('content') }
+        });
+        const data = await res.json();
+        showMessage(data.success ? 'Order unarchived successfully!' : data.message, data.success ? 'success' : 'error');
+        loadIncomingOrders();
+        loadOrderStats();
+    } catch (error) {
+        showMessage('Failed to unarchive order.', 'error');
+    }
+}
 </script>
 @endsection 

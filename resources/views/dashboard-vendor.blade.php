@@ -91,6 +91,15 @@
             </div>
         </div>
 
+<<<<<<< HEAD
+=======
+        <!-- Raw Material Statistics -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-900 mb-6">Raw Material Statistics</h2>
+            <div id="vendorRawMaterialDoughnuts" class="flex flex-wrap gap-6 justify-center"></div>
+        </div>
+
+>>>>>>> ea8a867b4687e9b8fd18e35a14a2bced025da181
         <!-- Production Summary -->
         <div class="bg-white rounded-lg shadow-md p-6 mb-8">
             <h2 class="text-xl font-semibold text-gray-900 mb-6">Production Summary</h2>
@@ -231,6 +240,61 @@
             });
         }
 
+<<<<<<< HEAD
+=======
+        // Raw Material Stats Cards & Chart
+        let vendorRawMaterialChart;
+        async function loadVendorRawMaterialStats() {
+            const data = await fetchJSON('/api/vendor/raw-material-stats');
+            // Prepare data for grouped bar chart
+            const materials = Object.keys(data);
+            const statuses = ['available', 'in_use', 'expired', 'disposed'];
+            const statusLabels = {
+                available: 'Available',
+                in_use: 'In Use',
+                expired: 'Expired',
+                disposed: 'Disposed'
+            };
+            const colorMap = {
+                available: 'rgba(34, 197, 94, 0.8)',
+                in_use: 'rgba(59, 130, 246, 0.8)',
+                expired: 'rgba(239, 68, 68, 0.8)',
+                disposed: 'rgba(156, 163, 175, 0.8)'
+            };
+
+            const datasets = statuses.map(status => ({
+                label: statusLabels[status],
+                data: materials.map(material => data[material][status] ?? 0),
+                backgroundColor: colorMap[status]
+            }));
+
+            // Restore single canvas for bar chart
+            const container = document.getElementById('vendorRawMaterialDoughnuts');
+            container.innerHTML = '<canvas id="vendorRawMaterialChart"></canvas>';
+            const ctx = document.getElementById('vendorRawMaterialChart').getContext('2d');
+            if (vendorRawMaterialChart) vendorRawMaterialChart.destroy();
+            vendorRawMaterialChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: materials,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' },
+                        title: { display: true, text: 'Raw Material Status by Type' }
+                    },
+                    scales: {
+                        x: { stacked: false, title: { display: true, text: 'Raw Material' } },
+                        y: { stacked: false, beginAtZero: true, title: { display: true, text: 'Quantity' } }
+                    }
+                }
+            });
+        }
+
+>>>>>>> ea8a867b4687e9b8fd18e35a14a2bced025da181
         // Production Summary Cards & Chart
         let vendorProductionChart;
         async function loadVendorProductionSummary() {
