@@ -160,6 +160,36 @@ class VendorDashboardController extends Controller
     {
         $vendor = auth()->user()->vendor;
         $employees = $vendor ? $vendor->employees : collect();
-        return view('dashboard-vendor', compact('vendor', 'employees'));
+        $lowStockNotifications = collect();
+        if ($vendor) {
+            // Low stock products
+            $lowStockProducts = \App\Models\Inventory::with('yogurtProduct')
+                ->where('quantity_available', '<=', 5)
+                ->whereHas('yogurtProduct', function($q) { $q->where('status', 'active'); })
+                ->get()
+                ->map(function($inv) {
+                    return [
+                        'type' => 'product',
+                        'name' => $inv->yogurtProduct->product_name ?? 'Product',
+                        'quantity' => $inv->quantity_available,
+                        'unit' => 'units',
+                    ];
+                });
+            // Low stock raw materials
+            $lowStockMaterials = \App\Models\RawMaterial::where('vendor_id', $vendor->id)
+                ->where('status', 'available')
+                ->where('quantity', '<=', 5)
+                ->get()
+                ->map(function($rm) {
+                    return [
+                        'type' => 'raw_material',
+                        'name' => $rm->material_name,
+                        'quantity' => $rm->quantity,
+                        'unit' => $rm->unit_of_measure,
+                    ];
+                });
+            $lowStockNotifications = $lowStockProducts->merge($lowStockMaterials);
+        }
+        return view('dashboard-vendor', compact('vendor', 'employees', 'lowStockNotifications'));
     }
 } 

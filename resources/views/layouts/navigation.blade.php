@@ -17,7 +17,17 @@
                 </button>
                 <div id="notificationDropdown" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg z-50 border border-gray-200" style="min-width: 280px;">
                     <div class="p-4 border-b font-semibold">Unread Messages</div>
-                    <div id="notificationMessages" class="p-4 max-h-64 overflow-y-auto text-sm"></div>
+                    <div id="notificationMessages" class="p-4 max-h-64 overflow-y-auto text-sm">
+                        @if(isset($lowStockNotifications) && $lowStockNotifications->count())
+                            <div class="mb-2 font-bold text-red-600">Low Stock Alerts</div>
+                            @foreach($lowStockNotifications as $notif)
+                                <div class="mb-1">
+                                    <span class="font-semibold">{{ ucfirst($notif['type']) }}:</span>
+                                    {{ $notif['name'] }} ({{ $notif['quantity'] }} {{ $notif['unit'] }})
+                                </div>
+                            @endforeach
+                        @endif
+                    </div>
                 </div>
             </div>
             <!-- Chat Icon Button (link to /chat) -->
