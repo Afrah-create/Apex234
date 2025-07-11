@@ -85,7 +85,7 @@ class VendorProductionController extends Controller
             'vendor_id' => $vendor->id,
             'product_id' => $product->id,
             'quantity_produced' => $request->quantity_produced,
-            'batch_code' => strtoupper(Str::random(8)),
+            'batch_code' => $batchNumber,
         ]);
         // Attach raw materials
         foreach ($request->raw_materials as $rm) {
