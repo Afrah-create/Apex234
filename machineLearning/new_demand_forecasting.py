@@ -86,23 +86,23 @@ class AdvancedDemandForecaster:
             # --- AGGREGATE TO MONTHLY DATA ---
             df['YearMonth'] = df['Date'].dt.to_period('M')
             
-            # Aggregate by month, product, and region (sum Units Sold, take median for others)
-            monthly_df = df.groupby(['YearMonth', 'product_name', 'Region']).agg({
-                'Units Sold': 'sum',
-                'Inventory Level': 'median',
-                'Units Ordered': 'sum',
-                'unit_price(UGX)': 'median',
-                'Inventory_Turnover': 'median',
-                'Order_Fulfillment_Rate': 'median',
-                'Revenue_Per_Unit': 'median',
-                'Promotion': 'max',
-                'retailer_id_encoded': 'first',
-                'Product_id_encoded': 'first',
-                'product_name_encoded': 'first',
-                'Region_encoded': 'first',
-                'Weather Condition_encoded': 'first',
-                'order_status_encoded': 'first',
-                'Product_Category_encoded': 'first'
+            # Aggregate by month only (total monthly demand across all products and regions)
+            monthly_df = df.groupby(['YearMonth']).agg({
+                'Units Sold': 'sum',  # Total monthly demand
+                'Inventory Level': 'sum',  # Total inventory
+                'Units Ordered': 'sum',  # Total orders
+                'unit_price(UGX)': 'mean',  # Average price
+                'Inventory_Turnover': 'mean',  # Average turnover
+                'Order_Fulfillment_Rate': 'mean',  # Average fulfillment rate
+                'Revenue_Per_Unit': 'mean',  # Average revenue per unit
+                'Promotion': 'max',  # Any promotion in the month
+                'retailer_id_encoded': 'first',  # Use first retailer as representative
+                'Product_id_encoded': 'first',  # Use first product as representative
+                'product_name_encoded': 'first',  # Use first product name as representative
+                'Region_encoded': 'first',  # Use first region as representative
+                'Weather Condition_encoded': 'first',  # Use first weather as representative
+                'order_status_encoded': 'first',  # Use first status as representative
+                'Product_Category_encoded': 'first'  # Use first category as representative
             }).reset_index()
             
             # Convert YearMonth back to datetime
@@ -235,10 +235,8 @@ class AdvancedDemandForecaster:
             confidence_level = self.calculate_confidence_level(model_scores[best_model_name])
             # --- HISTORICAL ACTUALS (aggregated by month) ---
             historical = []
-            monthly_historical = df.groupby(df['Date'].dt.to_period('M'))['Units Sold'].sum().reset_index()
-            monthly_historical['Date'] = monthly_historical['Date'].dt.to_timestamp()
-            
-            for _, row in monthly_historical.sort_values('Date').iterrows():
+            # Use the same monthly aggregation as training data
+            for _, row in df.sort_values('Date').iterrows():
                 historical.append({
                     'month': row['Date'].strftime('%Y-%m'),
                     'actual_sales': int(row['Units Sold'])
@@ -264,11 +262,11 @@ class AdvancedDemandForecaster:
                 'data_summary': {
                     'total_records': len(df),
                     'date_range': {
-                        'start': df['Date'].min().strftime('%Y-%m-%d'),
-                        'end': df['Date'].max().strftime('%Y-%m-%d')
+                        'start': df['Date'].min().to_pydatetime().strftime('%Y-%m-%d'),
+                        'end': df['Date'].max().to_pydatetime().strftime('%Y-%m-%d')
                     },
-                    'products_count': df['product_name'].nunique(),
-                    'regions_count': df['Region'].nunique()
+                    'months_count': len(df),
+                    'total_units_sold': int(df['Units Sold'].sum())
                 },
                 'status': 'success',
                 'forecast_months': [d.strftime('%Y-%m') for d in future_dates]

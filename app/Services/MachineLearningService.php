@@ -60,6 +60,7 @@ class MachineLearningService
             Log::info('ML: Starting retailer segmentation analysis');
             
             $retailers = \App\Models\Retailer::with('orders')->get();
+            Log::info('ML: Retrieved retailers', ['count' => $retailers->count()]);
             
             $segments = [
                 'premium' => ['retailers' => [], 'characteristics' => []],
@@ -71,16 +72,31 @@ class MachineLearningService
                 $profile = $this->analyzeRetailerProfile($retailer);
                 $segment = $this->assignRetailerSegment($profile);
                 $segments[$segment]['retailers'][] = $retailer->id;
+                
+                Log::info('ML: Retailer segmented', [
+                    'retailer_id' => $retailer->id,
+                    'store_name' => $retailer->store_name,
+                    'segment' => $segment,
+                    'profile' => $profile
+                ]);
             }
 
             // Calculate segment characteristics
             foreach ($segments as $segment => $data) {
                 $segments[$segment]['characteristics'] = $this->calculateRetailerSegmentCharacteristics($data['retailers']);
+                Log::info('ML: Segment calculated', [
+                    'segment' => $segment,
+                    'retailer_count' => count($data['retailers']),
+                    'characteristics' => $segments[$segment]['characteristics']
+                ]);
             }
 
+            Log::info('ML: Retailer segmentation completed', ['segments' => $segments]);
             return $segments;
         } catch (\Exception $e) {
-            Log::error('Error performing retailer segmentation: ' . $e->getMessage());
+            Log::error('Error performing retailer segmentation: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
             return $this->getFallbackSegmentation();
         }
     }

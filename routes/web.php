@@ -425,50 +425,28 @@ Route::get('/api/test-ml', function () {
     ]);
 });
 
-// Test route for ML integration
-Route::get('/test-ml', function () {
+// Temporary test route for retailer segmentation
+Route::get('/test-retailer-segmentation', function () {
     try {
-        $output = [];
-        $command = 'python ' . base_path('machineLearning/new_demand_forecast_api.py') . ' 3 2>&1';
-        exec($command, $output, $returnCode);
-        
-        if ($returnCode !== 0) {
-            return response()->json([
-                'error' => 'Python script failed',
-                'return_code' => $returnCode,
-                'output' => $output
-            ], 500);
-        }
-        
-        $jsonString = implode('', $output);
-        $json = json_decode($jsonString, true);
-        
-        if (!$json) {
-            return response()->json([
-                'error' => 'Invalid JSON response',
-                'raw_output' => $output
-            ], 500);
-        }
+        $mlService = app(\App\Services\MachineLearningService::class);
+        $segmentation = $mlService->performRetailerSegmentation();
         
         return response()->json([
             'success' => true,
-            'data' => $json,
+            'segmentation' => $segmentation,
             'test_info' => [
-                'command' => $command,
-                'return_code' => $returnCode,
-                'json_length' => strlen($jsonString)
+                'timestamp' => now()->toISOString(),
+                'retailer_count' => \App\Models\Retailer::count(),
+                'order_count' => \App\Models\Order::count()
             ]
         ]);
-        
     } catch (\Exception $e) {
         return response()->json([
             'error' => 'Test failed',
-            'message' => $e->getMessage()
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
         ], 500);
     }
 });
 
-// Simple test page for chart functionality
-Route::get('/test-chart', function () {
-    return view('test-chart');
-});
+

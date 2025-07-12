@@ -168,8 +168,12 @@ class AnalyticsController extends Controller
     public function getRetailerSegmentation(): JsonResponse
     {
         try {
+            Log::info('Analytics: Starting retailer segmentation request');
+            
             // Use ML service for retailer segmentation
             $segmentation = $this->mlService->performRetailerSegmentation();
+            Log::info('Analytics: Received segmentation data', ['segmentation' => $segmentation]);
+            
             $segments = [];
             $totalRetailers = 0;
             foreach ($segmentation as $segment => $data) {
@@ -177,19 +181,30 @@ class AnalyticsController extends Controller
                 $segments[$segment] = $retailerCount;
                 $totalRetailers += $retailerCount;
             }
+            
             $percentages = [];
             foreach ($segments as $segment => $count) {
                 $percentages[$segment] = $totalRetailers > 0 ? round(($count / $totalRetailers) * 100, 1) : 0;
             }
-            return response()->json([
+            
+            $response = [
                 'segments' => $segments,
                 'percentages' => $percentages,
                 'total_retailers' => $totalRetailers,
                 'characteristics' => array_map(function($data) {
                     return $data['characteristics'];
                 }, $segmentation)
-            ]);
+            ];
+            
+            Log::info('Analytics: Returning retailer segmentation response', ['response' => $response]);
+            
+            return response()->json($response);
         } catch (\Exception $e) {
+            Log::error('Analytics: Error in retailer segmentation', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             return response()->json([
                 'error' => 'Failed to load retailer segmentation',
                 'message' => $e->getMessage()

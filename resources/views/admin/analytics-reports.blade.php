@@ -12,12 +12,7 @@
         <div class="relative" style="height: 300px;">
             <canvas id="demandForecastChart"></canvas>
         </div>
-        <!-- Debug section -->
-        <div id="debugInfo" class="mt-4 p-3 bg-gray-100 rounded text-sm font-mono" style="display: none;">
-            <h4 class="font-bold">Debug Information:</h4>
-            <div id="debugContent"></div>
-        </div>
-        <button onclick="toggleDebug()" class="mt-2 px-3 py-1 bg-gray-500 text-white rounded text-sm">Toggle Debug</button>
+
     </div>
     <!-- Sales Prediction (Next 30 Days) -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-8">
@@ -59,16 +54,13 @@
         const segmentationChart = document.getElementById('retailerSegmentationChart');
         
         if (demandChart && segmentationChart) {
-            console.log('Analytics page detected, initializing charts...');
-            initializeCharts();
+        initializeCharts();
+        loadAnalyticsData();
+        
+        // Auto-refresh every 5 minutes
+        setInterval(function() {
             loadAnalyticsData();
-            
-            // Auto-refresh every 5 minutes
-            setInterval(function() {
-                loadAnalyticsData();
-            }, 300000);
-        } else {
-            console.log('Analytics page not detected or chart elements missing');
+        }, 300000);
         }
     });
 
@@ -156,8 +148,6 @@
         fetch('/api/analytics/sales-predictions')
             .then(response => response.json())
             .then(data => {
-                console.log('ML Data received:', data); // Debug logging
-                
                 // Update demand forecast chart
                 if (demandForecastChart && data.historical && data.predicted) {
                     // Extract months and values
@@ -165,13 +155,6 @@
                     const historicalValues = data.historical.map(d => d.actual_sales);
                     const predictedMonths = data.predicted.map(d => d.month);
                     const predictedValues = data.predicted.map(d => d.predicted_sales);
-
-                    console.log('Chart data:', {
-                        historicalMonths,
-                        historicalValues,
-                        predictedMonths,
-                        predictedValues
-                    });
 
                     // Combine for continuous x-axis
                     const allMonths = [...historicalMonths, ...predictedMonths];
@@ -185,37 +168,29 @@
                     demandForecastChart.data.datasets[0].data = allActuals;    // Actual Demand (solid)
                     demandForecastChart.data.datasets[1].data = allPredicted;  // Predicted Demand (dashed)
                     demandForecastChart.update();
-                    
-                    console.log('Chart updated successfully');
-                } else {
-                    console.warn('Chart data missing:', {
-                        hasChart: !!demandForecastChart,
-                        hasHistorical: !!data.historical,
-                        hasPredicted: !!data.predicted
-                    });
                 }
 
                 // Update sales prediction section
                 const salesPrediction = document.getElementById('salesPrediction');
                 if (salesPrediction) {
-                    salesPrediction.innerHTML = '';
+                salesPrediction.innerHTML = '';
                     
                     // Use the predicted data from ML module
                     if (data.predicted && data.predicted.length > 0) {
                         data.predicted.forEach(pred => {
-                            const div = document.createElement('div');
-                            div.className = 'flex justify-between items-center p-3 bg-green-50 rounded-lg';
+                        const div = document.createElement('div');
+                        div.className = 'flex justify-between items-center p-3 bg-green-50 rounded-lg';
                             div.innerHTML = `<span class="text-sm font-medium text-green-800">${pred.month}</span><span class="text-lg font-bold text-green-900">${pred.predicted_sales} units</span>`;
-                            salesPrediction.appendChild(div);
-                        });
+                        salesPrediction.appendChild(div);
+                    });
                         
                         const confidenceElement = document.getElementById('salesConfidence');
                         if (confidenceElement) {
                             const confidence = data.confidence_level ? Math.round(data.confidence_level * 100) : 0;
                             confidenceElement.textContent = confidence + '%';
                         }
-                    } else {
-                        salesPrediction.innerHTML = '<span class="text-gray-500">No sales prediction data available.</span>';
+                } else {
+                    salesPrediction.innerHTML = '<span class="text-gray-500">No sales prediction data available.</span>';
                         const confidenceElement = document.getElementById('salesConfidence');
                         if (confidenceElement) {
                             confidenceElement.textContent = '-';
@@ -223,21 +198,12 @@
                     }
                 }
                 
-                // Display additional ML insights if available
-                if (data.trend_direction) {
-                    console.log('Trend analysis:', {
-                        direction: data.trend_direction,
-                        strength: data.trend_strength,
-                        confidence: data.confidence_level
-                    });
-                }
+
             })
             .catch(error => {
-                console.error('Error loading predictions:', error);
-                
                 if (demandForecastChart) {
-                    demandForecastChart.data.datasets[1].data = [];
-                    demandForecastChart.update();
+                demandForecastChart.data.datasets[1].data = [];
+                demandForecastChart.update();
                 }
                 
                 const salesPrediction = document.getElementById('salesPrediction');
@@ -332,24 +298,37 @@
         fetch('/api/analytics/retailer-segmentation')
             .then(response => response.json())
             .then(data => {
+                console.log('Retailer segmentation data received:', data);
+                
                 if (retailerSegmentationChart && data.segments) {
                     const labels = Object.keys(data.segments).map(key => 
                         key.charAt(0).toUpperCase() + key.slice(1) + ' Retailers'
                     );
                     const values = Object.values(data.segments);
                     
+                    console.log('Chart data:', { labels, values });
+                    
                     retailerSegmentationChart.data.labels = labels;
                     retailerSegmentationChart.data.datasets[0].data = values;
                     retailerSegmentationChart.update();
+                    
+                    console.log('Retailer segmentation chart updated');
+                } else {
+                    console.warn('Retailer segmentation data missing or chart not available:', {
+                        hasChart: !!retailerSegmentationChart,
+                        hasSegments: !!data.segments,
+                        data: data
+                    });
                 }
             })
             .catch(error => {
+                console.error('Error loading retailer segmentation data:', error);
+                
                 if (retailerSegmentationChart) {
                     retailerSegmentationChart.data.labels = [];
                     retailerSegmentationChart.data.datasets[0].data = [];
                     retailerSegmentationChart.update();
                 }
-                console.error('Error loading retailer segmentation data:', error);
             });
     }
 
@@ -370,37 +349,6 @@
         }
     }
 
-    function toggleDebug() {
-        const debugInfo = document.getElementById('debugInfo');
-        const debugContent = document.getElementById('debugContent');
-        if (debugInfo && debugContent) {
-            debugInfo.style.display = debugInfo.style.display === 'none' ? 'block' : 'none';
-            debugContent.innerHTML = ''; // Clear previous content
-            debugContent.innerHTML = `
-                <p>Demand Forecast Chart Data:</p>
-                <p>Labels: ${demandForecastChart.data.labels.join(', ')}</p>
-                <p>Actual Data: ${demandForecastChart.data.datasets[0].data.join(', ')}</p>
-                <p>Predicted Data: ${demandForecastChart.data.datasets[1].data.join(', ')}</p>
-                <p>Chart Type: ${demandForecastChart.config.type}</p>
-                <p>Chart Options: ${JSON.stringify(demandForecastChart.options)}</p>
-                <p>Chart Data: ${JSON.stringify(demandForecastChart.data)}</p>
-                <p>Chart Config: ${JSON.stringify(demandForecastChart.config)}</p>
-                <p>Chart Plugins: ${JSON.stringify(demandForecastChart.plugins)}</p>
-                <p>Chart Scales: ${JSON.stringify(demandForecastChart.scales)}</p>
-                <p>Chart Layers: ${JSON.stringify(demandForecastChart.layers)}</p>
-                <p>Chart Hover: ${JSON.stringify(demandForecastChart.hover)}</p>
-                <p>Chart Tooltips: ${JSON.stringify(demandForecastChart.tooltips)}</p>
-                <p>Chart Legend: ${JSON.stringify(demandForecastChart.legend)}</p>
-                <p>Chart Events: ${JSON.stringify(demandForecastChart.events)}</p>
-                <p>Chart Options: ${JSON.stringify(demandForecastChart.options)}</p>
-                <p>Chart Scales: ${JSON.stringify(demandForecastChart.scales)}</p>
-                <p>Chart Layers: ${JSON.stringify(demandForecastChart.layers)}</p>
-                <p>Chart Hover: ${JSON.stringify(demandForecastChart.hover)}</p>
-                <p>Chart Tooltips: ${JSON.stringify(demandForecastChart.tooltips)}</p>
-                <p>Chart Legend: ${JSON.stringify(demandForecastChart.legend)}</p>
-                <p>Chart Events: ${JSON.stringify(demandForecastChart.events)}</p>
-            `;
-        }
-    }
+
 </script>
 @endsection 
