@@ -21,7 +21,8 @@
 
     <!-- Inventory Summary Cards -->
     <div class="summary-cards">
-        <div class="summary-card" style="--summary-card-border: #22c55e;">
+        <a href="{{ route('admin.products.index') }}" style="text-decoration:none;">
+        <div class="summary-card" style="--summary-card-border: #22c55e; cursor:pointer; transition:box-shadow 0.2s;" onmouseover="this.style.boxShadow='0 4px 16px rgba(34,197,94,0.13)';" onmouseout="this.style.boxShadow='';">
             <div class="icon" style="background: #bbf7d0; color: #22c55e;">
                 <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
@@ -32,6 +33,7 @@
                 <p id="totalProducts">-</p>
             </div>
         </div>
+        </a>
         <div class="summary-card" style="--summary-card-border: #3b82f6;">
             <div class="icon" style="background: #dbeafe; color: #3b82f6;">
                 <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -12,6 +12,7 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\VendorApplicantController;
 use App\Http\Controllers\SupplierController;
 use App\Models\YogurtProduct;
+use App\Http\Controllers\CartController;
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -81,6 +82,8 @@ Route::get('/dashboard', function () {
                 return redirect()->route('dashboard.vendor');
             case 'employee':
                 return redirect()->route('dashboard.employee');
+            case 'customer':
+                return redirect()->route('dashboard.customer');
             default:
                 $employeeRecord = \App\Models\Employee::where('user_id', $user->id)->first();
                 if ($employeeRecord) {
@@ -103,6 +106,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard/employee/warehouse-staff', [\App\Http\Controllers\EmployeeDashboardController::class, 'warehouseStaffDashboard'])->name('dashboard.employee.warehouse-staff');
     Route::get('/dashboard/employee/driver', [\App\Http\Controllers\EmployeeDashboardController::class, 'driverDashboard'])->name('dashboard.employee.driver');
     Route::get('/dashboard/employee/sales-manager', [\App\Http\Controllers\EmployeeDashboardController::class, 'salesManagerDashboard'])->name('dashboard.employee.sales-manager');
+    Route::get('/dashboard/customer', [\App\Http\Controllers\CustomerDashboardController::class, 'index'])->name('dashboard.customer');
     Route::get('/vendor/manage-orders', function () {
         return view('vendor.manage-orders');
     })->name('vendor.manage-orders');
@@ -110,6 +114,9 @@ Route::middleware(['auth'])->group(function () {
         return view('vendor.manage-products');
     })->name('vendor.manage-products');
     Route::post('/retailer/orders', [\App\Http\Controllers\RetailerOrderController::class, 'store'])->name('retailer.orders.store');
+    Route::resource('customer/orders', \App\Http\Controllers\CustomerOrderController::class)
+        ->names('customer.orders')
+        ->only(['index', 'show', 'store']);
 });
 
 Route::middleware('auth')->group(function () {
@@ -447,6 +454,42 @@ Route::get('/test-retailer-segmentation', function () {
             'trace' => $e->getTraceAsString()
         ], 500);
     }
+});
+
+// Admin Product Management
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/products', [\App\Http\Controllers\AdminProductController::class, 'index'])->name('products.index');
+    Route::post('/products/{product}/update', [\App\Http\Controllers\AdminProductController::class, 'update'])->name('products.update');
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    Route::post('/cart/add/{product}', [CartController::class, 'add'])->name('cart.add');
+    Route::post('/cart/update/{product}', [CartController::class, 'update'])->name('cart.update');
+    Route::post('/cart/remove/{product}', [CartController::class, 'remove'])->name('cart.remove');
+    
+    // Checkout routes
+    Route::get('/checkout', [\App\Http\Controllers\CheckoutController::class, 'index'])->name('checkout.index');
+    Route::post('/checkout', [\App\Http\Controllers\CheckoutController::class, 'store'])->name('checkout.store');
+    
+    // Test route for checkout (remove in production)
+    Route::get('/test-checkout', function() {
+        if (!Auth::check()) {
+            return 'Please login first';
+        }
+        $cartItems = \App\Models\CartItem::with('product')->where('user_id', Auth::id())->get();
+        return response()->json([
+            'user_id' => Auth::id(),
+            'cart_items_count' => $cartItems->count(),
+            'cart_items' => $cartItems->map(function($item) {
+                return [
+                    'product_name' => $item->product->product_name,
+                    'quantity' => $item->quantity,
+                    'price' => $item->product->selling_price
+                ];
+            })
+        ]);
+    });
 });
 
 

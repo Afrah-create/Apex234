@@ -27,16 +27,35 @@ const captions = [
 const totalSlides = slides.length;
 let slideInterval;
 
-function showSlide(n) {
-    // Hide all slides
-    slides.forEach(slide => slide.classList.remove('active'));
+function showSlide(n, direction = 'right') {
+    slides.forEach((slide, i) => {
+        slide.classList.remove('active', 'slide-in-right', 'slide-in-left', 'slide-out-left', 'slide-out-right');
+        slide.style.zIndex = 1;
+    });
+    const prevSlide = slides[currentSlide];
+    const nextSlide = slides[n];
+    if (direction === 'right') {
+        if (prevSlide) prevSlide.classList.add('slide-out-left');
+        if (nextSlide) nextSlide.classList.add('slide-in-right');
+    } else {
+        if (prevSlide) prevSlide.classList.add('slide-out-right');
+        if (nextSlide) nextSlide.classList.add('slide-in-left');
+    }
+    if (nextSlide) {
+        nextSlide.classList.add('active');
+        nextSlide.style.zIndex = 2;
+    }
+    setTimeout(() => {
+        slides.forEach((slide, i) => {
+            if (i !== n) {
+                slide.classList.remove('active', 'slide-in-right', 'slide-in-left', 'slide-out-left', 'slide-out-right');
+                slide.style.zIndex = 1;
+            }
+        });
+    }, 700);
+    // Update indicators and captions as before
     indicators.forEach(indicator => indicator.classList.remove('active'));
-    
-    // Show current slide (with safety checks)
-    if (slides[n]) slides[n].classList.add('active');
     if (indicators[n]) indicators[n].classList.add('active');
-    
-    // Update caption
     const captionElement = document.querySelector('.slide-caption');
     if (captionElement && captions[n]) {
         captionElement.innerHTML = `
@@ -47,16 +66,18 @@ function showSlide(n) {
 }
 
 function goToSlide(n) {
+    const direction = n > currentSlide ? 'right' : 'left';
     currentSlide = n;
-    showSlide(currentSlide);
+    showSlide(currentSlide, direction);
     resetInterval();
 }
 
 function resetInterval() {
     clearInterval(slideInterval);
     slideInterval = setInterval(() => {
-        currentSlide = (currentSlide + 1) % totalSlides;
-        showSlide(currentSlide);
+        const next = (currentSlide + 1) % totalSlides;
+        showSlide(next, 'right');
+        currentSlide = next;
     }, 5000);
 }
 
@@ -64,8 +85,9 @@ function resetInterval() {
 document.addEventListener('DOMContentLoaded', function() {
     // Start automatic sliding
     slideInterval = setInterval(() => {
-        currentSlide = (currentSlide + 1) % totalSlides;
-        showSlide(currentSlide);
+        const next = (currentSlide + 1) % totalSlides;
+        showSlide(next, 'right');
+        currentSlide = next;
     }, 5000);
 
     // Pause on hover
@@ -74,4 +96,6 @@ document.addEventListener('DOMContentLoaded', function() {
         carousel.addEventListener('mouseenter', () => clearInterval(slideInterval));
         carousel.addEventListener('mouseleave', resetInterval);
     }
+    // Initial show
+    showSlide(currentSlide, 'right');
 }); 

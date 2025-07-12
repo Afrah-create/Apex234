@@ -99,7 +99,7 @@ class User extends Authenticatable
     public function getPrimaryRoleName()
     {
         $roles = $this->roles()->pluck('name')->toArray();
-        $priority = ['admin', 'supplier', 'vendor', 'retailer', 'employee'];
+        $priority = ['admin', 'supplier', 'vendor', 'retailer', 'employee', 'customer']; // Add 'customer' here
         foreach ($priority as $role) {
             if (in_array($role, $roles)) {
                 return $role;
@@ -159,7 +159,7 @@ class User extends Authenticatable
 
     public function orders()
     {
-        return $this->hasMany(\App\Models\Order::class);
+        return $this->hasMany(\App\Models\Order::class, 'user_id');
     }
 }
     
