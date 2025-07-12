@@ -197,8 +197,8 @@ class AdvancedDemandForecaster:
                     print(f"Error training {name}: {e}")
         return model_scores
     
-    def generate_forecast(self, months=3):
-        """Generate demand forecast for future months using monthly aggregated data and output historical actuals for visualization"""
+    def generate_forecast(self, months=6):
+        """Generate demand forecast grouped by year and month for easy multi-year plotting"""
         try:
             # Load and preprocess data (now monthly)
             df = self.load_and_preprocess_data()
@@ -211,8 +211,7 @@ class AdvancedDemandForecaster:
             if not self.models:
                 return self.get_error_response(months)
             # Use the best model for forecasting
-            best_model_name = max(model_scores.keys(), 
-                                key=lambda x: model_scores[x]['r2_score'])
+            best_model_name = max(model_scores.keys(), key=lambda x: model_scores[x]['r2_score'])
             best_model = self.models[best_model_name]
             # Generate future months
             last_date = df['Date'].max()
@@ -227,31 +226,37 @@ class AdvancedDemandForecaster:
                 else:
                     prediction = best_model.predict([future_features])[0]
                 future_predictions.append(max(0, int(prediction)))
+            # Build a timeline of all months (historical + future)
+            all_dates = list(df['Date']) + future_dates
+            all_years = sorted(set([d.year for d in all_dates]))
+            # Build a lookup for actual and predicted
+            actual_lookup = {(row['Date'].year, row['Date'].month): int(row['Units Sold']) for _, row in df.iterrows()}
+            pred_lookup = {(d.year, d.month): int(future_predictions[i]) for i, d in enumerate(future_dates)}
+            # Month labels
+            month_labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            # For each year, build arrays of actual and predicted for Jan-Dec
+            years = []
+            for year in all_years:
+                actual = []
+                predicted = []
+                for m in range(1, 13):
+                    actual.append(actual_lookup.get((year, m)))
+                    predicted.append(pred_lookup.get((year, m)))
+                years.append({
+                    'year': year,
+                    'actual': actual,
+                    'predicted': predicted
+                })
             # Calculate seasonal patterns (now monthly)
             seasonal_patterns = self.calculate_seasonal_patterns(df)
             # Analyze trends
             trend_analysis = self.analyze_trends(df)
             # Calculate confidence level
             confidence_level = self.calculate_confidence_level(model_scores[best_model_name])
-            # --- HISTORICAL ACTUALS (aggregated by month) ---
-            historical = []
-            # Use the same monthly aggregation as training data
-            for _, row in df.sort_values('Date').iterrows():
-                historical.append({
-                    'month': row['Date'].strftime('%Y-%m'),
-                    'actual_sales': int(row['Units Sold'])
-                })
-            # --- PREDICTED (overall) ---
-            predicted = []
-            for i, date in enumerate(future_dates):
-                predicted.append({
-                    'month': date.strftime('%Y-%m'),
-                    'predicted_sales': int(future_predictions[i])
-                })
             # Prepare result
             result = {
-                'historical': historical,
-                'predicted': predicted,
+                'years': years,
+                'months': month_labels,
                 'confidence_level': confidence_level,
                 'seasonal_patterns': seasonal_patterns,
                 'trend_direction': trend_analysis['direction'],

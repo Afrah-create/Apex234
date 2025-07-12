@@ -149,55 +149,70 @@
             .then(response => response.json())
             .then(data => {
                 // Update demand forecast chart
-                if (demandForecastChart && data.historical && data.predicted) {
-                    // Extract months and values
-                    const historicalMonths = data.historical.map(d => d.month);
-                    const historicalValues = data.historical.map(d => d.actual_sales);
-                    const predictedMonths = data.predicted.map(d => d.month);
-                    const predictedValues = data.predicted.map(d => d.predicted_sales);
-
-                    // Combine for continuous x-axis
-                    const allMonths = [...historicalMonths, ...predictedMonths];
-                    const allActuals = [...historicalValues, ...Array(predictedValues.length).fill(null)];
-                    const allPredicted = [
-                        ...Array(historicalValues.length).fill(null),
-                        ...predictedValues
-                    ];
-
-                    demandForecastChart.data.labels = allMonths;
-                    demandForecastChart.data.datasets[0].data = allActuals;    // Actual Demand (solid)
-                    demandForecastChart.data.datasets[1].data = allPredicted;  // Predicted Demand (dashed)
+                if (demandForecastChart && data.years && data.months) {
+                    // Prepare datasets for each year (actual and predicted)
+                    const datasets = [];
+                    data.years.forEach(yearObj => {
+                        // Actual
+                        datasets.push({
+                            label: yearObj.year + ' Actual',
+                            data: yearObj.actual,
+                            borderColor: yearObj.year === new Date().getFullYear() ? 'rgb(59, 130, 246)' : 'rgba(59,130,246,0.5)',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4,
+                            borderWidth: 2,
+                            spanGaps: true,
+                            fill: false
+                        });
+                        // Predicted
+                        datasets.push({
+                            label: yearObj.year + ' Predicted',
+                            data: yearObj.predicted,
+                            borderColor: yearObj.year === new Date().getFullYear() + 1 ? 'rgb(34, 197, 94)' : 'rgba(34,197,94,0.5)',
+                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                            borderDash: [5, 5],
+                            tension: 0.4,
+                            borderWidth: 2,
+                            spanGaps: true,
+                            fill: false
+                        });
+                    });
+                    demandForecastChart.data.labels = data.months;
+                    demandForecastChart.data.datasets = datasets;
                     demandForecastChart.update();
                 }
 
-                // Update sales prediction section
+                // Update sales prediction section (show only for the latest year with predictions)
                 const salesPrediction = document.getElementById('salesPrediction');
                 if (salesPrediction) {
-                salesPrediction.innerHTML = '';
-                    
-                    // Use the predicted data from ML module
-                    if (data.predicted && data.predicted.length > 0) {
-                        data.predicted.forEach(pred => {
-                        const div = document.createElement('div');
-                        div.className = 'flex justify-between items-center p-3 bg-green-50 rounded-lg';
-                            div.innerHTML = `<span class="text-sm font-medium text-green-800">${pred.month}</span><span class="text-lg font-bold text-green-900">${pred.predicted_sales} units</span>`;
-                        salesPrediction.appendChild(div);
-                    });
-                        
+                    salesPrediction.innerHTML = '';
+                    if (data.years && data.years.length > 0) {
+                        // Find the latest year with predictions
+                        const latestPred = data.years.slice().reverse().find(y => y.predicted.some(v => v !== null));
+                        if (latestPred) {
+                            data.months.forEach((month, idx) => {
+                                if (latestPred.predicted[idx] !== null) {
+                                    const div = document.createElement('div');
+                                    div.className = 'flex justify-between items-center p-3 bg-green-50 rounded-lg';
+                                    div.innerHTML = `<span class="text-sm font-medium text-green-800">${month} ${latestPred.year}</span><span class="text-lg font-bold text-green-900">${latestPred.predicted[idx]} units</span>`;
+                                    salesPrediction.appendChild(div);
+                                }
+                            });
+                        }
                         const confidenceElement = document.getElementById('salesConfidence');
                         if (confidenceElement) {
                             const confidence = data.confidence_level ? Math.round(data.confidence_level * 100) : 0;
                             confidenceElement.textContent = confidence + '%';
                         }
-                } else {
-                    salesPrediction.innerHTML = '<span class="text-gray-500">No sales prediction data available.</span>';
+                    } else {
+                        salesPrediction.innerHTML = '<span class="text-gray-500">No sales prediction data available.</span>';
                         const confidenceElement = document.getElementById('salesConfidence');
                         if (confidenceElement) {
                             confidenceElement.textContent = '-';
                         }
                     }
                 }
-                
+
 
             })
             .catch(error => {
