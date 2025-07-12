@@ -102,6 +102,58 @@ class MachineLearningService
     }
 
     /**
+     * Perform customer segmentation analysis
+     */
+    public function performCustomerSegmentation(): array
+    {
+        try {
+            Log::info('ML: Starting customer segmentation analysis');
+            
+            $customers = \App\Models\User::whereHas('roles', function($query) {
+                $query->where('name', 'retailer'); // Change to 'customer' if you have a separate customer role
+            })->with('orders')->get();
+            Log::info('ML: Retrieved customers', ['count' => $customers->count()]);
+            
+            $segments = [
+                'premium' => ['customers' => [], 'characteristics' => []],
+                'regular' => ['customers' => [], 'characteristics' => []],
+                'occasional' => ['customers' => [], 'characteristics' => []]
+            ];
+
+            foreach ($customers as $customer) {
+                $profile = $this->analyzeCustomerProfile($customer);
+                $segment = $this->assignCustomerSegment($profile);
+                $segments[$segment]['customers'][] = $customer->id;
+                
+                Log::info('ML: Customer segmented', [
+                    'customer_id' => $customer->id,
+                    'name' => $customer->name,
+                    'segment' => $segment,
+                    'profile' => $profile
+                ]);
+            }
+
+            // Calculate segment characteristics
+            foreach ($segments as $segment => $data) {
+                $segments[$segment]['characteristics'] = $this->calculateCustomerSegmentCharacteristics($data['customers']);
+                Log::info('ML: Segment calculated', [
+                    'segment' => $segment,
+                    'customer_count' => count($data['customers']),
+                    'characteristics' => $segments[$segment]['characteristics']
+                ]);
+            }
+
+            Log::info('Customer Segmentation Final Structure', $segments);
+            return $segments;
+        } catch (\Exception $e) {
+            Log::error('Error performing customer segmentation: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            return $this->getFallbackSegmentation();
+        }
+    }
+
+    /**
      * Generate inventory optimization recommendations
      */
     public function generateInventoryRecommendations(): array
@@ -459,6 +511,63 @@ class MachineLearningService
             'confidence' => 0.7,
             'trend' => 'stable'
         ];
+    }
+
+    private function analyzeCustomerProfile(\App\Models\User $customer): array
+    {
+        $orders = $customer->orders;
+        return [
+            'total_orders' => $orders->count(),
+            'total_spent' => $orders->sum('total_amount'),
+            'avg_order_value' => $orders->count() > 0 ? $orders->sum('total_amount') / $orders->count() : 0,
+            'last_order_date' => $orders->max('created_at'),
+            'order_frequency' => $this->calculateOrderFrequency($orders)
+        ];
+    }
+
+    private function assignCustomerSegment(array $profile): string
+    {
+        $totalSpent = $profile['total_spent'];
+        $orderFrequency = $profile['order_frequency'];
+        if ($totalSpent > 1000 && $orderFrequency > 2) {
+            return 'premium';
+        } elseif ($totalSpent > 500 || $orderFrequency > 1) {
+            return 'regular';
+        } else {
+            return 'occasional';
+        }
+    }
+
+    private function calculateCustomerSegmentCharacteristics(array $customerIds): array
+    {
+        if (empty($customerIds)) {
+            return [
+                'avg_order_value' => 0,
+                'retention_rate' => 0,
+                'lifetime_value' => 0
+            ];
+        }
+        $customers = \App\Models\User::whereIn('id', $customerIds)->with('orders')->get();
+        $totalOrders = $customers->sum(function($customer) {
+            return $customer->orders->count();
+        });
+        $totalSpent = $customers->sum(function($customer) {
+            return $customer->orders->sum('total_amount');
+        });
+        return [
+            'avg_order_value' => $totalOrders > 0 ? $totalSpent / $totalOrders : 0,
+            'retention_rate' => $this->calculateCustomerRetentionRate($customers),
+            'lifetime_value' => $totalSpent / count($customerIds)
+        ];
+    }
+
+    private function calculateCustomerRetentionRate($customers): float
+    {
+        if ($customers->count() < 2) return 0;
+        $returning = $customers->filter(function($customer) {
+            return $customer->orders->count() > 1;
+        })->count();
+        return $returning / $customers->count();
     }
 
     private function assessSupplyChainRisk(): array

@@ -477,29 +477,29 @@ function getStatusColor(status) {
 
 // Cancel order
 async function cancelOrder(orderId) {
-    if (!confirm('Are you sure you want to cancel this order?')) {
-        return;
-    }
-    
-    try {
-        const res = await fetch(`/api/vendor/raw-material-orders/${orderId}/cancel`, {
-            method: 'POST',
-            headers: { 
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') 
+    (async function() {
+        const confirmed = await showConfirmModal('Are you sure you want to cancel this order?', 'Cancel Order');
+        if (!confirmed) return;
+        try {
+            const res = await fetch(`/api/vendor/raw-material-orders/${orderId}/cancel`, {
+                method: 'POST',
+                headers: { 
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') 
+                }
+            });
+            
+            const data = await res.json();
+            
+            if (data.success) {
+                showOrderMessage('success', data.message);
+                loadRawMaterialOrders();
+            } else {
+                showOrderMessage('error', data.message);
             }
-        });
-        
-        const data = await res.json();
-        
-        if (data.success) {
-            showOrderMessage('success', data.message);
-            loadRawMaterialOrders();
-        } else {
-            showOrderMessage('error', data.message);
+        } catch (error) {
+            showOrderMessage('error', 'An error occurred while cancelling the order.');
         }
-    } catch (error) {
-        showOrderMessage('error', 'An error occurred while cancelling the order.');
-    }
+    })();
 }
 
 // List product orders from retailers

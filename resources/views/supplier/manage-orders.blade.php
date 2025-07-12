@@ -368,103 +368,115 @@ function applyFilters() {
 
 // Order action functions
 async function confirmOrder(orderId) {
-    if (!confirm('Are you sure you want to confirm this order?')) return;
-    
-    try {
-        const res = await fetch(`/api/supplier/orders/${orderId}/confirm`, {
-            method: 'POST',
-            headers: { 
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') 
+    (async function() {
+        const confirmed = await showConfirmModal('Are you sure you want to confirm this order?', 'Confirm Order');
+        if (!confirmed) return;
+        
+        try {
+            const res = await fetch(`/api/supplier/orders/${orderId}/confirm`, {
+                method: 'POST',
+                headers: { 
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') 
+                }
+            });
+            
+            const data = await res.json();
+            
+            if (data.success) {
+                showMessage('Order confirmed successfully!', 'success');
+                loadIncomingOrders();
+                loadOrderStats();
+            } else {
+                showMessage(data.message, 'error');
             }
-        });
-        
-        const data = await res.json();
-        
-        if (data.success) {
-            showMessage('Order confirmed successfully!', 'success');
-            loadIncomingOrders();
-            loadOrderStats();
-        } else {
-            showMessage(data.message, 'error');
+        } catch (error) {
+            showMessage('An error occurred while confirming the order.', 'error');
         }
-    } catch (error) {
-        showMessage('An error occurred while confirming the order.', 'error');
-    }
+    })();
 }
 
 async function processOrder(orderId) {
-    if (!confirm('Are you sure you want to start processing this order?')) return;
-    
-    try {
-        const res = await fetch(`/api/supplier/orders/${orderId}/process`, {
-            method: 'POST',
-            headers: { 
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') 
+    (async function() {
+        const confirmed = await showConfirmModal('Are you sure you want to start processing this order?', 'Process Order');
+        if (!confirmed) return;
+        
+        try {
+            const res = await fetch(`/api/supplier/orders/${orderId}/process`, {
+                method: 'POST',
+                headers: { 
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') 
+                }
+            });
+            
+            const data = await res.json();
+            
+            if (data.success) {
+                showMessage('Order processing started!', 'success');
+                loadIncomingOrders();
+                loadOrderStats();
+            } else {
+                showMessage(data.message, 'error');
             }
-        });
-        
-        const data = await res.json();
-        
-        if (data.success) {
-            showMessage('Order processing started!', 'success');
-            loadIncomingOrders();
-            loadOrderStats();
-        } else {
-            showMessage(data.message, 'error');
+        } catch (error) {
+            showMessage('An error occurred while processing the order.', 'error');
         }
-    } catch (error) {
-        showMessage('An error occurred while processing the order.', 'error');
-    }
+    })();
 }
 
 async function shipOrder(orderId) {
-    if (!confirm('Are you sure you want to mark this order as shipped?')) return;
-    
-    try {
-        const res = await fetch(`/api/supplier/orders/${orderId}/ship`, {
-            method: 'POST',
-            headers: { 
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') 
+    (async function() {
+        const confirmed = await showConfirmModal('Are you sure you want to mark this order as shipped?', 'Ship Order');
+        if (!confirmed) return;
+        
+        try {
+            const res = await fetch(`/api/supplier/orders/${orderId}/ship`, {
+                method: 'POST',
+                headers: { 
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') 
+                }
+            });
+            
+            const data = await res.json();
+            
+            if (data.success) {
+                showMessage('Order marked as shipped!', 'success');
+                loadIncomingOrders();
+                loadOrderStats();
+            } else {
+                showMessage(data.message, 'error');
             }
-        });
-        
-        const data = await res.json();
-        
-        if (data.success) {
-            showMessage('Order marked as shipped!', 'success');
-            loadIncomingOrders();
-            loadOrderStats();
-        } else {
-            showMessage(data.message, 'error');
+        } catch (error) {
+            showMessage('An error occurred while shipping the order.', 'error');
         }
-    } catch (error) {
-        showMessage('An error occurred while shipping the order.', 'error');
-    }
+    })();
 }
 
 async function deliverOrder(orderId) {
-    if (!confirm('Are you sure you want to mark this order as delivered?')) return;
-    
-    try {
-        const res = await fetch(`/api/supplier/orders/${orderId}/deliver`, {
-            method: 'POST',
-            headers: { 
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') 
+    (async function() {
+        const confirmed = await showConfirmModal('Are you sure you want to mark this order as delivered?', 'Deliver Order');
+        if (!confirmed) return;
+        
+        try {
+            const res = await fetch(`/api/supplier/orders/${orderId}/deliver`, {
+                method: 'POST',
+                headers: { 
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') 
+                }
+            });
+            
+            const data = await res.json();
+            
+            if (data.success) {
+                showMessage('Order marked as delivered!', 'success');
+                loadIncomingOrders();
+                loadOrderStats();
+            } else {
+                showMessage(data.message, 'error');
             }
-        });
-        
-        const data = await res.json();
-        
-        if (data.success) {
-            showMessage('Order marked as delivered!', 'success');
-            loadIncomingOrders();
-            loadOrderStats();
-        } else {
-            showMessage(data.message, 'error');
+        } catch (error) {
+            showMessage('An error occurred while delivering the order.', 'error');
         }
-    } catch (error) {
-        showMessage('An error occurred while delivering the order.', 'error');
-    }
+    })();
 }
 
 function rejectOrder(orderId) {
@@ -613,34 +625,40 @@ document.getElementById('create-delivery-form').addEventListener('submit', async
 
 // Add archive/unarchive functions
 async function archiveRawMaterialOrder(orderId) {
-    if (!confirm('Are you sure you want to archive this order?')) return;
-    try {
-        const res = await fetch(`/raw-material-orders/${orderId}/archive`, {
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=\'csrf-token\']').getAttribute('content') }
-        });
-        const data = await res.json();
-        showMessage(data.success ? 'Order archived successfully!' : data.message, data.success ? 'success' : 'error');
-        loadIncomingOrders();
-        loadOrderStats();
-    } catch (error) {
-        showMessage('Failed to archive order.', 'error');
-    }
+    (async function() {
+        const confirmed = await showConfirmModal('Are you sure you want to archive this order?', 'Archive Order');
+        if (!confirmed) return;
+        try {
+            const res = await fetch(`/raw-material-orders/${orderId}/archive`, {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=\'csrf-token\']').getAttribute('content') }
+            });
+            const data = await res.json();
+            showMessage(data.success ? 'Order archived successfully!' : data.message, data.success ? 'success' : 'error');
+            loadIncomingOrders();
+            loadOrderStats();
+        } catch (error) {
+            showMessage('Failed to archive order.', 'error');
+        }
+    })();
 }
 async function unarchiveRawMaterialOrder(orderId) {
-    if (!confirm('Are you sure you want to unarchive this order?')) return;
-    try {
-        const res = await fetch(`/raw-material-orders/${orderId}/unarchive`, {
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=\'csrf-token\']').getAttribute('content') }
-        });
-        const data = await res.json();
-        showMessage(data.success ? 'Order unarchived successfully!' : data.message, data.success ? 'success' : 'error');
-        loadIncomingOrders();
-        loadOrderStats();
-    } catch (error) {
-        showMessage('Failed to unarchive order.', 'error');
-    }
+    (async function() {
+        const confirmed = await showConfirmModal('Are you sure you want to unarchive this order?', 'Unarchive Order');
+        if (!confirmed) return;
+        try {
+            const res = await fetch(`/raw-material-orders/${orderId}/unarchive`, {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=\'csrf-token\']').getAttribute('content') }
+            });
+            const data = await res.json();
+            showMessage(data.success ? 'Order unarchived successfully!' : data.message, data.success ? 'success' : 'error');
+            loadIncomingOrders();
+            loadOrderStats();
+        } catch (error) {
+            showMessage('Failed to unarchive order.', 'error');
+        }
+    })();
 }
 </script>
 @endsection 

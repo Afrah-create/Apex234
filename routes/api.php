@@ -10,6 +10,7 @@ Route::get('analytics/inventory-optimization', [AnalyticsController::class, 'get
 Route::get('analytics/risk-assessment', [AnalyticsController::class, 'getRiskAssessment']);
 Route::get('analytics/trend-analysis', [AnalyticsController::class, 'getTrendAnalysis']);
 Route::get('analytics/kpi', [AnalyticsController::class, 'kpi']);
+Route::get('analytics/customer-segmentation', [App\Http\Controllers\AnalyticsController::class, 'getCustomerSegmentation']);
 
 // Test route to verify API is working
 Route::get('test', function () {

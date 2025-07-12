@@ -156,5 +156,10 @@ class User extends Authenticatable
     {
         return $this->hasOne(\App\Models\Employee::class);
     }
+
+    public function orders()
+    {
+        return $this->hasMany(\App\Models\Order::class);
+    }
 }
     

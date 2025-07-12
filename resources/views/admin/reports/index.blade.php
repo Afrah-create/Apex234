@@ -863,30 +863,30 @@ async function triggerScheduledReport(id) {
 
 // Delete scheduled report
 async function deleteScheduledReport(id) {
-    if (!confirm('Are you sure you want to delete this scheduled report?')) {
-        return;
-    }
-    
-    try {
-        const response = await fetch(`{{ route('api.reports.scheduled.delete', ['id' => ':id']) }}`.replace(':id', id), {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+    (async function() {
+        const confirmed = await showConfirmModal('Are you sure you want to delete this scheduled report?', 'Delete Scheduled Report');
+        if (!confirmed) return;
+        try {
+            const response = await fetch(`{{ route('api.reports.scheduled.delete', ['id' => ':id']) }}`.replace(':id', id), {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                loadScheduledReports();
+            } else {
+                alert('Error deleting report: ' + result.message);
             }
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            loadScheduledReports();
-        } else {
-            alert('Error deleting report: ' + result.message);
+        } catch (error) {
+            console.error('Error deleting scheduled report:', error);
+            alert('Error deleting report. Please try again.');
         }
-    } catch (error) {
-        console.error('Error deleting scheduled report:', error);
-        alert('Error deleting report. Please try again.');
-    }
+    })();
 }
 
 // Enhanced schedule report function

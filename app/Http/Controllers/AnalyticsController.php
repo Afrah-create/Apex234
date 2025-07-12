@@ -176,6 +176,56 @@ class AnalyticsController extends Controller
     }
 
     /**
+     * Get customer segmentation data
+     */
+    public function getCustomerSegmentation(): JsonResponse
+    {
+        try {
+            Log::info('Analytics: Starting customer segmentation request');
+            
+            // Use ML service for customer segmentation
+            $segmentation = $this->mlService->performCustomerSegmentation();
+            Log::info('Analytics: Received customer segmentation data', ['segmentation' => $segmentation]);
+            
+            $segments = [];
+            $totalCustomers = 0;
+            foreach ($segmentation as $segment => $data) {
+                $customerCount = count($data['customers']);
+                $segments[$segment] = $customerCount;
+                $totalCustomers += $customerCount;
+            }
+            
+            $percentages = [];
+            foreach ($segments as $segment => $count) {
+                $percentages[$segment] = $totalCustomers > 0 ? round(($count / $totalCustomers) * 100, 1) : 0;
+            }
+            
+            $response = [
+                'segments' => $segments,
+                'percentages' => $percentages,
+                'total_customers' => $totalCustomers,
+                'characteristics' => array_map(function($data) {
+                    return $data['characteristics'];
+                }, $segmentation)
+            ];
+            
+            Log::info('Analytics: Returning customer segmentation response', ['response' => $response]);
+            
+            return response()->json($response);
+        } catch (\Exception $e) {
+            Log::error('Analytics: Error in customer segmentation', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'error' => 'Failed to load customer segmentation',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Get inventory optimization recommendations
      */
     public function getInventoryOptimization(): JsonResponse
