@@ -99,66 +99,29 @@ class AnalyticsController extends Controller
     {
         try {
             Log::info('ML: Starting predictions request');
-            
+
+            // Only predict for 2025 (Jan-Dec)
+            $months = 12;
+
             // Use the API wrapper instead of calling the main script directly
             $output = [];
-            $command = 'python ' . base_path('machineLearning/new_demand_forecast_api.py') . ' 6 2>&1';
-            exec($command, $output, $returnCode);
-            
-            Log::info('ML: Command executed', [
-                'command' => $command,
-                'return_code' => $returnCode,
-                'output_lines' => count($output)
-            ]);
-            
-            // Check if command executed successfully
-            if ($returnCode !== 0) {
-                Log::error('ML: Python script failed', ['return_code' => $returnCode, 'output' => $output]);
-                return response()->json([
-                    'error' => 'Python script execution failed',
-                    'return_code' => $returnCode,
-                    'raw_output' => $output
-                ], 500);
-            }
-            
-            // Combine output and parse JSON
-            $jsonString = implode('', $output);
-            Log::info('ML: Raw JSON output', ['json_length' => strlen($jsonString)]);
-            
-            $json = json_decode($jsonString, true);
+            $command = 'python ' . base_path('machineLearning/new_demand_forecast_api.py') . ' ' . $months . ' 2>&1';
+            exec($command, $output);
+            $result = implode("\n", $output);
+
+            $json = json_decode($result, true);
             if (!$json) {
-                Log::error('ML: Invalid JSON response', ['json_string' => $jsonString]);
-                return response()->json([
-                    'error' => 'Python script did not return valid JSON',
-                    'raw_output' => $output,
-                    'json_string' => $jsonString
-                ], 500);
+                Log::error('ML: Invalid JSON from forecast script', ['result' => $result]);
+                return response()->json(['error' => 'Failed to get predictions'], 500);
             }
-            
-            // Validate the response structure
-            if (!isset($json['status']) || $json['status'] !== 'success') {
-                Log::warning('ML: Response indicates failure', ['json' => $json]);
-            }
-            
-            Log::info('ML: Successfully parsed predictions', [
-                'historical_count' => count($json['historical'] ?? []),
-                'predicted_count' => count($json['predicted'] ?? []),
-                'confidence_level' => $json['confidence_level'] ?? 'unknown'
-            ]);
-            
+
+            // Keep both 2024 (actual) and 2025 (predicted) data
+            // The frontend will handle showing actual for 2024 and predicted for 2025
+
             return response()->json($json);
-            
         } catch (\Exception $e) {
-            Log::error('ML: Exception in getPredictions', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            return response()->json([
-                'error' => 'Failed to load predictions',
-                'message' => $e->getMessage(),
-                'status' => 'error'
-            ], 500);
+            Log::error('ML: Exception in getPredictions', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Exception: ' . $e->getMessage()], 500);
         }
     }
 

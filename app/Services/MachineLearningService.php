@@ -463,75 +463,267 @@ class MachineLearningService
 
     private function assessSupplyChainRisk(): array
     {
-        return [
-            'risk_level' => 'medium',
-            'factors' => [
-                'supplier_reliability' => 'high',
-                'inventory_shortages' => 'low',
-                'delivery_delays' => 'medium'
-            ],
-            'recommendations' => [
-                'Diversify supplier base',
-                'Implement safety stock levels',
-                'Monitor delivery performance'
-            ]
-        ];
+        try {
+            // Analyze supplier performance
+            $suppliers = \App\Models\Supplier::with(['user'])->get();
+            $supplierCount = $suppliers->count();
+            $activeSuppliers = $suppliers->where('status', 'approved')->count();
+            $supplierReliability = $supplierCount > 0 ? ($activeSuppliers / $supplierCount) * 100 : 0;
+            
+            // Analyze inventory shortages
+            $products = YogurtProduct::all();
+            $lowStockProducts = 0;
+            $outOfStockProducts = 0;
+            
+            foreach ($products as $product) {
+                if (($product->stock ?? 0) <= 0) {
+                    $outOfStockProducts++;
+                } elseif (($product->stock ?? 0) < 10) {
+                    $lowStockProducts++;
+                }
+            }
+            
+            $shortageRate = $products->count() > 0 ? (($lowStockProducts + $outOfStockProducts) / $products->count()) * 100 : 0;
+            
+            // Analyze delivery performance (using raw material orders)
+            $recentOrders = \App\Models\RawMaterialOrder::where('created_at', '>=', Carbon::now()->subMonths(3))->get();
+            $deliveredOrders = $recentOrders->where('status', 'delivered')->count();
+            $delayedOrders = $recentOrders->whereIn('status', ['pending', 'processing'])->count();
+            $deliveryPerformance = $recentOrders->count() > 0 ? ($deliveredOrders / $recentOrders->count()) * 100 : 100;
+            
+            // Calculate risk level
+            $riskScore = 0;
+            if ($supplierReliability < 70) $riskScore += 30;
+            if ($shortageRate > 20) $riskScore += 40;
+            if ($deliveryPerformance < 80) $riskScore += 30;
+            
+            $riskLevel = $riskScore >= 60 ? 'high' : ($riskScore >= 30 ? 'medium' : 'low');
+            
+            return [
+                'risk_level' => $riskLevel,
+                'risk_score' => $riskScore,
+                'factors' => [
+                    'supplier_reliability' => $supplierReliability >= 80 ? 'high' : ($supplierReliability >= 60 ? 'medium' : 'low'),
+                    'inventory_shortages' => $shortageRate <= 10 ? 'low' : ($shortageRate <= 20 ? 'medium' : 'high'),
+                    'delivery_delays' => $deliveryPerformance >= 90 ? 'low' : ($deliveryPerformance >= 75 ? 'medium' : 'high')
+                ],
+                'metrics' => [
+                    'active_suppliers' => $activeSuppliers,
+                    'total_suppliers' => $supplierCount,
+                    'supplier_reliability_percentage' => round($supplierReliability, 1),
+                    'shortage_rate_percentage' => round($shortageRate, 1),
+                    'delivery_performance_percentage' => round($deliveryPerformance, 1),
+                    'low_stock_products' => $lowStockProducts,
+                    'out_of_stock_products' => $outOfStockProducts
+                ],
+                'recommendations' => $this->generateSupplyChainRecommendations($riskLevel, $supplierReliability, $shortageRate, $deliveryPerformance)
+            ];
+        } catch (\Exception $e) {
+            Log::error('Error assessing supply chain risk: ' . $e->getMessage());
+            return $this->getFallbackSupplyChainRisk();
+        }
     }
 
     private function assessFinancialRisk(): array
     {
-        return [
-            'risk_level' => 'low',
-            'factors' => [
-                'cash_flow' => 'stable',
-                'profit_margins' => 'healthy',
-                'debt_levels' => 'low'
-            ],
-            'recommendations' => [
-                'Maintain current financial practices',
-                'Monitor profit margins closely',
-                'Consider expansion opportunities'
-            ]
-        ];
+        try {
+            // Analyze revenue trends
+            $currentMonthRevenue = Order::whereMonth('created_at', Carbon::now()->month)
+                ->whereYear('created_at', Carbon::now()->year)
+                ->sum('total_amount');
+            
+            $lastMonthRevenue = Order::whereMonth('created_at', Carbon::now()->subMonth()->month)
+                ->whereYear('created_at', Carbon::now()->subMonth()->year)
+                ->sum('total_amount');
+            
+            $revenueGrowth = $lastMonthRevenue > 0 ? (($currentMonthRevenue - $lastMonthRevenue) / $lastMonthRevenue) * 100 : 0;
+            
+            // Analyze profit margins (simplified calculation)
+            $totalRevenue = Order::where('created_at', '>=', Carbon::now()->subMonths(3))->sum('total_amount');
+            $totalCost = Inventory::where('created_at', '>=', Carbon::now()->subMonths(3))->sum('total_value');
+            $profitMargin = $totalRevenue > 0 ? (($totalRevenue - $totalCost) / $totalRevenue) * 100 : 0;
+            
+            // Analyze cash flow (using order payment status)
+            $paidOrders = Order::where('payment_status', 'paid')->count();
+            $totalOrders = Order::count();
+            $paymentRate = $totalOrders > 0 ? ($paidOrders / $totalOrders) * 100 : 0;
+            
+            // Calculate risk level
+            $riskScore = 0;
+            if ($revenueGrowth < -10) $riskScore += 40;
+            if ($profitMargin < 15) $riskScore += 30;
+            if ($paymentRate < 80) $riskScore += 30;
+            
+            $riskLevel = $riskScore >= 60 ? 'high' : ($riskScore >= 30 ? 'medium' : 'low');
+            
+            return [
+                'risk_level' => $riskLevel,
+                'risk_score' => $riskScore,
+                'factors' => [
+                    'cash_flow' => $paymentRate >= 90 ? 'stable' : ($paymentRate >= 75 ? 'moderate' : 'unstable'),
+                    'profit_margins' => $profitMargin >= 20 ? 'healthy' : ($profitMargin >= 10 ? 'moderate' : 'low'),
+                    'revenue_growth' => $revenueGrowth >= 5 ? 'positive' : ($revenueGrowth >= -5 ? 'stable' : 'declining')
+                ],
+                'metrics' => [
+                    'current_month_revenue' => round($currentMonthRevenue, 2),
+                    'last_month_revenue' => round($lastMonthRevenue, 2),
+                    'revenue_growth_percentage' => round($revenueGrowth, 1),
+                    'profit_margin_percentage' => round($profitMargin, 1),
+                    'payment_rate_percentage' => round($paymentRate, 1),
+                    'total_revenue_3months' => round($totalRevenue, 2),
+                    'total_cost_3months' => round($totalCost, 2)
+                ],
+                'recommendations' => $this->generateFinancialRecommendations($riskLevel, $revenueGrowth, $profitMargin, $paymentRate)
+            ];
+        } catch (\Exception $e) {
+            Log::error('Error assessing financial risk: ' . $e->getMessage());
+            return $this->getFallbackFinancialRisk();
+        }
     }
 
     private function assessOperationalRisk(): array
     {
-        return [
-            'risk_level' => 'low',
-            'factors' => [
-                'production_efficiency' => 'high',
-                'quality_control' => 'excellent',
-                'staff_turnover' => 'low'
-            ],
-            'recommendations' => [
-                'Continue quality monitoring',
-                'Invest in staff training',
-                'Maintain safety protocols'
-            ]
-        ];
+        try {
+            // Analyze production efficiency (using order fulfillment)
+            $totalOrders = Order::count();
+            $completedOrders = Order::where('order_status', 'delivered')->count();
+            $fulfillmentRate = $totalOrders > 0 ? ($completedOrders / $totalOrders) * 100 : 100;
+            
+            // Analyze quality control (using inventory status)
+            $totalInventory = Inventory::count();
+            $damagedInventory = Inventory::where('quantity_damaged', '>', 0)->count();
+            $qualityRate = $totalInventory > 0 ? (($totalInventory - $damagedInventory) / $totalInventory) * 100 : 100;
+            
+            // Analyze staff efficiency (using order processing time)
+            $recentOrders = Order::where('created_at', '>=', Carbon::now()->subMonths(1))->get();
+            $avgProcessingTime = 0;
+            if ($recentOrders->count() > 0) {
+                $totalTime = 0;
+                foreach ($recentOrders as $order) {
+                    if ($order->order_status === 'delivered' && $order->created_at && $order->updated_at) {
+                        $totalTime += Carbon::parse($order->created_at)->diffInHours($order->updated_at);
+                    }
+                }
+                $avgProcessingTime = $totalTime / $recentOrders->count();
+            }
+            
+            // Calculate risk level
+            $riskScore = 0;
+            if ($fulfillmentRate < 85) $riskScore += 35;
+            if ($qualityRate < 90) $riskScore += 35;
+            if ($avgProcessingTime > 72) $riskScore += 30; // More than 3 days
+            
+            $riskLevel = $riskScore >= 60 ? 'high' : ($riskScore >= 30 ? 'medium' : 'low');
+            
+            return [
+                'risk_level' => $riskLevel,
+                'risk_score' => $riskScore,
+                'factors' => [
+                    'production_efficiency' => $fulfillmentRate >= 95 ? 'high' : ($fulfillmentRate >= 85 ? 'moderate' : 'low'),
+                    'quality_control' => $qualityRate >= 95 ? 'excellent' : ($qualityRate >= 85 ? 'good' : 'needs_improvement'),
+                    'staff_turnover' => $avgProcessingTime <= 48 ? 'low' : ($avgProcessingTime <= 72 ? 'moderate' : 'high')
+                ],
+                'metrics' => [
+                    'fulfillment_rate_percentage' => round($fulfillmentRate, 1),
+                    'quality_rate_percentage' => round($qualityRate, 1),
+                    'avg_processing_time_hours' => round($avgProcessingTime, 1),
+                    'total_orders' => $totalOrders,
+                    'completed_orders' => $completedOrders,
+                    'damaged_inventory_count' => $damagedInventory
+                ],
+                'recommendations' => $this->generateOperationalRecommendations($riskLevel, $fulfillmentRate, $qualityRate, $avgProcessingTime)
+            ];
+        } catch (\Exception $e) {
+            Log::error('Error assessing operational risk: ' . $e->getMessage());
+            return $this->getFallbackOperationalRisk();
+        }
     }
 
     private function assessMarketRisk(): array
     {
-        return [
-            'risk_level' => 'medium',
-            'factors' => [
-                'competition' => 'moderate',
-                'market_demand' => 'stable',
-                'regulatory_changes' => 'low'
-            ],
-            'recommendations' => [
-                'Monitor competitor activities',
-                'Stay updated on market trends',
-                'Prepare for regulatory changes'
-            ]
-        ];
+        try {
+            // Analyze market demand (using order trends)
+            $currentMonthOrders = Order::whereMonth('created_at', Carbon::now()->month)
+                ->whereYear('created_at', Carbon::now()->year)
+                ->count();
+            
+            $lastMonthOrders = Order::whereMonth('created_at', Carbon::now()->subMonth()->month)
+                ->whereYear('created_at', Carbon::now()->subMonth()->year)
+                ->count();
+            
+            $demandGrowth = $lastMonthOrders > 0 ? (($currentMonthOrders - $lastMonthOrders) / $lastMonthOrders) * 100 : 0;
+            
+            // Analyze customer retention
+            $totalCustomers = User::whereHas('roles', function($query) {
+                $query->where('name', 'retailer');
+            })->count();
+            
+            $activeCustomers = User::whereHas('roles', function($query) {
+                $query->where('name', 'retailer');
+            })->whereHas('orders', function($query) {
+                $query->where('created_at', '>=', Carbon::now()->subMonths(3));
+            })->count();
+            
+            $retentionRate = $totalCustomers > 0 ? ($activeCustomers / $totalCustomers) * 100 : 0;
+            
+            // Analyze competition (using price sensitivity)
+            $avgOrderValue = Order::avg('total_amount') ?? 0;
+            $priceSensitivity = $avgOrderValue < 100 ? 'high' : ($avgOrderValue < 200 ? 'moderate' : 'low');
+            
+            // Calculate risk level
+            $riskScore = 0;
+            if ($demandGrowth < -15) $riskScore += 40;
+            if ($retentionRate < 70) $riskScore += 30;
+            if ($priceSensitivity === 'high') $riskScore += 30;
+            
+            $riskLevel = $riskScore >= 60 ? 'high' : ($riskScore >= 30 ? 'medium' : 'low');
+            
+            return [
+                'risk_level' => $riskLevel,
+                'risk_score' => $riskScore,
+                'factors' => [
+                    'competition' => $priceSensitivity === 'high' ? 'high' : ($priceSensitivity === 'moderate' ? 'moderate' : 'low'),
+                    'market_demand' => $demandGrowth >= 5 ? 'growing' : ($demandGrowth >= -5 ? 'stable' : 'declining'),
+                    'customer_retention' => $retentionRate >= 80 ? 'high' : ($retentionRate >= 60 ? 'moderate' : 'low')
+                ],
+                'metrics' => [
+                    'current_month_orders' => $currentMonthOrders,
+                    'last_month_orders' => $lastMonthOrders,
+                    'demand_growth_percentage' => round($demandGrowth, 1),
+                    'retention_rate_percentage' => round($retentionRate, 1),
+                    'avg_order_value' => round($avgOrderValue, 2),
+                    'total_customers' => $totalCustomers,
+                    'active_customers' => $activeCustomers
+                ],
+                'recommendations' => $this->generateMarketRecommendations($riskLevel, $demandGrowth, $retentionRate, $priceSensitivity)
+            ];
+        } catch (\Exception $e) {
+            Log::error('Error assessing market risk: ' . $e->getMessage());
+            return $this->getFallbackMarketRisk();
+        }
     }
 
     private function calculateOverallRiskScore(): float
     {
-        return 0.3; // Low overall risk (0.0 = no risk, 1.0 = high risk)
+        try {
+            $supplyChainRisk = $this->assessSupplyChainRisk();
+            $financialRisk = $this->assessFinancialRisk();
+            $operationalRisk = $this->assessOperationalRisk();
+            $marketRisk = $this->assessMarketRisk();
+            
+            $riskScores = [
+                $supplyChainRisk['risk_score'] ?? 0,
+                $financialRisk['risk_score'] ?? 0,
+                $operationalRisk['risk_score'] ?? 0,
+                $marketRisk['risk_score'] ?? 0
+            ];
+            
+            $overallScore = array_sum($riskScores) / count($riskScores);
+            return round($overallScore / 100, 2); // Normalize to 0-1 scale
+        } catch (\Exception $e) {
+            Log::error('Error calculating overall risk score: ' . $e->getMessage());
+            return 0.3; // Fallback score
+        }
     }
 
     private function generateSampleSalesData(): array
@@ -597,6 +789,201 @@ class MachineLearningService
             'operational_risks' => ['risk_level' => 'low'],
             'market_risks' => ['risk_level' => 'medium'],
             'overall_risk_score' => 0.3
+        ];
+    }
+
+    private function generateSupplyChainRecommendations(string $riskLevel, float $supplierReliability, float $shortageRate, float $deliveryPerformance): array
+    {
+        $recommendations = [];
+        
+        if ($supplierReliability < 70) {
+            $recommendations[] = 'Diversify supplier base to reduce reliance on single suppliers';
+        }
+        if ($shortageRate > 20) {
+            $recommendations[] = 'Implement safety stock levels to mitigate inventory shortages';
+        }
+        if ($deliveryPerformance < 80) {
+            $recommendations[] = 'Monitor delivery performance and identify frequent delays';
+        }
+        
+        if (empty($recommendations)) {
+            $recommendations[] = 'Maintain current supplier relationships and monitor performance';
+            $recommendations[] = 'Regularly review inventory levels and reorder points';
+        }
+        
+        return $recommendations;
+    }
+
+    private function generateFinancialRecommendations(string $riskLevel, float $revenueGrowth, float $profitMargin, float $paymentRate): array
+    {
+        $recommendations = [];
+        
+        if ($revenueGrowth < -10) {
+            $recommendations[] = 'Focus on revenue growth strategies and market expansion';
+        }
+        if ($profitMargin < 15) {
+            $recommendations[] = 'Implement cost control measures and optimize pricing';
+        }
+        if ($paymentRate < 80) {
+            $recommendations[] = 'Improve cash flow by accelerating payment collection';
+        }
+        
+        if (empty($recommendations)) {
+            $recommendations[] = 'Maintain current financial practices and monitor margins';
+            $recommendations[] = 'Consider expansion opportunities if growth is positive';
+        }
+        
+        return $recommendations;
+    }
+
+    private function generateOperationalRecommendations(string $riskLevel, float $fulfillmentRate, float $qualityRate, float $avgProcessingTime): array
+    {
+        $recommendations = [];
+        
+        if ($fulfillmentRate < 85) {
+            $recommendations[] = 'Optimize production processes to improve fulfillment rates';
+        }
+        if ($qualityRate < 90) {
+            $recommendations[] = 'Implement robust quality control systems';
+        }
+        if ($avgProcessingTime > 72) {
+            $recommendations[] = 'Streamline order processing and reduce delivery times';
+        }
+        
+        if (empty($recommendations)) {
+            $recommendations[] = 'Continue quality monitoring and staff training';
+            $recommendations[] = 'Maintain safety protocols and procedures';
+        }
+        
+        return $recommendations;
+    }
+
+    private function generateMarketRecommendations(string $riskLevel, float $demandGrowth, float $retentionRate, string $priceSensitivity): array
+    {
+        $recommendations = [];
+        
+        if ($demandGrowth < -15) {
+            $recommendations[] = 'Analyze market trends and adapt product offerings';
+        }
+        if ($retentionRate < 70) {
+            $recommendations[] = 'Implement customer retention strategies and loyalty programs';
+        }
+        if ($priceSensitivity === 'high') {
+            $recommendations[] = 'Monitor competitor pricing and optimize price strategies';
+        }
+        
+        if (empty($recommendations)) {
+            $recommendations[] = 'Monitor competitor activities and market trends';
+            $recommendations[] = 'Stay updated on customer preferences';
+        }
+        
+        return $recommendations;
+    }
+
+    private function getFallbackSupplyChainRisk(): array
+    {
+        return [
+            'risk_level' => 'medium',
+            'risk_score' => 50,
+            'factors' => [
+                'supplier_reliability' => 'medium',
+                'inventory_shortages' => 'medium',
+                'delivery_delays' => 'medium'
+            ],
+            'metrics' => [
+                'active_suppliers' => 5,
+                'total_suppliers' => 10,
+                'supplier_reliability_percentage' => 70,
+                'shortage_rate_percentage' => 15,
+                'delivery_performance_percentage' => 85,
+                'low_stock_products' => 10,
+                'out_of_stock_products' => 5
+            ],
+            'recommendations' => [
+                'Diversify supplier base to reduce reliance on single suppliers',
+                'Implement safety stock levels to mitigate inventory shortages',
+                'Monitor delivery performance and identify frequent delays'
+            ]
+        ];
+    }
+
+    private function getFallbackFinancialRisk(): array
+    {
+        return [
+            'risk_level' => 'medium',
+            'risk_score' => 50,
+            'factors' => [
+                'cash_flow' => 'moderate',
+                'profit_margins' => 'moderate',
+                'revenue_growth' => 'stable'
+            ],
+            'metrics' => [
+                'current_month_revenue' => 50000,
+                'last_month_revenue' => 45000,
+                'revenue_growth_percentage' => 11.1,
+                'profit_margin_percentage' => 15,
+                'payment_rate_percentage' => 85,
+                'total_revenue_3months' => 145000,
+                'total_cost_3months' => 100000
+            ],
+            'recommendations' => [
+                'Focus on revenue growth strategies and market expansion',
+                'Implement cost control measures and optimize pricing',
+                'Improve cash flow by accelerating payment collection'
+            ]
+        ];
+    }
+
+    private function getFallbackOperationalRisk(): array
+    {
+        return [
+            'risk_level' => 'medium',
+            'risk_score' => 50,
+            'factors' => [
+                'production_efficiency' => 'moderate',
+                'quality_control' => 'good',
+                'staff_turnover' => 'moderate'
+            ],
+            'metrics' => [
+                'fulfillment_rate_percentage' => 90,
+                'quality_rate_percentage' => 92,
+                'avg_processing_time_hours' => 48,
+                'total_orders' => 1000,
+                'completed_orders' => 900,
+                'damaged_inventory_count' => 5
+            ],
+            'recommendations' => [
+                'Optimize production processes to improve fulfillment rates',
+                'Implement robust quality control systems',
+                'Streamline order processing and reduce delivery times'
+            ]
+        ];
+    }
+
+    private function getFallbackMarketRisk(): array
+    {
+        return [
+            'risk_level' => 'medium',
+            'risk_score' => 50,
+            'factors' => [
+                'competition' => 'moderate',
+                'market_demand' => 'stable',
+                'customer_retention' => 'moderate'
+            ],
+            'metrics' => [
+                'current_month_orders' => 1000,
+                'last_month_orders' => 900,
+                'demand_growth_percentage' => 11.1,
+                'retention_rate_percentage' => 75,
+                'avg_order_value' => 150,
+                'total_customers' => 100,
+                'active_customers' => 75
+            ],
+            'recommendations' => [
+                'Analyze market trends and adapt product offerings',
+                'Implement customer retention strategies and loyalty programs',
+                'Monitor competitor pricing and optimize price strategies'
+            ]
         ];
     }
 } 
