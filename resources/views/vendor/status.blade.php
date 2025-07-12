@@ -144,7 +144,7 @@ body {
                 @endif
             </div>
             <div class="status-actions" style="margin-top: 1.5rem;">
-                <a href="/" class="btn">Return to Welcome Page</a>
+                <a href="/" class="btn">Exit</a>
             </div>
         @endif
     </div>

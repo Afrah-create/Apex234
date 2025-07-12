@@ -9,14 +9,14 @@ return new class extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('chat_background')->nullable();
+            $table->longText('chat_background')->nullable()->change();
         });
     }
 
     public function down()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('chat_background');
+            $table->longText('chat_background')->nullable(false)->change();
         });
     }
-}; 
+};

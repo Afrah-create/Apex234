@@ -2,16 +2,21 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AnalyticsController;
 
-Route::middleware('api')->group(function () {
-    Route::get('/admin-metrics', function () {
-        // Example: Replace with your own logic or database queries
-        return response()->json([
-            'labels' => ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
-            'values' => [12, 19, 3, 5, 2],
-        ]);
-    });
+// Machine Learning Analytics Routes
+Route::prefix('analytics')->group(function () {
+    Route::get('/retailer-segmentation', [AnalyticsController::class, 'getRetailerSegmentation']);
+    Route::get('/demand-forecast', [AnalyticsController::class, 'getDemandForecast']);
+    Route::get('/sales-predictions', [AnalyticsController::class, 'getPredictions']);
+    Route::get('/inventory-optimization', [AnalyticsController::class, 'getInventoryOptimization']);
+    Route::get('/risk-assessment', [AnalyticsController::class, 'getRiskAssessment']);
+    Route::get('/trend-analysis', [AnalyticsController::class, 'getTrendAnalysis']);
+    Route::get('/kpi', [AnalyticsController::class, 'kpi']);
+});
 
-    Route::get('/analytics/kpi', [AnalyticsController::class, 'kpi'])->name('api.analytics.kpi');
-    Route::get('/analytics/predictions', [AnalyticsController::class, 'getPredictions'])->name('api.analytics.predictions');
-    Route::get('/analytics/trend-analysis', [AnalyticsController::class, 'getTrendAnalysis'])->name('api.analytics.trend-analysis');
+// Test route to verify API is working
+Route::get('/test', function () {
+    return response()->json([
+        'message' => 'API is working!',
+        'timestamp' => now()->toISOString()
+    ]);
 }); 

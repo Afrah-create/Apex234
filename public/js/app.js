@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     if (overlay) {
         overlay.addEventListener('click', function() {
-            sidebar.classList.remove('open');
+            if (sidebar) sidebar.classList.remove('open');
             overlay.classList.remove('open');
         });
     }
@@ -30,13 +30,19 @@ document.addEventListener('DOMContentLoaded', function() {
 let cart = [];
 
 function updateCartCount() {
-    document.getElementById('cart-count').textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
+    const cartCount = document.getElementById('cart-count');
+    if (cartCount) {
+        cartCount.textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
+    }
 }
 
 function updateCartSidebar() {
     const cartSidebar = document.getElementById('cart-sidebar');
     const cartItemsList = document.getElementById('cart-items-list');
     const cartTotal = document.getElementById('cart-total');
+    
+    if (!cartSidebar || !cartItemsList || !cartTotal) return;
+    
     cartItemsList.innerHTML = '';
     let total = 0;
     cart.forEach(item => {
@@ -67,10 +73,12 @@ function updateCartSidebar() {
 
 function showCheckoutForm() {
     const form = document.getElementById('checkout-form');
+    if (form) {
     if (cart.length > 0) {
         form.style.display = '';
     } else {
         form.style.display = 'none';
+        }
     }
 }
 
@@ -101,9 +109,16 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const card = this.closest('.product-card');
+            if (!card) return;
+            
             const id = parseInt(card.getAttribute('data-product-id'));
-            const name = card.querySelector('.font-bold.text-lg').textContent;
-            const price = parseFloat(card.querySelector('.text-blue-600.font-bold').textContent.replace('UGX','').replace(/,/g,''));
+            const nameElement = card.querySelector('.font-bold.text-lg');
+            const priceElement = card.querySelector('.text-blue-600.font-bold');
+            
+            if (!nameElement || !priceElement) return;
+            
+            const name = nameElement.textContent;
+            const price = parseFloat(priceElement.textContent.replace('UGX','').replace(/,/g,''));
             let item = cart.find(i => i.id === id);
             if (item) {
                 item.quantity += 1;
@@ -115,23 +130,26 @@ document.addEventListener('DOMContentLoaded', function() {
             showNotification('Added to cart!');
         });
     });
+    
     // Cart sidebar toggle
     const cartSidebar = document.getElementById('cart-sidebar');
     const cartToggleBtn = document.getElementById('cart-toggle-btn');
-    if (cartToggleBtn) {
+    if (cartToggleBtn && cartSidebar) {
         cartToggleBtn.addEventListener('click', function() {
             cartSidebar.style.display = 'block';
             setTimeout(() => cartSidebar.classList.remove('translate-x-full'), 10);
             updateCartSidebar();
         });
     }
+    
     const cartCloseBtn = document.getElementById('cart-close-btn');
-    if (cartCloseBtn) {
+    if (cartCloseBtn && cartSidebar) {
         cartCloseBtn.addEventListener('click', function() {
             cartSidebar.classList.add('translate-x-full');
             setTimeout(() => cartSidebar.style.display = 'none', 300);
         });
     }
+    
     // Place Order (frontend only)
     const placeOrderBtn = document.getElementById('place-order-btn');
     if (placeOrderBtn) {
@@ -142,11 +160,16 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             // Send order to backend (no delivery details needed)
             try {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]');
+                if (!csrfToken) {
+                    throw new Error('CSRF token not found');
+                }
+                
                 const res = await fetch('/retailer/orders', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        'X-CSRF-TOKEN': csrfToken.getAttribute('content')
                     },
                     body: JSON.stringify({
                         cart: cart
@@ -158,8 +181,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     cart = [];
                     updateCartCount();
                     updateCartSidebar();
-                    document.getElementById('cart-sidebar').classList.add('translate-x-full');
-                    setTimeout(() => document.getElementById('cart-sidebar').style.display = 'none', 300);
+                    const cartSidebar = document.getElementById('cart-sidebar');
+                    if (cartSidebar) {
+                        cartSidebar.classList.add('translate-x-full');
+                        setTimeout(() => cartSidebar.style.display = 'none', 300);
+                    }
                 } else {
                     showNotification(data.message || 'Order failed.', 'error');
                 }

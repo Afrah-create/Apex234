@@ -293,7 +293,7 @@ Route::middleware(['auth', 'verified'])->get('/supplier/raw-material-inventory/a
 })->name('supplier.add-raw-material');
 
 // Supplier Add Raw Material POST (Blade form)
-Route::middleware(['auth', 'verified'])->post('/supplier/raw-material-inventory/add', [\App\Http\Controllers\SupplierController::class, 'storeRawMaterialBlade'])->name('supplier.add-raw-material');
+Route::middleware(['auth', 'verified'])->post('/supplier/raw-material-inventory/add', [\App\Http\Controllers\SupplierController::class, 'storeRawMaterialBlade'])->name('supplier.store-raw-material');
 
 // Supplier Profile Page
 Route::middleware(['auth', 'verified'])->get('/supplier/profile', [\App\Http\Controllers\SupplierController::class, 'profile'])->name('supplier.profile');
@@ -403,4 +403,72 @@ Route::middleware(['auth', 'verified'])->prefix('vendor/production')->group(func
     Route::get('/', [\App\Http\Controllers\VendorProductionController::class, 'index'])->name('vendor.production.index');
     Route::get('/create', [\App\Http\Controllers\VendorProductionController::class, 'create'])->name('vendor.production.create');
     Route::post('/store', [\App\Http\Controllers\VendorProductionController::class, 'store'])->name('vendor.production.store');
+});
+
+// Machine Learning Analytics Routes (temporary - for testing)
+Route::middleware(['auth', 'verified'])->prefix('api/analytics')->group(function () {
+    Route::get('/customer-segmentation', [AnalyticsController::class, 'getCustomerSegmentation']);
+    Route::get('/demand-forecast', [AnalyticsController::class, 'getDemandForecast']);
+    Route::get('/sales-predictions', [AnalyticsController::class, 'getPredictions']);
+    Route::get('/predictions', [AnalyticsController::class, 'getPredictions']); // Added for compatibility
+    Route::get('/inventory-optimization', [AnalyticsController::class, 'getInventoryOptimization']);
+    Route::get('/risk-assessment', [AnalyticsController::class, 'getRiskAssessment']);
+    Route::get('/trend-analysis', [AnalyticsController::class, 'getTrendAnalysis']);
+    Route::get('/kpi', [AnalyticsController::class, 'kpi']);
+});
+
+// Test route to verify machine learning is working
+Route::get('/api/test-ml', function () {
+    return response()->json([
+        'message' => 'Machine Learning API is working!',
+        'timestamp' => now()->toISOString()
+    ]);
+});
+
+// Test route for ML integration
+Route::get('/test-ml', function () {
+    try {
+        $output = [];
+        $command = 'python ' . base_path('machineLearning/new_demand_forecast_api.py') . ' 3 2>&1';
+        exec($command, $output, $returnCode);
+        
+        if ($returnCode !== 0) {
+            return response()->json([
+                'error' => 'Python script failed',
+                'return_code' => $returnCode,
+                'output' => $output
+            ], 500);
+        }
+        
+        $jsonString = implode('', $output);
+        $json = json_decode($jsonString, true);
+        
+        if (!$json) {
+            return response()->json([
+                'error' => 'Invalid JSON response',
+                'raw_output' => $output
+            ], 500);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'data' => $json,
+            'test_info' => [
+                'command' => $command,
+                'return_code' => $returnCode,
+                'json_length' => strlen($jsonString)
+            ]
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Test failed',
+            'message' => $e->getMessage()
+        ], 500);
+    }
+});
+
+// Simple test page for chart functionality
+Route::get('/test-chart', function () {
+    return view('test-chart');
 });

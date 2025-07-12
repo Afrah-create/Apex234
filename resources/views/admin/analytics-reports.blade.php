@@ -12,6 +12,12 @@
         <div class="relative" style="height: 300px;">
             <canvas id="demandForecastChart"></canvas>
         </div>
+        <!-- Debug section -->
+        <div id="debugInfo" class="mt-4 p-3 bg-gray-100 rounded text-sm font-mono" style="display: none;">
+            <h4 class="font-bold">Debug Information:</h4>
+            <div id="debugContent"></div>
+        </div>
+        <button onclick="toggleDebug()" class="mt-2 px-3 py-1 bg-gray-500 text-white rounded text-sm">Toggle Debug</button>
     </div>
     <!-- Sales Prediction (Next 30 Days) -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-8">
@@ -31,11 +37,11 @@
         <h3 class="text-lg font-semibold text-gray-900 mb-4">Risk Assessment</h3>
         <div id="riskAssessment" class="space-y-4"></div>
     </div>
-    <!-- Customer Segmentation (if ML-driven) -->
+    <!-- Retailer Segmentation (if ML-driven) -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Customer Segmentation</h3>
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Retailer Segmentation</h3>
         <div class="relative" style="height: 300px;">
-            <canvas id="customerSegmentationChart"></canvas>
+            <canvas id="retailerSegmentationChart"></canvas>
         </div>
     </div>
 </main>
@@ -44,23 +50,34 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-    let demandForecastChart, customerSegmentationChart;
+    let demandForecastChart, retailerSegmentationChart;
 
     // Initialize charts when page loads
     document.addEventListener('DOMContentLoaded', function() {
-        initializeCharts();
-        loadAnalyticsData();
+        // Check if we're on the analytics page
+        const demandChart = document.getElementById('demandForecastChart');
+        const segmentationChart = document.getElementById('retailerSegmentationChart');
         
-        // Auto-refresh every 5 minutes
-        setInterval(function() {
+        if (demandChart && segmentationChart) {
+            console.log('Analytics page detected, initializing charts...');
+            initializeCharts();
             loadAnalyticsData();
-        }, 300000);
+            
+            // Auto-refresh every 5 minutes
+            setInterval(function() {
+                loadAnalyticsData();
+            }, 300000);
+        } else {
+            console.log('Analytics page not detected or chart elements missing');
+        }
     });
 
     function initializeCharts() {
         // Demand Forecasting Chart
-        const demandCtx = document.getElementById('demandForecastChart').getContext('2d');
-        demandForecastChart = new Chart(demandCtx, {
+        const demandCtx = document.getElementById('demandForecastChart');
+        if (!demandCtx) return;
+        
+        demandForecastChart = new Chart(demandCtx.getContext('2d'), {
             type: 'line',
             data: {
                 labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
@@ -99,9 +116,11 @@
             }
         });
 
-        // Customer Segmentation Chart
-        const segmentationCtx = document.getElementById('customerSegmentationChart').getContext('2d');
-        customerSegmentationChart = new Chart(segmentationCtx, {
+        // Retailer Segmentation Chart
+        const segmentationCtx = document.getElementById('retailerSegmentationChart');
+        if (!segmentationCtx) return;
+        
+        retailerSegmentationChart = new Chart(segmentationCtx.getContext('2d'), {
             type: 'doughnut',
             data: {
                 labels: ['Premium Buyers', 'Regular Consumers', 'Occasional Buyers'],
@@ -134,35 +153,102 @@
 
     function loadAnalyticsData() {
         // Load ML predictions
-        fetch('/api/analytics/predictions')
+        fetch('/api/analytics/sales-predictions')
             .then(response => response.json())
             .then(data => {
+                console.log('ML Data received:', data); // Debug logging
+                
                 // Update demand forecast chart
-                demandForecastChart.data.datasets[1].data = data.demand_forecast || [];
-                demandForecastChart.update();
+                if (demandForecastChart && data.historical && data.predicted) {
+                    // Extract months and values
+                    const historicalMonths = data.historical.map(d => d.month);
+                    const historicalValues = data.historical.map(d => d.actual_sales);
+                    const predictedMonths = data.predicted.map(d => d.month);
+                    const predictedValues = data.predicted.map(d => d.predicted_sales);
+
+                    console.log('Chart data:', {
+                        historicalMonths,
+                        historicalValues,
+                        predictedMonths,
+                        predictedValues
+                    });
+
+                    // Combine for continuous x-axis
+                    const allMonths = [...historicalMonths, ...predictedMonths];
+                    const allActuals = [...historicalValues, ...Array(predictedValues.length).fill(null)];
+                    const allPredicted = [
+                        ...Array(historicalValues.length).fill(null),
+                        ...predictedValues
+                    ];
+
+                    demandForecastChart.data.labels = allMonths;
+                    demandForecastChart.data.datasets[0].data = allActuals;    // Actual Demand (solid)
+                    demandForecastChart.data.datasets[1].data = allPredicted;  // Predicted Demand (dashed)
+                    demandForecastChart.update();
+                    
+                    console.log('Chart updated successfully');
+                } else {
+                    console.warn('Chart data missing:', {
+                        hasChart: !!demandForecastChart,
+                        hasHistorical: !!data.historical,
+                        hasPredicted: !!data.predicted
+                    });
+                }
 
                 // Update sales prediction section
                 const salesPrediction = document.getElementById('salesPrediction');
-                salesPrediction.innerHTML = '';
-                if (data.sales_predictions && data.sales_predictions.length > 0) {
-                    data.sales_predictions.forEach(pred => {
-                        const div = document.createElement('div');
-                        div.className = 'flex justify-between items-center p-3 bg-green-50 rounded-lg';
-                        div.innerHTML = `<span class="text-sm font-medium text-green-800">${pred.product_name}</span><span class="text-lg font-bold text-green-900">${pred.predicted_sales} units</span>`;
-                        salesPrediction.appendChild(div);
+                if (salesPrediction) {
+                    salesPrediction.innerHTML = '';
+                    
+                    // Use the predicted data from ML module
+                    if (data.predicted && data.predicted.length > 0) {
+                        data.predicted.forEach(pred => {
+                            const div = document.createElement('div');
+                            div.className = 'flex justify-between items-center p-3 bg-green-50 rounded-lg';
+                            div.innerHTML = `<span class="text-sm font-medium text-green-800">${pred.month}</span><span class="text-lg font-bold text-green-900">${pred.predicted_sales} units</span>`;
+                            salesPrediction.appendChild(div);
+                        });
+                        
+                        const confidenceElement = document.getElementById('salesConfidence');
+                        if (confidenceElement) {
+                            const confidence = data.confidence_level ? Math.round(data.confidence_level * 100) : 0;
+                            confidenceElement.textContent = confidence + '%';
+                        }
+                    } else {
+                        salesPrediction.innerHTML = '<span class="text-gray-500">No sales prediction data available.</span>';
+                        const confidenceElement = document.getElementById('salesConfidence');
+                        if (confidenceElement) {
+                            confidenceElement.textContent = '-';
+                        }
+                    }
+                }
+                
+                // Display additional ML insights if available
+                if (data.trend_direction) {
+                    console.log('Trend analysis:', {
+                        direction: data.trend_direction,
+                        strength: data.trend_strength,
+                        confidence: data.confidence_level
                     });
-                    document.getElementById('salesConfidence').textContent = (data.confidence_level ? data.confidence_level + '%' : '-');
-                } else {
-                    salesPrediction.innerHTML = '<span class="text-gray-500">No sales prediction data available.</span>';
-                    document.getElementById('salesConfidence').textContent = '-';
                 }
             })
             .catch(error => {
-                demandForecastChart.data.datasets[1].data = [];
-                demandForecastChart.update();
-                document.getElementById('salesPrediction').innerHTML = '<span class="text-red-500">Error loading sales predictions.</span>';
-                document.getElementById('salesConfidence').textContent = 'Error';
                 console.error('Error loading predictions:', error);
+                
+                if (demandForecastChart) {
+                    demandForecastChart.data.datasets[1].data = [];
+                    demandForecastChart.update();
+                }
+                
+                const salesPrediction = document.getElementById('salesPrediction');
+                if (salesPrediction) {
+                    salesPrediction.innerHTML = '<span class="text-red-500">Error loading sales predictions.</span>';
+                }
+                
+                const confidenceElement = document.getElementById('salesConfidence');
+                if (confidenceElement) {
+                    confidenceElement.textContent = 'Error';
+                }
             });
 
         // Load inventory optimization
@@ -170,12 +256,14 @@
             .then(response => response.json())
             .then(data => {
                 const inventoryDiv = document.getElementById('inventoryOptimization');
+                if (!inventoryDiv) return;
+                
                 inventoryDiv.innerHTML = '';
-                if (data && data.length > 0) {
-                    data.forEach(item => {
+                if (data && data.detailed_recommendations && data.detailed_recommendations.length > 0) {
+                    data.detailed_recommendations.forEach(item => {
                         const div = document.createElement('div');
                         div.className = 'p-3 bg-yellow-50 rounded-lg border border-yellow-200 mb-2';
-                        div.innerHTML = `<div class="flex justify-between items-center mb-2"><span class="text-sm font-medium text-yellow-800">${item.product_name}</span><span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">${item.recommendation.replace('_', ' ')}</span></div><p class="text-xs text-yellow-700">Current: ${item.current_stock}, Optimal: ${item.optimal_stock}, Reorder Point: ${item.reorder_point}, Urgency: ${item.urgency}</p>`;
+                        div.innerHTML = `<div class="flex justify-between items-center mb-2"><span class="text-sm font-medium text-yellow-800">${item.product_name || 'Unknown Product'}</span><span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">${(item.recommendation || '').replace('_', ' ')}</span></div><p class="text-xs text-yellow-700">Current: ${item.current_stock || 0}, Optimal: ${item.optimal_stock || 0}, Reorder Point: ${item.reorder_point || 0}, Urgency: ${item.urgency || 'low'}</p>`;
                         inventoryDiv.appendChild(div);
                     });
                 } else {
@@ -183,7 +271,10 @@
                 }
             })
             .catch(error => {
-                document.getElementById('inventoryOptimization').innerHTML = '<span class="text-red-500">Error loading inventory optimization.</span>';
+                const inventoryDiv = document.getElementById('inventoryOptimization');
+                if (inventoryDiv) {
+                    inventoryDiv.innerHTML = '<span class="text-red-500">Error loading inventory optimization.</span>';
+                }
                 console.error('Error loading inventory optimization:', error);
             });
 
@@ -192,13 +283,37 @@
             .then(response => response.json())
             .then(data => {
                 const riskDiv = document.getElementById('riskAssessment');
+                if (!riskDiv) return;
+                
                 riskDiv.innerHTML = '';
                 if (data) {
                     Object.keys(data).forEach(riskType => {
                         const risk = data[riskType];
+                        if (!risk || typeof risk !== 'object') return;
+                        
                         const div = document.createElement('div');
-                        div.className = `flex items-center justify-between p-3 rounded-lg mb-2 ${risk.level === 'high' ? 'bg-red-50' : risk.level === 'medium' ? 'bg-yellow-50' : 'bg-green-50'}`;
-                        div.innerHTML = `<div><p class="text-sm font-medium ${risk.level === 'high' ? 'text-red-800' : risk.level === 'medium' ? 'text-yellow-800' : 'text-green-800'}">${riskType.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} Risk</p><p class="text-xs ${risk.level === 'high' ? 'text-red-600' : risk.level === 'medium' ? 'text-yellow-600' : 'text-green-600'}">${risk.factors && risk.factors.length ? risk.factors.join(', ') : ''}</p></div><span class="text-lg font-bold ${risk.level === 'high' ? 'text-red-900' : risk.level === 'medium' ? 'text-yellow-900' : 'text-green-900'}">${risk.level.charAt(0).toUpperCase() + risk.level.slice(1)}</span>`;
+                        const riskLevel = risk.risk_level || 'low';
+                        const riskLevelClass = riskLevel === 'high' ? 'bg-red-50' : riskLevel === 'medium' ? 'bg-yellow-50' : 'bg-green-50';
+                        const textClass = riskLevel === 'high' ? 'text-red-800' : riskLevel === 'medium' ? 'text-yellow-800' : 'text-green-800';
+                        const textClassSmall = riskLevel === 'high' ? 'text-red-600' : riskLevel === 'medium' ? 'text-yellow-600' : 'text-green-600';
+                        const textClassBold = riskLevel === 'high' ? 'text-red-900' : riskLevel === 'medium' ? 'text-yellow-900' : 'text-green-900';
+                        
+                        let factorsText = '';
+                        if (risk.factors) {
+                            if (Array.isArray(risk.factors)) {
+                                factorsText = risk.factors.join(', ');
+                            } else if (typeof risk.factors === 'object') {
+                                factorsText = Object.entries(risk.factors).map(([k, v]) => `${k.replace(/_/g, ' ')}: ${v}`).join(', ');
+                            }
+                        }
+                        
+                        // Fix the charAt error by ensuring riskLevel is a string
+                        const displayRiskLevel = typeof riskLevel === 'string' && riskLevel.length > 0 
+                            ? riskLevel.charAt(0).toUpperCase() + riskLevel.slice(1) 
+                            : 'Low';
+                        
+                        div.className = `flex items-center justify-between p-3 rounded-lg mb-2 ${riskLevelClass}`;
+                        div.innerHTML = `<div><p class="text-sm font-medium ${textClass}">${riskType.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} Risk</p><p class="text-xs ${textClassSmall}">${factorsText}</p></div><span class="text-lg font-bold ${textClassBold}">${displayRiskLevel}</span>`;
                         riskDiv.appendChild(div);
                     });
                 } else {
@@ -206,23 +321,35 @@
                 }
             })
             .catch(error => {
-                document.getElementById('riskAssessment').innerHTML = '<span class="text-red-500">Error loading risk assessment.</span>';
+                const riskDiv = document.getElementById('riskAssessment');
+                if (riskDiv) {
+                    riskDiv.innerHTML = '<span class="text-red-500">Error loading risk assessment.</span>';
+                }
                 console.error('Error loading risk assessment:', error);
             });
 
-        // Load customer segmentation data
-        fetch('/api/analytics/customer-segmentation')
+        // Load retailer segmentation data
+        fetch('/api/analytics/retailer-segmentation')
             .then(response => response.json())
             .then(data => {
-                customerSegmentationChart.data.labels = data.labels || [];
-                customerSegmentationChart.data.datasets[0].data = data.data || [];
-                customerSegmentationChart.update();
+                if (retailerSegmentationChart && data.segments) {
+                    const labels = Object.keys(data.segments).map(key => 
+                        key.charAt(0).toUpperCase() + key.slice(1) + ' Retailers'
+                    );
+                    const values = Object.values(data.segments);
+                    
+                    retailerSegmentationChart.data.labels = labels;
+                    retailerSegmentationChart.data.datasets[0].data = values;
+                    retailerSegmentationChart.update();
+                }
             })
             .catch(error => {
-                customerSegmentationChart.data.labels = [];
-                customerSegmentationChart.data.datasets[0].data = [];
-                customerSegmentationChart.update();
-                console.error('Error loading customer segmentation data:', error);
+                if (retailerSegmentationChart) {
+                    retailerSegmentationChart.data.labels = [];
+                    retailerSegmentationChart.data.datasets[0].data = [];
+                    retailerSegmentationChart.update();
+                }
+                console.error('Error loading retailer segmentation data:', error);
             });
     }
 
@@ -231,6 +358,7 @@
         
         // Show refresh feedback
         const button = event.target;
+        if (button) {
         const originalText = button.innerHTML;
         button.innerHTML = '<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Refreshed!';
         button.disabled = true;
@@ -239,6 +367,40 @@
             button.innerHTML = originalText;
             button.disabled = false;
         }, 2000);
+        }
+    }
+
+    function toggleDebug() {
+        const debugInfo = document.getElementById('debugInfo');
+        const debugContent = document.getElementById('debugContent');
+        if (debugInfo && debugContent) {
+            debugInfo.style.display = debugInfo.style.display === 'none' ? 'block' : 'none';
+            debugContent.innerHTML = ''; // Clear previous content
+            debugContent.innerHTML = `
+                <p>Demand Forecast Chart Data:</p>
+                <p>Labels: ${demandForecastChart.data.labels.join(', ')}</p>
+                <p>Actual Data: ${demandForecastChart.data.datasets[0].data.join(', ')}</p>
+                <p>Predicted Data: ${demandForecastChart.data.datasets[1].data.join(', ')}</p>
+                <p>Chart Type: ${demandForecastChart.config.type}</p>
+                <p>Chart Options: ${JSON.stringify(demandForecastChart.options)}</p>
+                <p>Chart Data: ${JSON.stringify(demandForecastChart.data)}</p>
+                <p>Chart Config: ${JSON.stringify(demandForecastChart.config)}</p>
+                <p>Chart Plugins: ${JSON.stringify(demandForecastChart.plugins)}</p>
+                <p>Chart Scales: ${JSON.stringify(demandForecastChart.scales)}</p>
+                <p>Chart Layers: ${JSON.stringify(demandForecastChart.layers)}</p>
+                <p>Chart Hover: ${JSON.stringify(demandForecastChart.hover)}</p>
+                <p>Chart Tooltips: ${JSON.stringify(demandForecastChart.tooltips)}</p>
+                <p>Chart Legend: ${JSON.stringify(demandForecastChart.legend)}</p>
+                <p>Chart Events: ${JSON.stringify(demandForecastChart.events)}</p>
+                <p>Chart Options: ${JSON.stringify(demandForecastChart.options)}</p>
+                <p>Chart Scales: ${JSON.stringify(demandForecastChart.scales)}</p>
+                <p>Chart Layers: ${JSON.stringify(demandForecastChart.layers)}</p>
+                <p>Chart Hover: ${JSON.stringify(demandForecastChart.hover)}</p>
+                <p>Chart Tooltips: ${JSON.stringify(demandForecastChart.tooltips)}</p>
+                <p>Chart Legend: ${JSON.stringify(demandForecastChart.legend)}</p>
+                <p>Chart Events: ${JSON.stringify(demandForecastChart.events)}</p>
+            `;
+        }
     }
 </script>
 @endsection 

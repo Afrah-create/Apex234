@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\MachineLearningService;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class AnalyticsController extends Controller
 {
@@ -97,60 +98,100 @@ class AnalyticsController extends Controller
     public function getPredictions(): JsonResponse
     {
         try {
-            // Use ML service for demand forecasting
-            $demandForecast = $this->mlService->generateDemandForecast(3);
+            Log::info('ML: Starting predictions request');
             
-            // Get sales predictions
-            $salesPredictions = $this->mlService->predictSales(30);
-
-            return response()->json([
-                'demand_forecast' => $demandForecast['forecast'],
-                'sales_predictions' => $salesPredictions,
-                'confidence_level' => round($demandForecast['confidence_level'] * 100, 0),
-                'seasonal_patterns' => $demandForecast['seasonal_patterns'],
-                'trend_direction' => $demandForecast['trend_direction']
+            // Use the API wrapper instead of calling the main script directly
+            $output = [];
+            $command = 'python ' . base_path('machineLearning/new_demand_forecast_api.py') . ' 6 2>&1';
+            exec($command, $output, $returnCode);
+            
+            Log::info('ML: Command executed', [
+                'command' => $command,
+                'return_code' => $returnCode,
+                'output_lines' => count($output)
             ]);
+            
+            // Check if command executed successfully
+            if ($returnCode !== 0) {
+                Log::error('ML: Python script failed', ['return_code' => $returnCode, 'output' => $output]);
+                return response()->json([
+                    'error' => 'Python script execution failed',
+                    'return_code' => $returnCode,
+                    'raw_output' => $output
+                ], 500);
+            }
+            
+            // Combine output and parse JSON
+            $jsonString = implode('', $output);
+            Log::info('ML: Raw JSON output', ['json_length' => strlen($jsonString)]);
+            
+            $json = json_decode($jsonString, true);
+            if (!$json) {
+                Log::error('ML: Invalid JSON response', ['json_string' => $jsonString]);
+                return response()->json([
+                    'error' => 'Python script did not return valid JSON',
+                    'raw_output' => $output,
+                    'json_string' => $jsonString
+                ], 500);
+            }
+            
+            // Validate the response structure
+            if (!isset($json['status']) || $json['status'] !== 'success') {
+                Log::warning('ML: Response indicates failure', ['json' => $json]);
+            }
+            
+            Log::info('ML: Successfully parsed predictions', [
+                'historical_count' => count($json['historical'] ?? []),
+                'predicted_count' => count($json['predicted'] ?? []),
+                'confidence_level' => $json['confidence_level'] ?? 'unknown'
+            ]);
+            
+            return response()->json($json);
+            
         } catch (\Exception $e) {
+            Log::error('ML: Exception in getPredictions', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             return response()->json([
                 'error' => 'Failed to load predictions',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
+                'status' => 'error'
             ], 500);
         }
     }
 
     /**
-     * Get customer segmentation data
+     * Get retailer segmentation data
      */
-    public function getCustomerSegmentation(): JsonResponse
+    public function getRetailerSegmentation(): JsonResponse
     {
         try {
-            // Use ML service for customer segmentation
-            $segmentation = $this->mlService->performCustomerSegmentation();
-            
+            // Use ML service for retailer segmentation
+            $segmentation = $this->mlService->performRetailerSegmentation();
             $segments = [];
-            $totalCustomers = 0;
-            
+            $totalRetailers = 0;
             foreach ($segmentation as $segment => $data) {
-                $customerCount = count($data['customers']);
-                $totalCustomers += $customerCount;
-                $segments[$segment] = $customerCount;
+                $retailerCount = count($data['retailers']);
+                $segments[$segment] = $retailerCount;
+                $totalRetailers += $retailerCount;
             }
-            
             $percentages = [];
             foreach ($segments as $segment => $count) {
-                $percentages[$segment] = $totalCustomers > 0 ? round(($count / $totalCustomers) * 100, 1) : 0;
+                $percentages[$segment] = $totalRetailers > 0 ? round(($count / $totalRetailers) * 100, 1) : 0;
             }
-
             return response()->json([
-                'segments' => $percentages,
-                'total_customers' => $totalCustomers,
+                'segments' => $segments,
+                'percentages' => $percentages,
+                'total_retailers' => $totalRetailers,
                 'characteristics' => array_map(function($data) {
                     return $data['characteristics'];
                 }, $segmentation)
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Failed to load customer segmentation',
+                'error' => 'Failed to load retailer segmentation',
                 'message' => $e->getMessage()
             ], 500);
         }
@@ -480,7 +521,7 @@ class AnalyticsController extends Controller
     {
         return [
             'predictions' => $this->getPredictions()->getData(),
-            'segmentation' => $this->getCustomerSegmentation()->getData(),
+            'segmentation' => $this->getRetailerSegmentation()->getData(),
             'optimization' => $this->getInventoryOptimization()->getData(),
             'risk_assessment' => $this->getRiskAssessment()->getData()
         ];
@@ -506,15 +547,15 @@ class AnalyticsController extends Controller
      */
     private function getLowStockItems(): array
     {
-        return YogurtProduct::with('inventory')
-            ->whereHas('inventory', function($query) {
-                $query->where('quantity', '<', 50);
+        return YogurtProduct::with('currentInventory')
+            ->whereHas('currentInventory', function($query) {
+                $query->where('quantity_available', '<', 50);
             })
             ->get()
             ->map(function($product) {
                 return [
                     'name' => $product->product_name,
-                    'current_stock' => $product->inventory->quantity ?? 0,
+                    'current_stock' => $product->currentInventory->quantity_available ?? 0,
                     'reorder_level' => 50
                 ];
             })
