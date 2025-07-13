@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\MachineLearningService;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class AnalyticsController extends Controller
 {
@@ -84,27 +85,91 @@ class AnalyticsController extends Controller
     }
 
     /**
+     * API endpoint for KPI data (for dashboard JS fetch)
+     */
+    public function kpi(): \Illuminate\Http\JsonResponse
+    {
+        return $this->getKpiData();
+    }
+
+    /**
      * Get machine learning predictions
      */
     public function getPredictions(): JsonResponse
     {
         try {
-            // Use ML service for demand forecasting
-            $demandForecast = $this->mlService->generateDemandForecast(3);
-            
-            // Get sales predictions
-            $salesPredictions = $this->mlService->predictSales(30);
+            Log::info('ML: Starting predictions request');
 
-            return response()->json([
-                'demand_forecast' => $demandForecast['forecast'],
-                'sales_predictions' => $salesPredictions,
-                'confidence_level' => round($demandForecast['confidence_level'] * 100, 0),
-                'seasonal_patterns' => $demandForecast['seasonal_patterns'],
-                'trend_direction' => $demandForecast['trend_direction']
-            ]);
+            // Only predict for 2025 (Jan-Dec)
+            $months = 12;
+
+            // Use the API wrapper instead of calling the main script directly
+            $output = [];
+            $command = 'python ' . base_path('machineLearning/new_demand_forecast_api.py') . ' ' . $months . ' 2>&1';
+            exec($command, $output);
+            $result = implode("\n", $output);
+
+            $json = json_decode($result, true);
+            if (!$json) {
+                Log::error('ML: Invalid JSON from forecast script', ['result' => $result]);
+                return response()->json(['error' => 'Failed to get predictions'], 500);
+            }
+
+            // Keep both 2024 (actual) and 2025 (predicted) data
+            // The frontend will handle showing actual for 2024 and predicted for 2025
+
+            return response()->json($json);
         } catch (\Exception $e) {
+            Log::error('ML: Exception in getPredictions', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Exception: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Get retailer segmentation data
+     */
+    public function getRetailerSegmentation(): JsonResponse
+    {
+        try {
+            Log::info('Analytics: Starting retailer segmentation request');
+            
+            // Use ML service for retailer segmentation
+            $segmentation = $this->mlService->performRetailerSegmentation();
+            Log::info('Analytics: Received segmentation data', ['segmentation' => $segmentation]);
+            
+            $segments = [];
+            $totalRetailers = 0;
+            foreach ($segmentation as $segment => $data) {
+                $retailerCount = count($data['retailers']);
+                $segments[$segment] = $retailerCount;
+                $totalRetailers += $retailerCount;
+            }
+            
+            $percentages = [];
+            foreach ($segments as $segment => $count) {
+                $percentages[$segment] = $totalRetailers > 0 ? round(($count / $totalRetailers) * 100, 1) : 0;
+            }
+            
+            $response = [
+                'segments' => $segments,
+                'percentages' => $percentages,
+                'total_retailers' => $totalRetailers,
+                'characteristics' => array_map(function($data) {
+                    return $data['characteristics'];
+                }, $segmentation)
+            ];
+            
+            Log::info('Analytics: Returning retailer segmentation response', ['response' => $response]);
+            
+            return response()->json($response);
+        } catch (\Exception $e) {
+            Log::error('Analytics: Error in retailer segmentation', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             return response()->json([
-                'error' => 'Failed to load predictions',
+                'error' => 'Failed to load retailer segmentation',
                 'message' => $e->getMessage()
             ], 500);
         }
@@ -116,31 +181,43 @@ class AnalyticsController extends Controller
     public function getCustomerSegmentation(): JsonResponse
     {
         try {
+            Log::info('Analytics: Starting customer segmentation request');
+            
             // Use ML service for customer segmentation
             $segmentation = $this->mlService->performCustomerSegmentation();
+            Log::info('Analytics: Received customer segmentation data', ['segmentation' => $segmentation]);
             
             $segments = [];
             $totalCustomers = 0;
-            
             foreach ($segmentation as $segment => $data) {
                 $customerCount = count($data['customers']);
-                $totalCustomers += $customerCount;
                 $segments[$segment] = $customerCount;
+                $totalCustomers += $customerCount;
             }
             
             $percentages = [];
             foreach ($segments as $segment => $count) {
                 $percentages[$segment] = $totalCustomers > 0 ? round(($count / $totalCustomers) * 100, 1) : 0;
             }
-
-            return response()->json([
-                'segments' => $percentages,
+            
+            $response = [
+                'segments' => $segments,
+                'percentages' => $percentages,
                 'total_customers' => $totalCustomers,
                 'characteristics' => array_map(function($data) {
                     return $data['characteristics'];
                 }, $segmentation)
-            ]);
+            ];
+            
+            Log::info('Analytics: Returning customer segmentation response', ['response' => $response]);
+            
+            return response()->json($response);
         } catch (\Exception $e) {
+            Log::error('Analytics: Error in customer segmentation', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             return response()->json([
                 'error' => 'Failed to load customer segmentation',
                 'message' => $e->getMessage()
@@ -472,7 +549,7 @@ class AnalyticsController extends Controller
     {
         return [
             'predictions' => $this->getPredictions()->getData(),
-            'segmentation' => $this->getCustomerSegmentation()->getData(),
+            'segmentation' => $this->getRetailerSegmentation()->getData(),
             'optimization' => $this->getInventoryOptimization()->getData(),
             'risk_assessment' => $this->getRiskAssessment()->getData()
         ];
@@ -498,15 +575,15 @@ class AnalyticsController extends Controller
      */
     private function getLowStockItems(): array
     {
-        return YogurtProduct::with('inventory')
-            ->whereHas('inventory', function($query) {
-                $query->where('quantity', '<', 50);
+        return YogurtProduct::with('currentInventory')
+            ->whereHas('currentInventory', function($query) {
+                $query->where('quantity_available', '<', 50);
             })
             ->get()
             ->map(function($product) {
                 return [
                     'name' => $product->product_name,
-                    'current_stock' => $product->inventory->quantity ?? 0,
+                    'current_stock' => $product->currentInventory->quantity_available ?? 0,
                     'reorder_level' => 50
                 ];
             })

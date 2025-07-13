@@ -774,28 +774,30 @@ function editProductInventory(id) {
 
 // Delete product inventory
 async function deleteProductInventory(id) {
-    if (!confirm('Are you sure you want to delete this product inventory?')) return;
-    
-    try {
-        const response = await fetch(`/api/vendor/inventory/products/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': getCSRFToken()
+    (async function() {
+        const confirmed = await showConfirmModal('Are you sure you want to delete this product inventory?', 'Delete Product Inventory');
+        if (!confirmed) return;
+        try {
+            const response = await fetch(`/api/vendor/inventory/products/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': getCSRFToken()
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                loadProductInventory();
+                loadInventorySummary();
+            } else {
+                alert('Error deleting product inventory: ' + (result.error || 'Unknown error'));
             }
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            loadProductInventory();
-            loadInventorySummary();
-        } else {
-            alert('Error deleting product inventory: ' + (result.error || 'Unknown error'));
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error deleting product inventory');
         }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Error deleting product inventory');
-    }
+    })();
 }
 
 // Edit raw material - redirect to edit view
@@ -805,28 +807,30 @@ function editRawMaterial(id) {
 
 // Delete raw material
 async function deleteRawMaterial(id) {
-    if (!confirm('Are you sure you want to delete this raw material?')) return;
-    
-    try {
-        const response = await fetch(`/api/vendor/inventory/raw-materials/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': getCSRFToken()
+    (async function() {
+        const confirmed = await showConfirmModal('Are you sure you want to delete this raw material?', 'Delete Raw Material');
+        if (!confirmed) return;
+        try {
+            const response = await fetch(`/api/vendor/inventory/raw-materials/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': getCSRFToken()
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                loadRawMaterials();
+                loadInventorySummary();
+            } else {
+                alert('Error deleting raw material: ' + (result.error || 'Unknown error'));
             }
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            loadRawMaterials();
-            loadInventorySummary();
-        } else {
-            alert('Error deleting raw material: ' + (result.error || 'Unknown error'));
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error deleting raw material');
         }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Error deleting raw material');
-    }
+    })();
 }
 
 // Auto-refresh data every 30 seconds for real-time updates

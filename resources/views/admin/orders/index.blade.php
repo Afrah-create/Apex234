@@ -372,29 +372,29 @@
 
         // Delete order
         async function deleteOrder(orderId) {
-            if (!confirm('Are you sure you want to delete this order?')) {
-                return;
-            }
+            (async function() {
+                const confirmed = await showConfirmModal('Are you sure you want to delete this order?', 'Delete Order');
+                if (!confirmed) return;
+                try {
+                    const response = await fetch(`/admin/orders/${orderId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    });
 
-            try {
-                const response = await fetch(`/admin/orders/${orderId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    if (response.ok) {
+                        loadOrdersData();
+                        loadOrderStatistics();
+                        alert('Order deleted successfully');
+                    } else {
+                        alert('Error deleting order');
                     }
-                });
-
-                if (response.ok) {
-                    loadOrdersData();
-                    loadOrderStatistics();
-                    alert('Order deleted successfully');
-                } else {
+                } catch (error) {
+                    console.error('Error deleting order:', error);
                     alert('Error deleting order');
                 }
-            } catch (error) {
-                console.error('Error deleting order:', error);
-                alert('Error deleting order');
-            }
+            })();
         }
 
         // Navigation functions
@@ -491,27 +491,33 @@
         }
 
         async function archiveRawMaterialOrder(orderId) {
-            if (!confirm('Are you sure you want to archive this order?')) return;
-            try {
-                const response = await fetch(`/admin/raw-material-orders/${orderId}/archive`, { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } });
-                const data = await response.json();
-                alert(data.message);
-                loadRawMaterialOrdersData();
-            } catch (error) {
-                alert('Failed to archive order.');
-            }
+            (async function() {
+                const confirmed = await showConfirmModal('Are you sure you want to archive this order?', 'Archive Order');
+                if (!confirmed) return;
+                try {
+                    const response = await fetch(`/admin/raw-material-orders/${orderId}/archive`, { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } });
+                    const data = await response.json();
+                    alert(data.message);
+                    loadRawMaterialOrdersData();
+                } catch (error) {
+                    alert('Failed to archive order.');
+                }
+            })();
         }
 
         async function unarchiveRawMaterialOrder(orderId) {
-            if (!confirm('Are you sure you want to unarchive this order?')) return;
-            try {
-                const response = await fetch(`/admin/raw-material-orders/${orderId}/unarchive`, { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } });
-                const data = await response.json();
-                alert(data.message);
-                loadRawMaterialOrdersData();
-            } catch (error) {
-                alert('Failed to unarchive order.');
-            }
+            (async function() {
+                const confirmed = await showConfirmModal('Are you sure you want to unarchive this order?', 'Unarchive Order');
+                if (!confirmed) return;
+                try {
+                    const response = await fetch(`/admin/raw-material-orders/${orderId}/unarchive`, { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } });
+                    const data = await response.json();
+                    alert(data.message);
+                    loadRawMaterialOrdersData();
+                } catch (error) {
+                    alert('Failed to unarchive order.');
+                }
+            })();
         }
 
         // Event listeners

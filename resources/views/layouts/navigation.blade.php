@@ -39,6 +39,18 @@
                 </svg>
                 <span id="chatNotificationDot" class="absolute top-2 right-2 block h-5 w-5 rounded-full bg-red-500 text-xs text-white flex items-center justify-center font-bold hidden"></span>
             </a>
+            <!-- Cart Icon Button (only for customers and retailers) -->
+            @php $role = auth()->user()->getPrimaryRoleName(); @endphp
+            @if($role === 'customer')
+                <a href="{{ route('cart.index') }}" class="relative inline-flex items-center justify-center w-10 h-10 rounded-full bg-orange-500 hover:bg-orange-600 focus:outline-none transition ease-in-out duration-150 mr-1" title="Cart">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" stroke="#FFA500" stroke-width="2" fill="#FFA500"/>
+                        <rect x="7" y="9" width="10" height="6" rx="2" fill="#fff"/>
+                        <circle cx="10" cy="16" r="1.5" fill="#fff"/>
+                        <circle cx="14" cy="16" r="1.5" fill="#fff"/>
+                    </svg>
+                </a>
+            @endif
             <x-dropdown align="right" width="48">
                 <x-slot name="trigger">
                     <button class="w-10 h-10 rounded-full bg-blue-800 hover:bg-blue-700 focus:outline-none transition ease-in-out duration-150 overflow-hidden p-0 border-2 border-white" title="User menu">

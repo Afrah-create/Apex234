@@ -12,4 +12,21 @@ class RouteServiceProvider extends ServiceProvider
      * @var string
      */
     public const HOME = '/dashboard';
+
+    /**
+     * Define your route model bindings, pattern filters, etc.
+     */
+    public function boot()
+    {
+        parent::boot();
+
+        $this->routes(function () {
+            \Illuminate\Support\Facades\Route::middleware('api')
+                ->prefix('api')
+                ->group(base_path('routes/api.php'));
+
+            \Illuminate\Support\Facades\Route::middleware('web')
+                ->group(base_path('routes/web.php'));
+        });
+    }
 } 
