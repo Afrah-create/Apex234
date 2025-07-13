@@ -33,7 +33,7 @@ class RegisteredUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'role' => ['required', 'in:retailer,supplier,vendor'],
+            'role' => ['required', 'in:retailer,supplier,vendor,customer'], // Add 'customer' as a valid role
         ]);
 
         $user = User::create([
@@ -113,7 +113,7 @@ class RegisteredUserController extends Controller
                 'monthly_sales_volume' => null,
                 'payment_methods' => null,
                 'store_hours' => null,
-                'certification_status' => 'pending',
+                'certification_status' => 'certified',
                 'certifications' => null,
                 'last_inspection_date' => null,
                 'next_inspection_date' => null,
@@ -127,6 +127,8 @@ class RegisteredUserController extends Controller
                 'contact_phone' => $request->phone_number ?? '',
             ]);
         }
+
+        // No extra record for customer, just user and role
 
         // Note: Vendor records are created only after admin approval
         // For vendors, we only create the user and redirect to application form
@@ -154,6 +156,8 @@ class RegisteredUserController extends Controller
                     'description' => $request->description ?? '',
                 ]);
                 return redirect()->route('vendor-applicant.create');
+            case 'customer':
+                return redirect()->route('dashboard.customer');
             default:
                 return redirect(route('dashboard', absolute: false));
         }

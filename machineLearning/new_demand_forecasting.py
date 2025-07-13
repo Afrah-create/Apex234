@@ -18,19 +18,27 @@ import warnings
 warnings.filterwarnings('ignore')
 
 class AdvancedDemandForecaster:
-    def __init__(self, csv_path='demanForecasting.csv'):
-        self.csv_path = csv_path
+    def __init__(self, csv_path=None, suppress_output=False):
+        if csv_path is None:
+            # Always use the absolute path relative to this script's location
+            self.csv_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'demanForecasting.csv')
+        else:
+            self.csv_path = csv_path
         self.models = {}
         self.label_encoders = {}
         self.scaler = StandardScaler()
         self.feature_importance = {}
+        self.suppress_output = suppress_output
         
     def load_and_preprocess_data(self):
-        """Load and preprocess the demand forecasting dataset"""
+        import os
+        if not self.suppress_output:
+            print('Looking for CSV at:', os.path.abspath(self.csv_path))
         try:
             # Load the CSV file
             df = pd.read_csv(self.csv_path)
-            print(f"Loaded {len(df)} records from {self.csv_path}")
+            if not self.suppress_output:
+                print(f"Loaded {len(df)} records from {self.csv_path}")
             
             # Convert Date to datetime
             df['Date'] = pd.to_datetime(df['Date'], format='%d/%m/%Y', errors='coerce')
@@ -74,11 +82,49 @@ class AdvancedDemandForecaster:
             le_category = LabelEncoder()
             df['Product_Category_encoded'] = le_category.fit_transform(df['Product_Category'])
             self.label_encoders['Product_Category'] = le_category
+
+            # --- AGGREGATE TO MONTHLY DATA ---
+            df['YearMonth'] = df['Date'].dt.to_period('M')
             
-            return df
+            # Aggregate by month only (total monthly demand across all products and regions)
+            monthly_df = df.groupby(['YearMonth']).agg({
+                'Units Sold': 'sum',  # Total monthly demand
+                'Inventory Level': 'sum',  # Total inventory
+                'Units Ordered': 'sum',  # Total orders
+                'unit_price(UGX)': 'mean',  # Average price
+                'Inventory_Turnover': 'mean',  # Average turnover
+                'Order_Fulfillment_Rate': 'mean',  # Average fulfillment rate
+                'Revenue_Per_Unit': 'mean',  # Average revenue per unit
+                'Promotion': 'max',  # Any promotion in the month
+                'retailer_id_encoded': 'first',  # Use first retailer as representative
+                'Product_id_encoded': 'first',  # Use first product as representative
+                'product_name_encoded': 'first',  # Use first product name as representative
+                'Region_encoded': 'first',  # Use first region as representative
+                'Weather Condition_encoded': 'first',  # Use first weather as representative
+                'order_status_encoded': 'first',  # Use first status as representative
+                'Product_Category_encoded': 'first'  # Use first category as representative
+            }).reset_index()
             
+            # Convert YearMonth back to datetime
+            monthly_df['Date'] = monthly_df['YearMonth'].dt.to_timestamp()
+            
+            # Add back date features for the aggregated data
+            monthly_df['Year'] = monthly_df['Date'].dt.year
+            monthly_df['Month'] = monthly_df['Date'].dt.month
+            monthly_df['Day'] = 1
+            monthly_df['DayOfWeek'] = monthly_df['Date'].dt.dayofweek
+            monthly_df['Quarter'] = monthly_df['Date'].dt.quarter
+            monthly_df['WeekOfYear'] = monthly_df['Date'].dt.isocalendar().week
+            monthly_df['IsWeekend'] = 0
+            monthly_df['IsMonthEnd'] = monthly_df['Date'].dt.is_month_end.astype(int)
+            monthly_df['IsMonthStart'] = 1
+            
+            if not self.suppress_output:
+                print(f"Aggregated to {len(monthly_df)} monthly records")
+            return monthly_df
         except Exception as e:
-            print(f"Error loading data: {e}")
+            if not self.suppress_output:
+                print(f"Error loading data: {e}")
             return None
     
     def prepare_features(self, df):
@@ -112,20 +158,16 @@ class AdvancedDemandForecaster:
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, test_size=0.2, random_state=42, shuffle=False
         )
-        
         # Scale features
         X_train_scaled = self.scaler.fit_transform(X_train)
         X_test_scaled = self.scaler.transform(X_test)
-        
         # Train different models
         models = {
             'random_forest': RandomForestRegressor(n_estimators=100, random_state=42),
             'gradient_boosting': GradientBoostingRegressor(n_estimators=100, random_state=42),
             'linear_regression': LinearRegression()
         }
-        
         model_scores = {}
-        
         for name, model in models.items():
             try:
                 if name == 'linear_regression':
@@ -134,84 +176,87 @@ class AdvancedDemandForecaster:
                 else:
                     model.fit(X_train, y_train)
                     y_pred = model.predict(X_test)
-                
                 # Calculate metrics
                 mae = mean_absolute_error(y_test, y_pred)
                 rmse = np.sqrt(mean_squared_error(y_test, y_pred))
                 r2 = r2_score(y_test, y_pred)
-                
                 model_scores[name] = {
                     'mae': mae,
                     'rmse': rmse,
                     'r2_score': r2
                 }
-                
                 self.models[name] = model
-                
                 # Store feature importance for tree-based models
                 if hasattr(model, 'feature_importances_'):
                     self.feature_importance[name] = dict(zip(features, model.feature_importances_))
-                
-                print(f"{name}: MAE={mae:.2f}, RMSE={rmse:.2f}, R²={r2:.3f}")
-                
+                # Use only ASCII in print statements
+                if not self.suppress_output:
+                    print(f"{name}: MAE={mae:.2f}, RMSE={rmse:.2f}, R2={r2:.3f}")
             except Exception as e:
-                print(f"Error training {name}: {e}")
-        
+                if not self.suppress_output:
+                    print(f"Error training {name}: {e}")
         return model_scores
     
-    def generate_forecast(self, months=3):
-        """Generate demand forecast for future months"""
+    def generate_forecast(self, months=6):
+        """Generate demand forecast grouped by year and month for easy multi-year plotting"""
         try:
-            # Load and preprocess data
+            # Load and preprocess data (now monthly)
             df = self.load_and_preprocess_data()
             if df is None:
                 return self.get_error_response(months)
-            
             # Prepare features
             X, y, features = self.prepare_features(df)
-            
             # Train models
             model_scores = self.train_models(X, y, features)
-            
             if not self.models:
                 return self.get_error_response(months)
-            
             # Use the best model for forecasting
-            best_model_name = max(model_scores.keys(), 
-                                key=lambda x: model_scores[x]['r2_score'])
+            best_model_name = max(model_scores.keys(), key=lambda x: model_scores[x]['r2_score'])
             best_model = self.models[best_model_name]
-            
-            # Generate future dates
+            # Generate future months
             last_date = df['Date'].max()
-            future_dates = [last_date + timedelta(days=30*i) for i in range(1, months + 1)]
-            
+            future_dates = [last_date + pd.DateOffset(months=i) for i in range(1, months + 1)]
             # Prepare future feature data
             future_predictions = []
             for date in future_dates:
-                # Create feature vector for future date
                 future_features = self.create_future_feature_vector(date, df, features)
-                
-                # Make prediction
                 if best_model_name == 'linear_regression':
                     future_features_scaled = self.scaler.transform([future_features])
                     prediction = best_model.predict(future_features_scaled)[0]
                 else:
                     prediction = best_model.predict([future_features])[0]
-                
                 future_predictions.append(max(0, int(prediction)))
-            
-            # Calculate seasonal patterns
+            # Build a timeline of all months (historical + future)
+            all_dates = list(df['Date']) + future_dates
+            all_years = sorted(set([d.year for d in all_dates]))
+            # Build a lookup for actual and predicted
+            actual_lookup = {(row['Date'].year, row['Date'].month): int(row['Units Sold']) for _, row in df.iterrows()}
+            pred_lookup = {(d.year, d.month): int(future_predictions[i]) for i, d in enumerate(future_dates)}
+            # Month labels
+            month_labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            # For each year, build arrays of actual and predicted for Jan-Dec
+            years = []
+            for year in all_years:
+                actual = []
+                predicted = []
+                for m in range(1, 13):
+                    actual.append(actual_lookup.get((year, m)))
+                    predicted.append(pred_lookup.get((year, m)))
+                years.append({
+                    'year': year,
+                    'actual': actual,
+                    'predicted': predicted
+                })
+            # Calculate seasonal patterns (now monthly)
             seasonal_patterns = self.calculate_seasonal_patterns(df)
-            
             # Analyze trends
             trend_analysis = self.analyze_trends(df)
-            
             # Calculate confidence level
             confidence_level = self.calculate_confidence_level(model_scores[best_model_name])
-            
             # Prepare result
             result = {
-                'forecast': future_predictions,
+                'years': years,
+                'months': month_labels,
                 'confidence_level': confidence_level,
                 'seasonal_patterns': seasonal_patterns,
                 'trend_direction': trend_analysis['direction'],
@@ -222,24 +267,23 @@ class AdvancedDemandForecaster:
                 'data_summary': {
                     'total_records': len(df),
                     'date_range': {
-                        'start': df['Date'].min().strftime('%Y-%m-%d'),
-                        'end': df['Date'].max().strftime('%Y-%m-%d')
+                        'start': df['Date'].min().to_pydatetime().strftime('%Y-%m-%d'),
+                        'end': df['Date'].max().to_pydatetime().strftime('%Y-%m-%d')
                     },
-                    'products_count': df['product_name'].nunique(),
-                    'retailers_count': df['retailer_name'].nunique(),
-                    'regions_count': df['Region'].nunique()
+                    'months_count': len(df),
+                    'total_units_sold': int(df['Units Sold'].sum())
                 },
-                'status': 'success'
+                'status': 'success',
+                'forecast_months': [d.strftime('%Y-%m') for d in future_dates]
             }
-            
             return result
-            
         except Exception as e:
-            print(f"Error in forecast generation: {e}")
+            if not self.suppress_output:
+                print(f"Error in forecast generation: {e}")
             return self.get_error_response(months)
     
     def create_future_feature_vector(self, date, df, features):
-        """Create feature vector for future date prediction"""
+        """Create feature vector for future date prediction with seasonal patterns"""
         # Base date features
         future_features = {
             'Year': date.year,
@@ -253,16 +297,32 @@ class AdvancedDemandForecaster:
             'IsMonthStart': 1 if date.day == 1 else 0
         }
         
-        # Use median values for other features
-        future_features.update({
-            'Inventory Level': df['Inventory Level'].median(),
-            'Units Ordered': df['Units Ordered'].median(),
-            'unit_price(UGX)': df['unit_price(UGX)'].median(),
-            'Inventory_Turnover': df['Inventory_Turnover'].median(),
-            'Order_Fulfillment_Rate': df['Order_Fulfillment_Rate'].median(),
-            'Revenue_Per_Unit': df['Revenue_Per_Unit'].median(),
-            'Promotion': 0  # Assume no promotion for future
-        })
+        # Use seasonal patterns for better predictions
+        month_data = df[df['Month'] == date.month]
+        quarter_data = df[df['Quarter'] == date.quarter]
+        
+        # Use seasonal averages when available, fallback to overall medians
+        if len(month_data) > 0:
+            future_features.update({
+                'Inventory Level': month_data['Inventory Level'].median(),
+                'Units Ordered': month_data['Units Ordered'].median(),
+                'unit_price(UGX)': month_data['unit_price(UGX)'].median(),
+                'Inventory_Turnover': month_data['Inventory_Turnover'].median(),
+                'Order_Fulfillment_Rate': month_data['Order_Fulfillment_Rate'].median(),
+                'Revenue_Per_Unit': month_data['Revenue_Per_Unit'].median(),
+            })
+        else:
+            future_features.update({
+                'Inventory Level': df['Inventory Level'].median(),
+                'Units Ordered': df['Units Ordered'].median(),
+                'unit_price(UGX)': df['unit_price(UGX)'].median(),
+                'Inventory_Turnover': df['Inventory_Turnover'].median(),
+                'Order_Fulfillment_Rate': df['Order_Fulfillment_Rate'].median(),
+                'Revenue_Per_Unit': df['Revenue_Per_Unit'].median(),
+            })
+        
+        # Assume no promotion for future
+        future_features['Promotion'] = 0
         
         # Add encoded features (use most common values)
         for feature in ['retailer_id', 'Product_id', 'product_name', 'Region', 'Weather Condition', 'order_status', 'Product_Category']:
@@ -333,17 +393,26 @@ class AdvancedDemandForecaster:
 
 def main():
     """Main function to run demand forecasting"""
-    # Get months from command line argument, default to 3
-    months = int(sys.argv[1]) if len(sys.argv) > 1 else 3
-    
-    # Initialize forecaster
-    forecaster = AdvancedDemandForecaster()
-    
-    # Generate forecast
-    result = forecaster.generate_forecast(months)
-    
-    # Print JSON result
-    print(json.dumps(result, indent=2))
+    try:
+        # Get months from command line argument, default to 3
+        months = int(sys.argv[1]) if len(sys.argv) > 1 else 3
+        
+        # Initialize forecaster
+        forecaster = AdvancedDemandForecaster()
+        
+        # Generate forecast
+        result = forecaster.generate_forecast(months)
+        
+        # Print JSON result with proper formatting
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+        
+    except Exception as e:
+        error_result = {
+            'error': str(e),
+            'status': 'error',
+            'message': 'Failed to generate forecast'
+        }
+        print(json.dumps(error_result, indent=2))
 
 if __name__ == "__main__":
     main() 

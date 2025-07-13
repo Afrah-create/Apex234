@@ -105,7 +105,7 @@ class VendorProductController extends Controller
         $product->save();
         
         // Update inventory quantities if provided
-        $inventory = Inventory::where('yogurt_product_id', $id)->first();
+        $inventory = $product->currentInventory;
         if ($inventory) {
             if ($request->filled('quantity_available')) {
                 $inventory->quantity_available = $request->quantity_available;

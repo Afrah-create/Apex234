@@ -104,6 +104,11 @@ class VendorApplicantController extends Controller
         // Clear registration data from session
         session()->forget('vendor_registration_data');
 
+        // Log out the user after application submission
+        \Illuminate\Support\Facades\Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
         // Redirect to confirmation page with check status button
         return redirect()->route('vendor-applicant.confirmation', ['email' => $validated['email']]);
     }

@@ -2,271 +2,57 @@
 
 @section('content')
 <main class="main-content">
-    <!-- Navigation Section -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-        <div class="flex items-center justify-between mb-4">
-            <h1 class="text-2xl font-bold text-gray-900">Analytics & Reports Dashboard</h1>
-            <div class="flex space-x-4">
-              
-                <button onclick="refreshAllData()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition duration-200 flex items-center">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                    </svg>
-                    Refresh Data
-                </button>
-            </div>
-        </div>
-        <p class="text-gray-600">Comprehensive analytics, machine learning insights, and decision-making tools for strategic management.</p>
+        <h1 class="text-2xl font-bold text-gray-900">Machine Learning Insights</h1>
     </div>
-
-    <!-- Key Performance Indicators -->
-    <div class="summary-cards mb-8">
-        <div class="summary-card" style="--summary-card-border: #22c55e;">
-            <div class="icon" style="background: #bbf7d0; color: #22c55e;">
-                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
-                </svg>
-            </div>
-            <div class="details">
-                <p>Revenue Growth</p>
-                <p id="revenueGrowth">+12.5%</p>
-            </div>
-        </div>
-        <div class="summary-card" style="--summary-card-border: #3b82f6;">
-            <div class="icon" style="background: #dbeafe; color: #3b82f6;">
-                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                </svg>
-            </div>
-            <div class="details">
-                <p>Order Volume</p>
-                <p id="orderVolume">1,247</p>
-            </div>
-        </div>
-        <div class="summary-card" style="--summary-card-border: #f59e0b;">
-            <div class="icon" style="background: #fef3c7; color: #f59e0b;">
-                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-                </svg>
-            </div>
-            <div class="details">
-                <p>Profit Margin</p>
-                <p id="profitMargin">23.8%</p>
-            </div>
-        </div>
-        <div class="summary-card" style="--summary-card-border: #ef4444;">
-            <div class="icon" style="background: #fee2e2; color: #ef4444;">
-                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                </svg>
-            </div>
-            <div class="details">
-                <p>Customer Satisfaction</p>
-                <p id="customerSatisfaction">94.2%</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Predictive Analytics -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-        <!-- Sales Prediction -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Sales Prediction (Next 30 Days)</h3>
-            <div class="space-y-4">
-                <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                    <span class="text-sm font-medium text-green-800">Greek Vanilla Yoghurt</span>
-                    <span class="text-lg font-bold text-green-900">2,450 units</span>
-                </div>
-                <div class="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-                    <span class="text-sm font-medium text-blue-800">Low Fat Blueberry Yoghurt</span>
-                    <span class="text-lg font-bold text-blue-900">1,890 units</span>
-                </div>
-                <div class="flex justify-between items-center p-3 bg-yellow-50 rounded-lg">
-                    <span class="text-sm font-medium text-yellow-800">Organic Strawberry Yoghurt</span>
-                    <span class="text-lg font-bold text-yellow-900">1,230 units</span>
-                </div>
-            </div>
-            <div class="mt-4 p-3 bg-gray-50 rounded-lg">
-                <p class="text-sm text-gray-600">Confidence Level: <span class="font-semibold text-gray-900">87%</span></p>
-            </div>
-        </div>
-
-        <!-- Inventory Optimization -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Inventory Optimization</h3>
-            <div class="space-y-4">
-                <div class="p-3 bg-red-50 rounded-lg border border-red-200">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-sm font-medium text-red-800">Low Stock Alert</span>
-                        <span class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">3 items</span>
-                    </div>
-                    <p class="text-xs text-red-700">Greek Vanilla, Low Fat Blueberry, Organic Strawberry</p>
-                </div>
-                <div class="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-sm font-medium text-yellow-800">Reorder Suggested</span>
-                        <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">5 items</span>
-                    </div>
-                    <p class="text-xs text-yellow-700">Based on ML predictions</p>
-                </div>
-                <div class="p-3 bg-green-50 rounded-lg border border-green-200">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-sm font-medium text-green-800">Optimal Stock</span>
-                        <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">12 items</span>
-                    </div>
-                    <p class="text-xs text-green-700">Well-maintained levels</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Risk Assessment -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Risk Assessment</h3>
-            <div class="space-y-4">
-                <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg">
-                    <div>
-                        <p class="text-sm font-medium text-red-800">Supply Chain Risk</p>
-                        <p class="text-xs text-red-600">Raw material shortage</p>
-                    </div>
-                    <span class="text-lg font-bold text-red-900">High</span>
-                </div>
-                <div class="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
-                    <div>
-                        <p class="text-sm font-medium text-yellow-800">Market Competition</p>
-                        <p class="text-xs text-yellow-600">New entrants</p>
-                    </div>
-                    <span class="text-lg font-bold text-yellow-900">Medium</span>
-                </div>
-                <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                    <div>
-                        <p class="text-sm font-medium text-green-800">Financial Stability</p>
-                        <p class="text-xs text-green-600">Strong cash flow</p>
-                    </div>
-                    <span class="text-lg font-bold text-green-900">Low</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Advanced Analytics -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <!-- Trend Analysis -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-xl font-semibold text-gray-900 mb-6">Trend Analysis</h2>
-            <div class="relative" style="height: 300px;">
-                <canvas id="trendAnalysisChart"></canvas>
-            </div>
-            <div class="mt-4 grid grid-cols-2 gap-4">
-                <div class="p-3 bg-blue-50 rounded-lg">
-                    <p class="text-sm font-medium text-blue-800">Growth Rate</p>
-                    <p class="text-lg font-bold text-blue-900">+8.5%</p>
-                </div>
-                <div class="p-3 bg-green-50 rounded-lg">
-                    <p class="text-sm font-medium text-green-800">Market Share</p>
-                    <p class="text-lg font-bold text-green-900">12.3%</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Performance Metrics -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-xl font-semibold text-gray-900 mb-6">Performance Metrics</h2>
-            <div class="space-y-4">
-                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div>
-                        <p class="text-sm font-medium text-gray-700">Customer Acquisition Cost</p>
-                        <p class="text-xs text-gray-500">Last 30 days</p>
-                    </div>
-                    <span class="text-lg font-bold text-gray-900">85,750 UGX</span>
-                </div>
-                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div>
-                        <p class="text-sm font-medium text-gray-700">Customer Lifetime Value</p>
-                        <p class="text-xs text-gray-500">Average per customer</p>
-                    </div>
-                    <span class="text-lg font-bold text-gray-900">548,800 UGX</span>
-                </div>
-                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div>
-                        <p class="text-sm font-medium text-gray-700">Conversion Rate</p>
-                        <p class="text-xs text-gray-500">Website to purchase</p>
-                    </div>
-                    <span class="text-lg font-bold text-gray-900">3.2%</span>
-                </div>
-                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div>
-                        <p class="text-sm font-medium text-gray-700">Churn Rate</p>
-                        <p class="text-xs text-gray-500">Monthly</p>
-                    </div>
-                    <span class="text-lg font-bold text-gray-900">2.1%</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Decision Support Tools -->
+    <!-- Demand Forecasting Chart -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 class="text-xl font-semibold text-gray-900 mb-6">Decision Support Tools</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="p-4 border border-gray-200 rounded-lg">
-                <h3 class="font-semibold text-gray-900 mb-3">Scenario Analysis</h3>
-                <div class="space-y-2">
-                    <button onclick="runScenario('optimistic')" class="w-full text-left p-2 bg-green-50 hover:bg-green-100 rounded text-sm">
-                        Optimistic Scenario (+20% growth)
-                    </button>
-                    <button onclick="runScenario('realistic')" class="w-full text-left p-2 bg-blue-50 hover:bg-blue-100 rounded text-sm">
-                        Realistic Scenario (+10% growth)
-                    </button>
-                    <button onclick="runScenario('pessimistic')" class="w-full text-left p-2 bg-red-50 hover:bg-red-100 rounded text-sm">
-                        Pessimistic Scenario (-5% growth)
-                    </button>
-                </div>
-            </div>
-            <div class="p-4 border border-gray-200 rounded-lg">
-                <h3 class="font-semibold text-gray-900 mb-3">What-If Analysis</h3>
-                <div class="space-y-3">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Price Change (%)</label>
-                        <input type="number" id="priceChange" class="w-full p-2 border border-gray-300 rounded text-sm" placeholder="0">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Marketing Budget (UGX)</label>
-                        <input type="number" id="marketingBudget" class="w-full p-2 border border-gray-300 rounded text-sm" placeholder="35000000">
-                    </div>
-                    <button onclick="runWhatIfAnalysis()" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded text-sm">
-                        Analyze Impact
-                    </button>
-                </div>
-            </div>
-            <div class="p-4 border border-gray-200 rounded-lg">
-                <h3 class="font-semibold text-gray-900 mb-3">Recommendations</h3>
-                <div id="recommendations" class="space-y-2">
-                    <div class="p-2 bg-blue-50 rounded text-sm">
-                        <strong>Inventory:</strong> Increase Greek Vanilla Yoghurt stock by 25%
-                    </div>
-                    <div class="p-2 bg-green-50 rounded text-sm">
-                        <strong>Pricing:</strong> Consider 5% price increase for premium products
-                    </div>
-                    <div class="p-2 bg-yellow-50 rounded text-sm">
-                        <strong>Marketing:</strong> Focus on Low Fat Blueberry Yoghurt promotions
-                    </div>
-                </div>
-            </div>
+        <h2 class="text-xl font-semibold text-gray-900 mb-6">Demand Forecasting</h2>
+        <div class="relative" style="height: 300px;">
+            <canvas id="demandForecastChart"></canvas>
+        </div>
+
+    </div>
+    <!-- Sales Prediction (Next 30 Days) -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Sales Prediction</h3>
+        <div id="salesPrediction" class="space-y-4"></div>
+        <div class="mt-4 p-3 bg-gray-50 rounded-lg">
+            <p class="text-sm text-gray-600">Confidence Level: <span id="salesConfidence" class="font-semibold text-gray-900">-</span></p>
         </div>
     </div>
-
-    <!-- Advanced Reports Link -->
-    
+    <!-- Inventory Optimization -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Inventory Optimization</h3>
+        <div id="inventoryOptimization" class="space-y-4"></div>
+    </div>
+    <!-- Risk Assessment -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Risk Assessment</h3>
+        <div id="riskAssessment" class="space-y-4"></div>
+    </div>
+    <!-- Customer Segmentation -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Customer Segmentation</h3>
+        <div class="relative" style="height: 300px;">
+            <canvas id="customerSegmentationChart"></canvas>
+        </div>
+    </div>
 </main>
 
 <!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-    let demandForecastChart, customerSegmentationChart, trendAnalysisChart;
+    let demandForecastChart, customerSegmentationChart;
 
     // Initialize charts when page loads
     document.addEventListener('DOMContentLoaded', function() {
+        // Check if we're on the analytics page
+        const demandChart = document.getElementById('demandForecastChart');
+        const segmentationChart = document.getElementById('customerSegmentationChart');
+        
+        if (demandChart && segmentationChart) {
         initializeCharts();
         loadAnalyticsData();
         
@@ -274,24 +60,27 @@
         setInterval(function() {
             loadAnalyticsData();
         }, 300000);
+        }
     });
 
     function initializeCharts() {
         // Demand Forecasting Chart
-        const demandCtx = document.getElementById('demandForecastChart').getContext('2d');
-        demandForecastChart = new Chart(demandCtx, {
+        const demandCtx = document.getElementById('demandForecastChart');
+        if (!demandCtx) return;
+        
+        demandForecastChart = new Chart(demandCtx.getContext('2d'), {
             type: 'line',
             data: {
                 labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                 datasets: [{
                     label: 'Actual Demand',
-                    data: [1200, 1350, 1400, 1550, 1600, 1750, 1800, 1700, 1650, 1500, 1400, 1300],
+                    data: [], // Will be filled by API
                     borderColor: 'rgb(59, 130, 246)',
                     backgroundColor: 'rgba(59, 130, 246, 0.1)',
                     tension: 0.4
                 }, {
                     label: 'Predicted Demand',
-                    data: [null, null, null, null, null, null, null, null, null, null, 1450, 1600],
+                    data: [], // Will be filled by API
                     borderColor: 'rgb(34, 197, 94)',
                     backgroundColor: 'rgba(34, 197, 94, 0.1)',
                     borderDash: [5, 5],
@@ -319,13 +108,15 @@
         });
 
         // Customer Segmentation Chart
-        const segmentationCtx = document.getElementById('customerSegmentationChart').getContext('2d');
-        customerSegmentationChart = new Chart(segmentationCtx, {
+        const segmentationCtx = document.getElementById('customerSegmentationChart');
+        if (!segmentationCtx) return;
+        
+        customerSegmentationChart = new Chart(segmentationCtx.getContext('2d'), {
             type: 'doughnut',
             data: {
                 labels: ['Premium Buyers', 'Regular Consumers', 'Occasional Buyers'],
                 datasets: [{
-                    data: [23, 45, 32],
+                    data: [], // Will be filled by API
                     backgroundColor: [
                         'rgba(59, 130, 246, 0.8)',
                         'rgba(34, 197, 94, 0.8)',
@@ -349,85 +140,476 @@
                 }
             }
         });
-
-        // Trend Analysis Chart
-        const trendCtx = document.getElementById('trendAnalysisChart').getContext('2d');
-        trendAnalysisChart = new Chart(trendCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Q1', 'Q2', 'Q3', 'Q4'],
-                datasets: [{
-                    label: 'Revenue',
-                    data: [45000, 52000, 48000, 61000],
-                    backgroundColor: 'rgba(59, 130, 246, 0.8)',
-                    borderColor: 'rgba(59, 130, 246, 1)',
-                    borderWidth: 1
-                }, {
-                    label: 'Profit',
-                    data: [12000, 14000, 13000, 18000],
-                    backgroundColor: 'rgba(34, 197, 94, 0.8)',
-                    borderColor: 'rgba(34, 197, 94, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Amount (UGX)'
-                        }
-                    }
-                }
-            }
-        });
     }
 
     function loadAnalyticsData() {
-        // Load KPI data
-        fetch('{{ route("api.analytics.kpi") }}')
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('revenueGrowth').textContent = data.revenue_growth;
-                document.getElementById('orderVolume').textContent = data.order_volume;
-                document.getElementById('profitMargin').textContent = data.profit_margin;
-                document.getElementById('customerSatisfaction').textContent = data.customer_satisfaction;
-            })
-            .catch(error => console.error('Error loading KPI data:', error));
-
         // Load ML predictions
-        fetch('{{ route("api.analytics.predictions") }}')
+        fetch('/api/analytics/sales-predictions')
             .then(response => response.json())
             .then(data => {
                 // Update demand forecast chart
-                demandForecastChart.data.datasets[1].data = data.demand_forecast;
-                demandForecastChart.update();
-            })
-            .catch(error => console.error('Error loading predictions:', error));
+                if (demandForecastChart && data.years && data.months) {
+                    const datasets = [];
+                    const currentYear = new Date().getFullYear();
+                    // Softer, pastel color palette
+                    const colorPalette = [
+                        '#7fa7e6', // soft blue
+                        '#ffd699', // soft orange
+                        '#a7e6b8', // soft green
+                        '#f7a6a6', // soft red
+                        '#c7b6e6', // soft purple
+                        '#c2b280', // soft brown
+                        '#f7b6d2', // soft pink
+                        '#cccccc', // soft gray
+                        '#e6e6a7', // soft olive
+                        '#a7e6e6'  // soft cyan
+                    ];
+                    data.years.forEach((yearObj, idx) => {
+                        const colorIdx = idx % colorPalette.length;
+                        // Only show actual for past/current years
+                        if (yearObj.year <= currentYear) {
+                            datasets.push({
+                                label: yearObj.year + ' Actual',
+                                data: yearObj.actual,
+                                borderColor: colorPalette[colorIdx],
+                                backgroundColor: colorPalette[colorIdx] + '11', // very light fill
+                                tension: 0.4,
+                                borderWidth: 2,
+                                spanGaps: true,
+                                fill: false
+                            });
+                        }
+                        // Only show predicted for current/future years
+                        if (yearObj.year >= currentYear) {
+                            datasets.push({
+                                label: yearObj.year + ' Predicted',
+                                data: yearObj.predicted,
+                                borderColor: colorPalette[colorIdx],
+                                backgroundColor: colorPalette[colorIdx] + '11',
+                                borderDash: [6, 5],
+                                tension: 0.4,
+                                borderWidth: 2,
+                                spanGaps: true,
+                                fill: false,
+                                pointStyle: 'rectRot',
+                                pointRadius: 4
+                            });
+                        }
+                    });
+                    demandForecastChart.data.labels = data.months;
+                    demandForecastChart.data.datasets = datasets;
+                    demandForecastChart.update();
+                }
 
-        // Load trend analysis data
-        fetch('{{ route("api.analytics.trend-analysis") }}')
+                // Update sales prediction section (show only for the latest year with predictions)
+                const salesPrediction = document.getElementById('salesPrediction');
+                if (salesPrediction) {
+                    salesPrediction.innerHTML = '';
+                    if (data.years && data.years.length > 0) {
+                        // Find the latest year with predictions
+                        const latestPred = data.years.slice().reverse().find(y => y.predicted.some(v => v !== null));
+                        if (latestPred) {
+                            // Create a grid container for two-column layout
+                            const gridContainer = document.createElement('div');
+                            gridContainer.className = 'grid grid-cols-2 gap-4';
+                            
+                            data.months.forEach((month, idx) => {
+                                if (latestPred.predicted[idx] !== null) {
+                                    const div = document.createElement('div');
+                                    div.className = 'flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200';
+                                    div.innerHTML = `
+                                        <div class="flex flex-col">
+                                            <span class="text-sm font-medium text-green-800">${month} ${latestPred.year}</span>
+                                            <span class="text-xs text-green-600">Predicted Demand</span>
+                                        </div>
+                                        <div class="text-right">
+                                            <span class="text-lg font-bold text-green-900">${latestPred.predicted[idx]}</span>
+                                            <span class="text-xs text-green-600 block">units</span>
+                                        </div>
+                                    `;
+                                    gridContainer.appendChild(div);
+                                }
+                            });
+                            
+                            salesPrediction.appendChild(gridContainer);
+                        }
+                        const confidenceElement = document.getElementById('salesConfidence');
+                        if (confidenceElement) {
+                            const confidence = data.confidence_level ? Math.round(data.confidence_level * 100) : 0;
+                            confidenceElement.textContent = confidence + '%';
+                        }
+                    } else {
+                        salesPrediction.innerHTML = '<span class="text-gray-500">No sales prediction data available.</span>';
+                        const confidenceElement = document.getElementById('salesConfidence');
+                        if (confidenceElement) {
+                            confidenceElement.textContent = '-';
+                        }
+                    }
+                }
+
+
+            })
+            .catch(error => {
+                if (demandForecastChart) {
+                demandForecastChart.data.datasets[1].data = [];
+                demandForecastChart.update();
+                }
+                
+                const salesPrediction = document.getElementById('salesPrediction');
+                if (salesPrediction) {
+                    salesPrediction.innerHTML = '<span class="text-red-500">Error loading sales predictions.</span>';
+                }
+                
+                const confidenceElement = document.getElementById('salesConfidence');
+                if (confidenceElement) {
+                    confidenceElement.textContent = 'Error';
+                }
+            });
+
+        // Load inventory optimization
+        fetch('/api/analytics/inventory-optimization')
             .then(response => response.json())
             .then(data => {
-                // Update trend analysis chart with real data
-                trendAnalysisChart.data.labels = data.quarters;
-                trendAnalysisChart.data.datasets[0].data = data.revenue;
-                trendAnalysisChart.data.datasets[1].data = data.profit;
-                trendAnalysisChart.update();
+                const inventoryDiv = document.getElementById('inventoryOptimization');
+                if (!inventoryDiv) return;
                 
-                // Update growth rate and market share
-                document.querySelector('.bg-blue-50 .text-lg').textContent = data.growth_rate + '%';
-                document.querySelector('.bg-green-50 .text-lg').textContent = data.market_share + '%';
+                inventoryDiv.innerHTML = '';
+                if (data && data.detailed_recommendations && data.detailed_recommendations.length > 0) {
+                    // Group recommendations by urgency
+                    const highUrgency = data.detailed_recommendations.filter(item => item.urgency === 'high');
+                    const mediumUrgency = data.detailed_recommendations.filter(item => item.urgency === 'medium');
+                    const lowUrgency = data.detailed_recommendations.filter(item => item.urgency === 'low');
+                    
+                    // Create urgency sections
+                    if (highUrgency.length > 0) {
+                        const highSection = document.createElement('div');
+                        highSection.className = 'mb-6';
+                        highSection.innerHTML = `
+                            <div class="flex items-center mb-3">
+                                <div class="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+                                <h4 class="text-sm font-semibold text-red-800">High Priority - Immediate Action Required</h4>
+                                <span class="ml-2 text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">${highUrgency.length} items</span>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        `;
+                        
+                        highUrgency.forEach(item => {
+                            highSection.innerHTML += `
+                                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <h5 class="font-medium text-red-900 text-sm">${item.product_name || 'Unknown Product'}</h5>
+                                        <span class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full font-medium">${(item.recommendation || '').replace('_', ' ')}</span>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-2 text-xs">
+                                        <div class="text-center">
+                                            <div class="font-semibold text-red-700">Current</div>
+                                            <div class="text-red-900">${item.current_stock || 0}</div>
+                                        </div>
+                                        <div class="text-center">
+                                            <div class="font-semibold text-red-700">Optimal</div>
+                                            <div class="text-red-900">${item.optimal_stock || 0}</div>
+                                        </div>
+                                        <div class="text-center">
+                                            <div class="font-semibold text-red-700">Reorder</div>
+                                            <div class="text-red-900">${item.reorder_point || 0}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        
+                        highSection.innerHTML += '</div>';
+                        inventoryDiv.appendChild(highSection);
+                    }
+                    
+                    if (mediumUrgency.length > 0) {
+                        const mediumSection = document.createElement('div');
+                        mediumSection.className = 'mb-6';
+                        mediumSection.innerHTML = `
+                            <div class="flex items-center mb-3">
+                                <div class="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
+                                <h4 class="text-sm font-semibold text-yellow-800">Medium Priority - Plan Reorder</h4>
+                                <span class="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">${mediumUrgency.length} items</span>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        `;
+                        
+                        mediumUrgency.forEach(item => {
+                            mediumSection.innerHTML += `
+                                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <h5 class="font-medium text-yellow-900 text-sm">${item.product_name || 'Unknown Product'}</h5>
+                                        <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-medium">${(item.recommendation || '').replace('_', ' ')}</span>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-2 text-xs">
+                                        <div class="text-center">
+                                            <div class="font-semibold text-yellow-700">Current</div>
+                                            <div class="text-yellow-900">${item.current_stock || 0}</div>
+                                        </div>
+                                        <div class="text-center">
+                                            <div class="font-semibold text-yellow-700">Optimal</div>
+                                            <div class="text-yellow-900">${item.optimal_stock || 0}</div>
+                                        </div>
+                                        <div class="text-center">
+                                            <div class="font-semibold text-yellow-700">Reorder</div>
+                                            <div class="text-yellow-900">${item.reorder_point || 0}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        
+                        mediumSection.innerHTML += '</div>';
+                        inventoryDiv.appendChild(mediumSection);
+                    }
+                    
+                    if (lowUrgency.length > 0) {
+                        const lowSection = document.createElement('div');
+                        lowSection.className = 'mb-6';
+                        lowSection.innerHTML = `
+                            <div class="flex items-center mb-3">
+                                <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                                <h4 class="text-sm font-semibold text-green-800">Low Priority - Stock Levels Good</h4>
+                                <span class="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">${lowUrgency.length} items</span>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        `;
+                        
+                        lowUrgency.forEach(item => {
+                            lowSection.innerHTML += `
+                                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <h5 class="font-medium text-green-900 text-sm">${item.product_name || 'Unknown Product'}</h5>
+                                        <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">${(item.recommendation || '').replace('_', ' ')}</span>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-2 text-xs">
+                                        <div class="text-center">
+                                            <div class="font-semibold text-green-700">Current</div>
+                                            <div class="text-green-900">${item.current_stock || 0}</div>
+                                        </div>
+                                        <div class="text-center">
+                                            <div class="font-semibold text-green-700">Optimal</div>
+                                            <div class="text-green-900">${item.optimal_stock || 0}</div>
+                                        </div>
+                                        <div class="text-center">
+                                            <div class="font-semibold text-green-700">Reorder</div>
+                                            <div class="text-green-900">${item.reorder_point || 0}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        
+                        lowSection.innerHTML += '</div>';
+                        inventoryDiv.appendChild(lowSection);
+                    }
+                } else {
+                    inventoryDiv.innerHTML = '<span class="text-gray-500">No inventory optimization data available.</span>';
+                }
             })
-            .catch(error => console.error('Error loading trend analysis data:', error));
+            .catch(error => {
+                const inventoryDiv = document.getElementById('inventoryOptimization');
+                if (inventoryDiv) {
+                    inventoryDiv.innerHTML = '<span class="text-red-500">Error loading inventory optimization.</span>';
+                }
+                console.error('Error loading inventory optimization:', error);
+            });
+
+        // Load risk assessment
+        fetch('/api/analytics/risk-assessment')
+            .then(response => response.json())
+            .then(data => {
+                const riskDiv = document.getElementById('riskAssessment');
+                if (!riskDiv) return;
+                
+                riskDiv.innerHTML = '';
+                if (data) {
+                    // Display overall risk score first
+                    if (data.overall_risk_score !== undefined) {
+                        const overallRiskCard = document.createElement('div');
+                        const overallScore = Math.round(data.overall_risk_score * 100);
+                        const riskLevel = overallScore >= 60 ? 'high' : (overallScore >= 30 ? 'medium' : 'low');
+                        const riskColor = riskLevel === 'high' ? 'red' : (riskLevel === 'medium' ? 'yellow' : 'green');
+                        
+                        overallRiskCard.className = `bg-${riskColor}-50 border border-${riskColor}-200 rounded-lg p-4 mb-4`;
+                        overallRiskCard.innerHTML = `
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="text-lg font-semibold text-${riskColor}-800">Overall Business Risk</h4>
+                                <span class="text-2xl font-bold text-${riskColor}-900">${overallScore}%</span>
+                            </div>
+                            <div class="text-sm text-${riskColor}-700">
+                                Risk Level: <span class="font-semibold capitalize">${riskLevel}</span>
+                            </div>
+                        `;
+                        riskDiv.appendChild(overallRiskCard);
+                    }
+                    
+                    // Display individual risk categories
+                    Object.keys(data).forEach(riskType => {
+                        if (riskType === 'overall_risk_score') return; // Skip overall score as it's displayed above
+                        
+                        const risk = data[riskType];
+                        if (!risk || typeof risk !== 'object') return;
+                        
+                        const riskLevel = risk.risk_level || 'low';
+                        const riskScore = risk.risk_score || 0;
+                        const riskLevelClass = riskLevel === 'high' ? 'bg-red-50 border-red-200' : 
+                                             riskLevel === 'medium' ? 'bg-yellow-50 border-yellow-200' : 
+                                             'bg-green-50 border-green-200';
+                        const textClass = riskLevel === 'high' ? 'text-red-800' : 
+                                        riskLevel === 'medium' ? 'text-yellow-800' : 
+                                        'text-green-800';
+                        const textClassSmall = riskLevel === 'high' ? 'text-red-600' : 
+                                             riskLevel === 'medium' ? 'text-yellow-600' : 
+                                             'text-green-600';
+                        const textClassBold = riskLevel === 'high' ? 'text-red-900' : 
+                                            riskLevel === 'medium' ? 'text-yellow-900' : 
+                                            'text-green-900';
+                        
+                        const div = document.createElement('div');
+                        div.className = `border rounded-lg p-4 mb-3 ${riskLevelClass}`;
+                        
+                        // Create risk header
+                        const riskHeader = `
+                            <div class="flex items-center justify-between mb-3">
+                                <div>
+                                    <h5 class="text-sm font-semibold ${textClass} capitalize">
+                                        ${riskType.replace(/_/g, ' ')} Risk
+                                    </h5>
+                                    <div class="text-xs ${textClassSmall}">
+                                        Risk Score: ${riskScore}/100
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-lg font-bold ${textClassBold} capitalize">${riskLevel}</span>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // Create metrics section
+                        let metricsSection = '';
+                        if (risk.metrics && Object.keys(risk.metrics).length > 0) {
+                            metricsSection = `
+                                <div class="mb-3">
+                                    <h6 class="text-xs font-semibold ${textClass} mb-2">Key Metrics:</h6>
+                                    <div class="grid grid-cols-2 gap-2 text-xs">
+                            `;
+                            
+                            Object.entries(risk.metrics).forEach(([key, value]) => {
+                                const displayKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                const displayValue = typeof value === 'number' ? 
+                                    (key.includes('percentage') ? `${value}%` : 
+                                     key.includes('amount') || key.includes('revenue') || key.includes('cost') ? 
+                                     `UGX ${value.toLocaleString()}` : value.toLocaleString()) : 
+                                    value;
+                                
+                                metricsSection += `
+                                    <div class="bg-white bg-opacity-50 rounded p-2">
+                                        <div class="font-medium ${textClassSmall}">${displayKey}</div>
+                                        <div class="font-bold ${textClassBold}">${displayValue}</div>
+                                    </div>
+                                `;
+                            });
+                            
+                            metricsSection += `
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        
+                        // Create factors section
+                        let factorsSection = '';
+                        if (risk.factors && Object.keys(risk.factors).length > 0) {
+                            factorsSection = `
+                                <div class="mb-3">
+                                    <h6 class="text-xs font-semibold ${textClass} mb-2">Risk Factors:</h6>
+                                    <div class="text-xs ${textClassSmall}">
+                            `;
+                            
+                            Object.entries(risk.factors).forEach(([key, value]) => {
+                                const displayKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                factorsSection += `<div><span class="font-medium">${displayKey}:</span> ${value}</div>`;
+                            });
+                            
+                            factorsSection += `
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        
+                        // Create recommendations section
+                        let recommendationsSection = '';
+                        if (risk.recommendations && risk.recommendations.length > 0) {
+                            recommendationsSection = `
+                                <div>
+                                    <h6 class="text-xs font-semibold ${textClass} mb-2">Recommendations:</h6>
+                                    <ul class="text-xs ${textClassSmall} space-y-1">
+                            `;
+                            
+                            risk.recommendations.forEach(rec => {
+                                recommendationsSection += `<li class="flex items-start">
+                                    <span class="mr-2 mt-1">•</span>
+                                    <span>${rec}</span>
+                                </li>`;
+                            });
+                            
+                            recommendationsSection += `
+                                    </ul>
+                                </div>
+                            `;
+                        }
+                        
+                        div.innerHTML = riskHeader + metricsSection + factorsSection + recommendationsSection;
+                        riskDiv.appendChild(div);
+                    });
+                } else {
+                    riskDiv.innerHTML = '<span class="text-gray-500">No risk assessment data available.</span>';
+                }
+            })
+            .catch(error => {
+                const riskDiv = document.getElementById('riskAssessment');
+                if (riskDiv) {
+                    riskDiv.innerHTML = '<span class="text-red-500">Error loading risk assessment.</span>';
+                }
+                console.error('Error loading risk assessment:', error);
+            });
+
+        // Load customer segmentation data
+        fetch('/api/analytics/customer-segmentation')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Customer segmentation data received:', data);
+                
+                if (customerSegmentationChart && data.segments) {
+                    const labels = Object.keys(data.segments).map(key => 
+                        key.charAt(0).toUpperCase() + key.slice(1) + ' Customers'
+                    );
+                    const values = Object.values(data.segments);
+                    
+                    console.log('Chart data:', { labels, values });
+                    
+                    customerSegmentationChart.data.labels = labels;
+                    customerSegmentationChart.data.datasets[0].data = values;
+                    customerSegmentationChart.update();
+                    
+                    console.log('Customer segmentation chart updated');
+                } else {
+                    console.warn('Customer segmentation data missing or chart not available:', {
+                        hasChart: !!customerSegmentationChart,
+                        hasSegments: !!data.segments,
+                        data: data
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error loading customer segmentation data:', error);
+                
+                if (customerSegmentationChart) {
+                    customerSegmentationChart.data.labels = [];
+                    customerSegmentationChart.data.datasets[0].data = [];
+                    customerSegmentationChart.update();
+                }
+            });
     }
 
     function refreshAllData() {
@@ -435,6 +617,7 @@
         
         // Show refresh feedback
         const button = event.target;
+        if (button) {
         const originalText = button.innerHTML;
         button.innerHTML = '<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Refreshed!';
         button.disabled = true;
@@ -443,31 +626,9 @@
             button.innerHTML = originalText;
             button.disabled = false;
         }, 2000);
-    }
-
-    function runScenario(type) {
-        // Simulate scenario analysis
-        const scenarios = {
-            optimistic: { growth: '+20%', revenue: '262,500,000 UGX', risk: 'Low' },
-            realistic: { growth: '+10%', revenue: '227,500,000 UGX', risk: 'Medium' },
-            pessimistic: { growth: '-5%', revenue: '192,500,000 UGX', risk: 'High' }
-        };
-        
-        const scenario = scenarios[type];
-        alert(`${type.charAt(0).toUpperCase() + type.slice(1)} Scenario:\nGrowth: ${scenario.growth}\nRevenue: ${scenario.revenue}\nRisk: ${scenario.risk}`);
-    }
-
-    function runWhatIfAnalysis() {
-        const priceChange = document.getElementById('priceChange').value;
-        const marketingBudget = document.getElementById('marketingBudget').value;
-        
-        if (priceChange || marketingBudget) {
-            // Simulate what-if analysis
-            const impact = Math.random() * 20 - 10; // Random impact between -10% and +10%
-            alert(`What-If Analysis Results:\nPrice Change: ${priceChange}%\nMarketing Budget: ${marketingBudget} UGX\nPredicted Impact: ${impact.toFixed(1)}%`);
-        } else {
-            alert('Please enter values for analysis');
         }
     }
+
+
 </script>
 @endsection 
