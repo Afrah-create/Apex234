@@ -8,8 +8,13 @@ return new class extends Migration {
     public function up()
     {
         Schema::table('orders', function (Blueprint $table) {
-            // $table->unsignedBigInteger('user_id')->nullable()->after('retailer_id'); // Commented out to avoid duplicate column error
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
+            if (!Schema::hasColumn('orders', 'user_id')) {
+                $table->unsignedBigInteger('user_id')->nullable()->after('retailer_id');
+                $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
+            }
+            if (!Schema::hasColumn('orders', 'order_type')) {
+                $table->string('order_type')->nullable();
+            }
         });
     }
 
