@@ -77,6 +77,42 @@ class AdminEmployeeController extends Controller
         return redirect()->route('admin.users.index')->with('success', 'Employee created!');
     }
 
+    public function edit($id)
+    {
+        $employee = \App\Models\Employee::findOrFail($id);
+        $vendors = \App\Models\Vendor::all();
+        return view('admin.users.partials.edit-employee', compact('employee', 'vendors'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $employee = \App\Models\Employee::findOrFail($id);
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'role' => 'required|in:Production Worker,Warehouse Staff,Driver,Sales Manager',
+            'vendor_id' => 'nullable|exists:vendors,id',
+            'status' => 'required|in:Active,On Leave,Terminated',
+        ]);
+        $employee->update($request->only(['name', 'role', 'vendor_id', 'status']));
+        // Optionally update the linked user name
+        if ($employee->user) {
+            $employee->user->name = $request->name;
+            $employee->user->save();
+        }
+        return redirect()->route('admin.users.index')->with('success', 'Employee updated successfully!');
+    }
+
+    public function destroy($id)
+    {
+        $employee = \App\Models\Employee::findOrFail($id);
+        // Optionally delete the linked user account
+        if ($employee->user) {
+            $employee->user->delete();
+        }
+        $employee->delete();
+        return redirect()->route('admin.users.index')->with('success', 'Employee deleted successfully!');
+    }
+
     // Export filtered employee assignments as CSV
     public function exportCsv(Request $request)
     {

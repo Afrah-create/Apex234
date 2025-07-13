@@ -25,4 +25,14 @@ class YogurtProduct extends Model
     {
         return $this->hasOne(Inventory::class, 'yogurt_product_id')->latestOfMany();
     }
+
+    public function inventories()
+    {
+        return $this->hasMany(\App\Models\Inventory::class);
+    }
+
+    public function getStockAttribute()
+    {
+        return $this->inventories()->sum('quantity_available');
+    }
 } 

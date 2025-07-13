@@ -33,5 +33,11 @@
         
         <!-- Custom JavaScript -->
         <script src="{{ asset('js/carousel.js') }}"></script>
+        @if(session('force_refresh'))
+        <script>
+            // Force a full reload to clear any cached data after logout
+            window.location.reload(true);
+        </script>
+        @endif
     </body>
 </html>

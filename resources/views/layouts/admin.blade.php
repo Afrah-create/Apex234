@@ -52,6 +52,18 @@
             {{ $slot }}
         </main>
     </div>
+    <footer class="bg-blue-900 text-white mt-8">
+        <div class="max-w-7xl mx-auto px-4 py-8 flex flex-col md:flex-row justify-between items-center">
+            <div class="text-sm mb-2 md:mb-0">
+                &copy; {{ date('Y') }} Caramel Yogurt. All rights reserved.
+            </div>
+            <div class="flex space-x-4">
+                <a href="{{ route('privacy.policy') }}" class="hover:underline hover:text-blue-200">Privacy Policy</a>
+                <a href="{{ route('terms.use') }}" class="hover:underline hover:text-blue-200">Terms of Service</a>
+                <a href="{{ route('contact') }}" class="hover:underline hover:text-blue-200">Contact</a>
+            </div>
+        </div>
+    </footer>
     <script src="{{ asset('js/carousel.js') }}"></script>
 </body>
 </html> 

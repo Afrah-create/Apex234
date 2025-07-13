@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\YogurtProduct;
 use App\Models\CartItem;
+use App\Models\Cart;
 use Illuminate\Support\Facades\Auth;
 
 class CartController extends Controller
@@ -100,5 +101,22 @@ class CartController extends Controller
             }
         }
         return redirect()->route('cart.index')->with('success', 'Product removed from cart!');
+    }
+
+    // API methods for cart management
+    public function getCart()
+    {
+        $cart = Cart::where('user_id', Auth::id())->first();
+        return response()->json(['cart' => $cart ? $cart->cart_data : []]);
+    }
+
+    public function saveCart(Request $request)
+    {
+        $request->validate(['cart' => 'required|array']);
+        $cart = Cart::updateOrCreate(
+            ['user_id' => Auth::id()],
+            ['cart_data' => $request->cart]
+        );
+        return response()->json(['success' => true]);
     }
 } 

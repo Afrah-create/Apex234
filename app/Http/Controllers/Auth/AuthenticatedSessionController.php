@@ -72,8 +72,10 @@ class AuthenticatedSessionController extends Controller
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
+
+        // Set a session flash variable to indicate logout just happened
+        session()->flash('force_refresh', true);
 
         return redirect('/');
     }

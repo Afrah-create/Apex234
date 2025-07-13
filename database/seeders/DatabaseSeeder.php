@@ -57,7 +57,7 @@ class DatabaseSeeder extends Seeder
             'chat_background' => '',
         ]);
 
-        // Ensure vendor@example.com has a Vendor profile
+        
         \App\Models\Vendor::firstOrCreate([
             'user_id' => $vendor->id,
         ], [
