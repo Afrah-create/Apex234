@@ -274,6 +274,44 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="distribution_center_id" class="form-label">Distribution Center *</label>
+                    <select id="distribution_center_id" name="distribution_center_id" class="form-input" required>
+                        <option value="">Select Distribution Center</option>
+                        @foreach($distributionCenters as $center)
+                            <option value="{{ $center->id }}" {{ old('distribution_center_id') == $center->id ? 'selected' : '' }}>
+                                {{ $center->center_name }} - {{ $center->location }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('distribution_center_id')
+                        <div style="color:#c33; font-size:0.9rem; margin-top:4px;">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="payment_method" class="form-label">Payment Method *</label>
+                    <select id="payment_method" name="payment_method" class="form-input" required>
+                        <option value="">Select Payment Method</option>
+                        <option value="cash" {{ old('payment_method') == 'cash' ? 'selected' : '' }}>Cash on Delivery</option>
+                        <option value="mobile_money" {{ old('payment_method') == 'mobile_money' ? 'selected' : '' }}>Mobile Money</option>
+                        <option value="bank_transfer" {{ old('payment_method') == 'bank_transfer' ? 'selected' : '' }}>Bank Transfer</option>
+                    </select>
+                    @error('payment_method')
+                        <div style="color:#c33; font-size:0.9rem; margin-top:4px;">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="requested_delivery_date" class="form-label">Requested Delivery Date *</label>
+                    <input type="date" id="requested_delivery_date" name="requested_delivery_date" class="form-input" 
+                           value="{{ old('requested_delivery_date', date('Y-m-d', strtotime('+2 days'))) }}" 
+                           min="{{ date('Y-m-d', strtotime('+1 day')) }}" required>
+                    @error('requested_delivery_date')
+                        <div style="color:#c33; font-size:0.9rem; margin-top:4px;">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="form-group">
                     <label for="special_instructions" class="form-label">Special Instructions (Optional)</label>
                     <textarea id="special_instructions" name="special_instructions" class="form-textarea" 
                               placeholder="Any special delivery instructions...">{{ old('special_instructions') }}</textarea>

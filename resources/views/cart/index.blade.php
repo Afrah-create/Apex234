@@ -41,22 +41,24 @@
         .header-logo {
             display: flex;
             align-items: center;
-            font-size: 2.2rem;
+            font-size: 1.4rem;
             font-weight: bold;
             color: #222;
             letter-spacing: 2px;
+            flex-shrink: 0;
         }
-        .header-logo .star {
-            color: #ff9900;
-            margin-left: 2px;
-            font-size: 1.5rem;
+        .header-logo .apex-logo {
+            margin-left: 10px;
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
         }
         .header-search {
-            flex: 1;
+            flex: 0 1 320px;
             display: flex;
             align-items: center;
-            margin: 0 32px;
-            max-width: 600px;
+            margin: 0 18px;
+            max-width: 320px;
         }
         .header-searchbox {
             flex: 1;
@@ -361,17 +363,16 @@
 <body>
     <div class="header-orange-bar"></div>
     <div class="header-topbar">
-        <div><span style="color:#ff9900; font-size:1.1em;">&#127849;</span> Sell with Caramel Yoghurt</div>
+        <div>Sell with Caramel Yoghurt</div>
         <div class="caramel-mini">
             <span style="color:#222; font-weight:bold;">CARAMEL</span>
-            <span style="color:#ff9900; font-size:1.1em;">&#127849;</span>
             <span style="color:#bfa76a; font-size:1em; font-weight:normal;">FRESH</span>
             <span style="color:#bfa76a; font-size:1em; font-weight:normal;">DAIRY</span>
         </div>
     </div>
     <div class="header-main">
         <div class="header-logo">
-            CARAMEL YOGHURT <span class="star">&#127849;</span>
+            <img src="{{ asset('images/apex-logo.png') }}" alt="Apex Logo" class="apex-logo" />CARAMEL YOGHURT 
         </div>
         <form class="header-search" onsubmit="return false;">
             <div class="header-searchbox">
@@ -384,8 +385,8 @@
         </form>
         <div class="header-actions">
             <div class="header-action account-action" tabindex="0" style="position:relative;">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 8-4 8-4s8 0 8 4"/></svg>
-                Account <span class="dropdown">&#9662;</span>
+                @php $user = Auth::user(); @endphp
+                <img src="{{ $user->profile_photo_url }}" alt="Profile Photo" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid #ff9900;vertical-align:middle;cursor:pointer;" />
                 <div class="account-dropdown" id="accountDropdown">
                     <a href="{{ route('profile.edit') }}"><svg width="18" height="18" fill="none" stroke="#ff9900" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a8.38 8.38 0 0 1 13 0"/></svg> Update Profile</a>
                     <a href="{{ route('customer.orders.index') }}"><svg width="18" height="18" fill="none" stroke="#ff9900" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M16 3v4M8 3v4"/></svg> View Orders</a>
@@ -395,7 +396,7 @@
             </div>
             <a class="header-action" href="#">
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-size="12" fill="#222">?</text></svg>
-                Help <span class="dropdown">&#9662;</span>
+                Help <svg class="dropdown" width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left:2px;vertical-align:middle;"><path d="M6 8L10 12L14 8" stroke="#222" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </a>
             <a class="header-action header-cart" href="{{ route('cart.index') }}">
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>

@@ -41,22 +41,24 @@
         .header-logo {
             display: flex;
             align-items: center;
-            font-size: 2.2rem;
+            font-size: 1.4rem;
             font-weight: bold;
             color: #222;
             letter-spacing: 2px;
+            flex-shrink: 0;
         }
-        .header-logo .star {
-            color: #ff9900;
-            margin-left: 2px;
-            font-size: 1.5rem;
+        .header-logo .apex-logo {
+            margin-left: 10px;
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
         }
         .header-search {
-            flex: 1;
+            flex: 0 1 320px;
             display: flex;
             align-items: center;
-            margin: 0 32px;
-            max-width: 600px;
+            margin: 0 18px;
+            max-width: 320px;
         }
         .header-searchbox {
             flex: 1;
@@ -157,83 +159,92 @@
             background: #ff9900;
             width: 100%;
         }
+        /* Carousel */
         .carousel-container {
-            max-width: 600px;
-            margin: 0 auto;
+            width: 100%;
+            max-width: 900px;
+            margin: 32px auto 0 auto;
             position: relative;
-            height: 340px;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 4px 32px rgba(255,153,0,0.07);
+            min-height: 240px;
+            height: 240px;
         }
         .carousel-slide {
-            position: absolute;
-            top: 0; left: 0;
             width: 100%;
-            height: 100%;
-            background: #fff;
-            border-radius: 20px;
-            box-shadow: 0 2px 16px rgba(0,0,0,0.10);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transform: translateX(100%);
-            transition: transform 0.7s cubic-bezier(0.77,0,0.175,1), opacity 0.5s;
-            z-index: 1;
+            height: 240px;
             background-size: cover;
             background-position: center;
-            color: #fff;
-        }
-        .carousel-slide .carousel-overlay {
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.55);
-            border-radius: 20px;
+            top: 0; left: 0;
+            opacity: 0;
             z-index: 1;
-        }
-        .carousel-slide .carousel-content {
-            position: relative;
-            z-index: 2;
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            align-items: center; /* Center vertically */
+            justify-content: center; /* Center horizontally */
+            transform: translateX(100%);
+            transition: transform 0.7s cubic-bezier(.77,0,.18,1), opacity 0.3s;
         }
         .carousel-slide.active {
             opacity: 1;
-            transform: translateX(0);
             z-index: 2;
+            transform: translateX(0);
+            transition: transform 0.7s cubic-bezier(.77,0,.18,1), opacity 0.3s;
         }
         .carousel-slide.slide-out-left {
             opacity: 0;
-            transform: translateX(-100%);
             z-index: 1;
+            transform: translateX(-100%);
+            transition: transform 0.7s cubic-bezier(.77,0,.18,1), opacity 0.3s;
         }
         .carousel-slide.slide-in-right {
             opacity: 1;
-            transform: translateX(0);
             z-index: 2;
+            transform: translateX(0);
+            transition: transform 0.7s cubic-bezier(.77,0,.18,1), opacity 0.3s;
         }
-        .carousel-icon {
-            font-size: 4.2rem;
-            margin-bottom: 28px;
-            font-weight: bold;
-            text-shadow: 0 2px 8px rgba(0,0,0,0.45);
+        .carousel-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(120deg, rgba(255,255,255,0.05) 0%, rgba(255,153,0,0.13) 100%);
+            z-index: 1;
+        }
+        .carousel-content {
+            position: relative;
+            z-index: 2;
+            color: #222;
+            background: none;
+            min-width: unset;
+            max-width: 90%;
+            margin: 0;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .carousel-text-bg {
+            background: rgba(255,255,255,0.55);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            border-radius: 18px;
+            padding: 18px 32px 14px 32px;
+            display: inline-block;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+            max-width: 90vw;
         }
         .carousel-title {
-            font-size: 2.1rem;
-            font-weight: 900;
-            margin-bottom: 14px;
-            color: #fff;
-            text-align: center;
-            text-shadow: 0 2px 8px rgba(0,0,0,0.45);
+            font-size: 1.7rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #222;
+            text-shadow: 0 2px 8px rgba(255,255,255,0.7);
         }
         .carousel-desc {
-            color: #fff;
-            font-size: 1.18rem;
-            text-align: center;
-            max-width: 85%;
-            font-weight: 500;
-            text-shadow: 0 2px 8px rgba(0,0,0,0.45);
+            font-size: 1.08rem;
+            color: #444;
+            text-shadow: 0 2px 8px rgba(255,255,255,0.7);
         }
         .carousel-indicators {
             position: absolute;
@@ -245,29 +256,23 @@
             z-index: 10;
         }
         .carousel-indicator {
-            width: 12px;
-            height: 12px;
+            width: 14px;
+            height: 14px;
             border-radius: 50%;
-            background: #d1d5db;
-            border: none;
+            background: #fff;
+            border: 2px solid #ff9900;
+            opacity: 0.6;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: opacity 0.2s, background 0.2s;
         }
         .carousel-indicator.active {
             background: #ff9900;
+            opacity: 1;
         }
-        @media (max-width: 900px) {
-            .header-main { flex-direction: column; align-items: stretch; padding: 12px 8px; }
-            .header-search { margin: 12px 0; }
-        }
-        @media (max-width: 600px) {
-            .header-main { padding: 8px 2vw; }
-            .header-topbar { padding: 4px 2vw 4px 2vw; }
-            .header-search { max-width: 98vw; }
-        }
+        /* Products */
         .products-section {
             max-width: 1200px;
-            margin: 48px auto 32px auto;
+            margin: 48px auto 0 auto;
             padding: 0 16px;
         }
         .products-title {
@@ -279,68 +284,162 @@
         }
         .products-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 32px 24px;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 32px;
         }
         .product-card {
             background: #fff;
-            border-radius: 14px;
+            border-radius: 16px;
             box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-            padding: 18px 18px 22px 18px;
+            padding: 24px 18px 18px 18px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            transition: box-shadow 0.2s;
+            transition: box-shadow 0.18s, transform 0.18s;
+            position: relative;
         }
         .product-card:hover {
-            box-shadow: 0 6px 24px rgba(255,153,0,0.13);
+            box-shadow: 0 8px 32px rgba(255,153,0,0.13);
+            transform: translateY(-4px) scale(1.02);
         }
         .product-image {
-            width: 120px;
-            height: 120px;
+            width: 110px;
+            height: 110px;
             object-fit: cover;
-            border-radius: 10px;
-            background: #f5f5f5;
+            border-radius: 12px;
             margin-bottom: 16px;
+            background: #f5f5f5;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 2.5rem;
         }
         .product-name {
             font-size: 1.15rem;
             font-weight: 600;
+            margin-bottom: 6px;
             color: #222;
-            margin-bottom: 8px;
             text-align: center;
         }
         .product-price {
             color: #ff9900;
-            font-size: 1.1rem;
-            font-weight: bold;
+            font-size: 1.08rem;
+            font-weight: 500;
             margin-bottom: 8px;
         }
         .product-desc {
-            color: #555;
+            color: #666;
+            font-size: 0.98rem;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        .product-card form {
+            margin-top: 8px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .product-card input[type="number"] {
+            width: 48px;
+            padding: 4px 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        .product-card button {
+            background: #38c172;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 16px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.18s;
+        }
+        .product-card button:hover {
+            background: #2fa360;
+        }
+        /* Toast */
+        #cart-toast {
+            position: fixed;
+            top: 32px;
+            right: 32px;
+            z-index: 9999;
+            min-width: 220px;
+            max-width: 320px;
+            background: #fff;
+            border-left: 6px solid #38c172;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.13);
+            padding: 18px 28px 18px 18px;
+            border-radius: 8px;
+            font-size: 1.08rem;
+            color: #222;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        /* Footer */
+        .customer-footer {
+            background: #222;
+            color: #fff;
+            padding: 32px 0 18px 0;
+            margin-top: 48px;
+        }
+        .footer-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .footer-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 28px;
+            margin-bottom: 16px;
+            justify-content: center;
+        }
+        .footer-links a {
+            color: #ff9900;
+            text-decoration: none;
+            font-size: 1.08rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .footer-links a:hover {
+            color: #fff;
+            text-decoration: underline;
+        }
+        .footer-copy {
+            color: #bbb;
             font-size: 0.98rem;
             text-align: center;
-            margin-bottom: 0;
+        }
+        @media (max-width: 600px) {
+            .header-main { padding: 8px 2vw; }
+            .header-topbar { padding: 4px 2vw 4px 2vw; }
+            .header-search { max-width: 98vw; min-width: 0; }
+            .header-actions { gap: 10px; }
+            .carousel-content { margin: 0 0 8px 2px; padding: 14px 8px 18px 8px; }
+            .carousel-slide, .carousel-container { min-height: 140px; height: 140px; }
         }
     </style>
 </head>
 <body>
     <div class="header-orange-bar"></div>
     <div class="header-topbar">
-        <div><span style="color:#ff9900; font-size:1.1em;">&#127849;</span> Sell with Caramel Yoghurt</div>
+        <div>Sell with Caramel Yoghurt</div>
         <div class="caramel-mini">
             <span style="color:#222; font-weight:bold;">CARAMEL</span>
-            <span style="color:#ff9900; font-size:1.1em;">&#127849;</span>
             <span style="color:#bfa76a; font-size:1em; font-weight:normal;">FRESH</span>
             <span style="color:#bfa76a; font-size:1em; font-weight:normal;">DAIRY</span>
         </div>
     </div>
     <div class="header-main">
         <div class="header-logo">
-            CARAMEL YOGHURT <span class="star">&#127849;</span>
+            <img src="{{ asset('images/apex-logo.png') }}" alt="Apex Logo" class="apex-logo" />CARAMEL YOGHURT
         </div>
         <form class="header-search" onsubmit="return false;">
             <div class="header-searchbox">
@@ -353,8 +452,8 @@
         </form>
         <div class="header-actions">
             <div class="header-action account-action" tabindex="0" style="position:relative;">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 8-4 8-4s8 0 8 4"/></svg>
-                Account <span class="dropdown">&#9662;</span>
+                @php $user = Auth::user(); @endphp
+                <img src="{{ $user->profile_photo_url }}" alt="Profile Photo" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid #ff9900;vertical-align:middle;cursor:pointer;" />
                 <div class="account-dropdown" id="accountDropdown">
                     <a href="{{ route('profile.edit') }}"><svg width="18" height="18" fill="none" stroke="#ff9900" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a8.38 8.38 0 0 1 13 0"/></svg> Update Profile</a>
                     <a href="{{ route('customer.orders.index') }}"><svg width="18" height="18" fill="none" stroke="#ff9900" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M16 3v4M8 3v4"/></svg> View Orders</a>
@@ -364,7 +463,7 @@
             </div>
             <a class="header-action" href="#">
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-size="12" fill="#222">?</text></svg>
-                Help <span class="dropdown">&#9662;</span>
+                Help <svg class="dropdown" width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left:2px;vertical-align:middle;"><path d="M6 8L10 12L14 8" stroke="#222" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </a>
             <a class="header-action header-cart" href="{{ route('cart.index') }}" style="position:relative;">
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
@@ -390,50 +489,64 @@
         <div class="carousel-slide" style="background-image: url('{{ asset('images/carousel/fresh-milk.jpg') }}');">
             <div class="carousel-overlay"></div>
             <div class="carousel-content">
-                <div class="carousel-title">Dashboard Home</div>
-                <div class="carousel-desc">Overview of your store's performance and quick links.</div>
+                <div class="carousel-text-bg">
+                    <div class="carousel-title">Dashboard Home</div>
+                    <div class="carousel-desc">Overview of your store's performance and quick links.</div>
+                </div>
             </div>
         </div>
         <div class="carousel-slide" style="background-image: url('{{ asset('images/carousel/production.jpg') }}');">
             <div class="carousel-overlay"></div>
             <div class="carousel-content">
-                <div class="carousel-title">View Stock</div>
-                <div class="carousel-desc">Check current inventory and stock levels.</div>
+                <div class="carousel-text-bg">
+                    <div class="carousel-title">View Stock</div>
+                    <div class="carousel-desc">Check current inventory and stock levels.</div>
+                </div>
             </div>
         </div>
         <div class="carousel-slide" style="background-image: url('{{ asset('images/carousel/quality.jpg') }}');">
             <div class="carousel-overlay"></div>
             <div class="carousel-content">
-                <div class="carousel-title">Sales Reports</div>
-                <div class="carousel-desc">View sales analytics and download reports.</div>
+                <div class="carousel-text-bg">
+                    <div class="carousel-title">Sales Reports</div>
+                    <div class="carousel-desc">View sales analytics and download reports.</div>
+                </div>
             </div>
         </div>
         <div class="carousel-slide" style="background-image: url('{{ asset('images/carousel/transportation.jpg') }}');">
             <div class="carousel-overlay"></div>
             <div class="carousel-content">
-                <div class="carousel-title">Shop Products</div>
-                <div class="carousel-desc">Browse and add products to your cart.</div>
+                <div class="carousel-text-bg">
+                    <div class="carousel-title">Shop Products</div>
+                    <div class="carousel-desc">Browse and add products to your cart.</div>
+                </div>
             </div>
         </div>
         <div class="carousel-slide" style="background-image: url('{{ asset('images/carousel/retail.jpg') }}');">
             <div class="carousel-overlay"></div>
             <div class="carousel-content">
-                <div class="carousel-title">Deliveries</div>
-                <div class="carousel-desc">Track and manage your deliveries.</div>
+                <div class="carousel-text-bg">
+                    <div class="carousel-title">Deliveries</div>
+                    <div class="carousel-desc">Track and manage your deliveries.</div>
+                </div>
             </div>
         </div>
         <div class="carousel-slide" style="background-image: url('{{ asset('images/carousel/production.jpg') }}');">
             <div class="carousel-overlay"></div>
             <div class="carousel-content">
-                <div class="carousel-title">View Transactions</div>
-                <div class="carousel-desc">Review your transaction history.</div>
+                <div class="carousel-text-bg">
+                    <div class="carousel-title">View Transactions</div>
+                    <div class="carousel-desc">Review your transaction history.</div>
+                </div>
             </div>
         </div>
         <div class="carousel-slide" style="background-image: url('{{ asset('images/carousel/fresh-milk.jpg') }}');">
             <div class="carousel-overlay"></div>
             <div class="carousel-content">
-                <div class="carousel-title">Chat</div>
-                <div class="carousel-desc">Chat with admin or vendor for support.</div>
+                <div class="carousel-text-bg">
+                    <div class="carousel-title">Chat</div>
+                    <div class="carousel-desc">Chat with admin or vendor for support.</div>
+                </div>
             </div>
         </div>
         <div class="carousel-indicators">
@@ -498,45 +611,6 @@
         <div class="footer-copy">&copy; {{ date('Y') }} Caramel Yogurt. All rights reserved.</div>
     </div>
 </footer>
-<style>
-    .customer-footer {
-        background: #222;
-        color: #fff;
-        padding: 32px 0 18px 0;
-        margin-top: 48px;
-    }
-    .footer-container {
-        max-width: 1100px;
-        margin: 0 auto;
-        padding: 0 24px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-    .footer-links {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 28px;
-        margin-bottom: 16px;
-        justify-content: center;
-    }
-    .footer-links a {
-        color: #ff9900;
-        text-decoration: none;
-        font-size: 1.08rem;
-        font-weight: 500;
-        transition: color 0.2s;
-    }
-    .footer-links a:hover {
-        color: #fff;
-        text-decoration: underline;
-    }
-    .footer-copy {
-        color: #bbb;
-        font-size: 0.98rem;
-        text-align: center;
-    }
-</style>
     <script>
         const slides = document.querySelectorAll('#retailer-carousel .carousel-slide');
         const indicators = document.querySelectorAll('#retailer-carousel .carousel-indicator');
@@ -546,11 +620,21 @@
             slides.forEach((slide, i) => {
                 slide.classList.remove('active', 'slide-in-right', 'slide-out-left');
                 slide.style.zIndex = 1;
+                // Reset all slides to off-screen right except the current and previous
+                if (i !== idx && i !== prev) {
+                    slide.style.transform = 'translateX(100%)';
+                    slide.style.opacity = 0;
+                }
             });
-            if (slides[prev]) slides[prev].classList.add('slide-out-left');
+            if (slides[prev] && prev !== idx) {
+                slides[prev].classList.add('slide-out-left');
+                slides[prev].style.zIndex = 1;
+            }
             if (slides[idx]) {
                 slides[idx].classList.add('slide-in-right', 'active');
                 slides[idx].style.zIndex = 2;
+                slides[idx].style.opacity = 1;
+                slides[idx].style.transform = 'translateX(0)';
             }
             indicators.forEach((ind, i) => {
                 ind.classList.toggle('active', i === idx);
@@ -560,6 +644,8 @@
                     if (i !== idx) {
                         slide.classList.remove('active', 'slide-in-right', 'slide-out-left');
                         slide.style.zIndex = 1;
+                        slide.style.opacity = 0;
+                        slide.style.transform = 'translateX(100%)';
                     }
                 });
             }, 700);
@@ -575,6 +661,17 @@
                 showSlide(i);
                 current = i;
             });
+        });
+        // Initialize all slides off-screen except the first
+        slides.forEach((slide, i) => {
+            if (i !== 0) {
+                slide.style.transform = 'translateX(100%)';
+                slide.style.opacity = 0;
+            } else {
+                slide.classList.add('active');
+                slide.style.transform = 'translateX(0)';
+                slide.style.opacity = 1;
+            }
         });
         showSlide(current);
         setInterval(nextSlide, 4000);
