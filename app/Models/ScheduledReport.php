@@ -27,7 +27,10 @@ class ScheduledReport extends Model
         'is_active',
         'last_generated_at',
         'next_generation_at',
-        'created_by'
+        'created_by',
+        // Stakeholder fields
+        'stakeholder_type', // e.g., admin, vendor, retailer, supplier, employee
+        'stakeholder_id',   // ID of the stakeholder (nullable)
     ];
 
     protected $casts = [
