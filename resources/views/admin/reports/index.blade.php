@@ -964,6 +964,24 @@ function showSchedulingModal(reportConfig) {
                         <input type="time" id="schedule-time" name="time" class="w-full p-2 border border-gray-300 rounded-lg" required>
                     </div>
                     <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Stakeholder Type</label>
+                        <select id="schedule-stakeholder-type" name="stakeholder_type" class="w-full p-2 border border-gray-300 rounded-lg" required>
+                            <option value="">Select Stakeholder Type</option>
+                            <option value="admin">Admin</option>
+                            <option value="vendor">Vendor</option>
+                            <option value="retailer">Retailer</option>
+                            <option value="supplier">Supplier</option>
+                            <option value="employee">Employee</option>
+                        </select>
+                    </div>
+                    <div id="stakeholder-select-container" style="display:none;">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Stakeholder</label>
+                        <select id="schedule-stakeholder-id" name="stakeholder_id" class="w-full p-2 border border-gray-300 rounded-lg">
+                            <option value="">Select Stakeholder</option>
+                            <!-- Options will be populated dynamically -->
+                        </select>
+                    </div>
+                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Recipients (comma-separated emails)</label>
                         <input type="text" id="schedule-recipients" name="recipients" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="email1@example.com, email2@example.com" required>
                     </div>
@@ -992,6 +1010,22 @@ function showSchedulingModal(reportConfig) {
     
     // Setup form event listeners
     setupSchedulingForm(reportConfig);
+
+    // Add event listener for stakeholder type
+    setTimeout(() => {
+        const stakeholderTypeSelect = document.getElementById('schedule-stakeholder-type');
+        const stakeholderSelectContainer = document.getElementById('stakeholder-select-container');
+        const stakeholderIdSelect = document.getElementById('schedule-stakeholder-id');
+        stakeholderTypeSelect.addEventListener('change', function() {
+            if (this.value && this.value !== 'admin') {
+                stakeholderSelectContainer.style.display = 'block';
+                populateStakeholderDropdown(this.value, stakeholderIdSelect);
+            } else {
+                stakeholderSelectContainer.style.display = 'none';
+                stakeholderIdSelect.innerHTML = '<option value="">Select Stakeholder</option>';
+            }
+        });
+    }, 100);
 }
 
 // Setup scheduling form
@@ -1000,6 +1034,9 @@ function setupSchedulingForm(reportConfig) {
     const frequencySelect = document.getElementById('schedule-frequency');
     const weeklyOptions = document.getElementById('weekly-options');
     const monthlyOptions = document.getElementById('monthly-options');
+    const stakeholderTypeSelect = document.getElementById('schedule-stakeholder-type');
+    const stakeholderSelectContainer = document.getElementById('stakeholder-select-container');
+    const stakeholderSelect = document.getElementById('schedule-stakeholder-id');
     
     // Set default time
     document.getElementById('schedule-time').value = '09:00';
@@ -1009,12 +1046,31 @@ function setupSchedulingForm(reportConfig) {
         weeklyOptions.style.display = this.value === 'weekly' ? 'block' : 'none';
         monthlyOptions.style.display = this.value === 'monthly' || this.value === 'quarterly' || this.value === 'yearly' ? 'block' : 'none';
     });
-    
+
     // Handle form submission
     form.addEventListener('submit', function(e) {
         e.preventDefault();
         submitScheduledReport(reportConfig);
     });
+}
+
+// Add this function to populate the stakeholder dropdown (for now, dummy data)
+function populateStakeholderDropdown(type, selectElem) {
+    selectElem.innerHTML = '<option value="">Loading...</option>';
+    // TODO: Replace with AJAX call to fetch real stakeholders
+    setTimeout(() => {
+        let options = '<option value="">Select Stakeholder</option>';
+        if (type === 'vendor') {
+            options += '<option value="5">Vendor 5</option>';
+        } else if (type === 'retailer') {
+            options += '<option value="10">Retailer 10</option>';
+        } else if (type === 'supplier') {
+            options += '<option value="20">Supplier 20</option>';
+        } else if (type === 'employee') {
+            options += '<option value="30">Employee 30</option>';
+        }
+        selectElem.innerHTML = options;
+    }, 500);
 }
 
 // Submit scheduled report
@@ -1038,6 +1094,11 @@ async function submitScheduledReport(reportConfig) {
         format: formData.get('format')
     };
     
+    const stakeholderType = document.getElementById('schedule-stakeholder-type').value;
+    const stakeholderId = document.getElementById('schedule-stakeholder-id').value;
+    scheduleData.stakeholder_type = stakeholderType;
+    scheduleData.stakeholder_id = stakeholderId || null;
+
     try {
         const response = await fetch('{{ route("api.reports.scheduled.create") }}', {
             method: 'POST',

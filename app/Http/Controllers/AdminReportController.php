@@ -798,7 +798,9 @@ class AdminReportController extends Controller
             'timezone' => 'required|string',
             'recipients' => 'required|array|min:1',
             'recipients.*' => 'email',
-            'format' => 'required|in:pdf,excel,csv'
+            'format' => 'required|in:pdf,excel,csv',
+            'stakeholder_type' => 'nullable|string|in:admin,vendor,retailer,supplier,employee',
+            'stakeholder_id' => 'nullable|integer',
         ]);
 
         try {

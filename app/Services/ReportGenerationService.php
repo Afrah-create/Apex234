@@ -103,14 +103,34 @@ class ReportGenerationService
     protected function generateReportData(ScheduledReport $report): array
     {
         $config = $report->report_config;
-        
+        $filters = $config['filters'] ?? [];
+
+        // Inject stakeholder-specific filters
+        if ($report->stakeholder_type && $report->stakeholder_id) {
+            switch ($report->stakeholder_type) {
+                case 'vendor':
+                    $filters['vendor_id'] = [$report->stakeholder_id];
+                    break;
+                case 'retailer':
+                    $filters['retailer_id'] = [$report->stakeholder_id];
+                    break;
+                case 'supplier':
+                    $filters['supplier_id'] = [$report->stakeholder_id];
+                    break;
+                case 'employee':
+                    $filters['employee_id'] = [$report->stakeholder_id];
+                    break;
+                // For admin, no filter (gets all data)
+            }
+        }
+
         // Create a mock request with the report configuration
         $request = new \Illuminate\Http\Request();
         $request->merge([
             'report_type' => $report->report_type,
             'date_from' => $config['date_from'] ?? Carbon::now()->subDays(30)->format('Y-m-d'),
             'date_to' => $config['date_to'] ?? Carbon::now()->format('Y-m-d'),
-            'filters' => $config['filters'] ?? [],
+            'filters' => $filters,
             'group_by' => $config['group_by'] ?? null,
             'sort_by' => $config['sort_by'] ?? 'created_at',
             'sort_order' => $config['sort_order'] ?? 'desc'
