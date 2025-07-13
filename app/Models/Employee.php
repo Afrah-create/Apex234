@@ -24,6 +24,11 @@ class Employee extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function distributionCenter()
+    {
+        return $this->belongsTo(\App\Models\DistributionCenter::class);
+    }
+
     public function isActive()
     {
         return $this->status === 'active';

@@ -29,6 +29,15 @@
             </select>
         </div>
         <div class="mb-4">
+            <label class="block font-semibold mb-1">Assigned Distribution Center</label>
+            <select name="distribution_center_id" class="border rounded px-3 py-2 w-full">
+                <option value="">Unassigned</option>
+                @foreach($distributionCenters as $dc)
+                    <option value="{{ $dc->id }}" @if($employee->distribution_center_id == $dc->id) selected @endif>{{ $dc->center_name }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="mb-4">
             <label class="block font-semibold mb-1">Status</label>
             <select name="status" required class="border rounded px-3 py-2 w-full">
                 <option value="Active" @if($employee->status == 'Active') selected @endif>Active</option>

@@ -496,3 +496,12 @@ Route::get('/terms-of-use', function () {
 Route::get('/contact', function () {
     return view('contact');
 })->name('contact');
+
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/distribution-centers')->name('admin.distribution-centers.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\AdminDistributionCenterController::class, 'index'])->name('index');
+    Route::get('/create', [\App\Http\Controllers\AdminDistributionCenterController::class, 'create'])->name('create');
+    Route::post('/', [\App\Http\Controllers\AdminDistributionCenterController::class, 'store'])->name('store');
+    Route::get('/{id}/edit', [\App\Http\Controllers\AdminDistributionCenterController::class, 'edit'])->name('edit');
+    Route::put('/{id}', [\App\Http\Controllers\AdminDistributionCenterController::class, 'update'])->name('update');
+    Route::delete('/{id}', [\App\Http\Controllers\AdminDistributionCenterController::class, 'destroy'])->name('destroy');
+});
