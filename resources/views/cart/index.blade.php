@@ -500,7 +500,7 @@
                 <a href="/dashboard/customer">Shop</a>
                 <a href="{{ route('customer.orders.index') }}">Orders</a>
                 <a href="{{ route('help.index') }}">Help</a>
-                <a href="#">Privacy Policy</a>
+                <a href="{{ route('privacy.policy') }}">Privacy Policy</a>
                 <a href="#">Terms</a>
                 <a href="#">Contact</a>
             </div>
