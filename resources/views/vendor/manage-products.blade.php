@@ -4,40 +4,31 @@
 <main class="main-content">
     <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-6 md:mb-8">Inventory Management</h1>
     
-    <!-- Inventory Summary Cards -->
-    <div class="summary-cards mb-8">
-        <div class="summary-card" style="--summary-card-border: #22c55e;">
-            <div class="icon" style="background: #bbf7d0; color: #22c55e;">
-                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                </svg>
+    <!-- Inventory Summary Cards (real-time) -->
+    <div id="inventory-summary-cards" class="flex flex-wrap gap-4 mb-8">
+        <div class="summary-card flex-1 min-w-[180px] bg-white rounded-lg shadow p-4 flex flex-col items-center">
+            <div class="font-bold text-gray-700 text-sm mb-1">Total Batches</div>
+            <div id="summary-total-products" class="text-2xl font-bold text-blue-600">-</div>
         </div>
-            <div class="details">
-                <p>Total Products</p>
-                <p id="total-products">-</p>
+        <div class="summary-card flex-1 min-w-[180px] bg-white rounded-lg shadow p-4 flex flex-col items-center">
+            <div class="font-bold text-gray-700 text-sm mb-1">Total Value</div>
+            <div id="summary-total-value" class="text-2xl font-bold text-green-600">-</div>
         </div>
+        <div class="summary-card flex-1 min-w-[180px] bg-white rounded-lg shadow p-4 flex flex-col items-center">
+            <div class="font-bold text-gray-700 text-sm mb-1">Total Products Available</div>
+            <div id="summary-total-available" class="text-2xl font-bold text-indigo-600">-</div>
         </div>
-        <div class="summary-card" style="--summary-card-border: #f59e0b;">
-            <div class="icon" style="background: #fef3c7; color: #f59e0b;">
-                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-                </svg>
-            </div>
-            <div class="details">
-                <p>Total Value</p>
-                <p id="total-value">-</p>
-            </div>
+        <div class="summary-card flex-1 min-w-[180px] bg-white rounded-lg shadow p-4 flex flex-col items-center">
+            <div class="font-bold text-gray-700 text-sm mb-1">Total Reserved</div>
+            <div id="summary-total-reserved" class="text-2xl font-bold text-yellow-600">-</div>
         </div>
-        <div class="summary-card" style="--summary-card-border: #ef4444;">
-            <div class="icon" style="background: #fee2e2; color: #ef4444;">
-                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-                </svg>
-            </div>
-            <div class="details">
-                <p>Low Stock Items</p>
-                <p id="low-stock-items">-</p>
-            </div>
+        <div class="summary-card flex-1 min-w-[180px] bg-white rounded-lg shadow p-4 flex flex-col items-center">
+            <div class="font-bold text-gray-700 text-sm mb-1">Total Damaged</div>
+            <div id="summary-total-damaged" class="text-2xl font-bold text-red-600">-</div>
+        </div>
+        <div class="summary-card flex-1 min-w-[180px] bg-white rounded-lg shadow p-4 flex flex-col items-center">
+            <div class="font-bold text-gray-700 text-sm mb-1">Total Expired</div>
+            <div id="summary-total-expired" class="text-2xl font-bold text-gray-500">-</div>
         </div>
     </div>
 
@@ -57,116 +48,12 @@
 
     <!-- Product Inventory Section -->
     <div id="products-section" class="inventory-section">
-        <div class="mb-6 md:mb-8">
-            <h2 class="text-lg md:text-xl font-semibold mb-4">Add New Product Inventory</h2>
-            <form id="add-product-inventory-form" class="bg-white rounded-lg shadow-md p-4 md:p-6">
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div>
-                        <label for="product-name" class="block font-bold mb-1 text-sm">Product</label>
-                        <select id="product-name" name="product_name" class="w-full p-2 rounded border text-sm" required>
-                            <option value="">Select Product</option>
-                            <option value="Greek Vanilla Yoghurt">Greek Vanilla Yoghurt</option>
-                            <option value="Low Fat Blueberry Yoghurt">Low Fat Blueberry Yoghurt</option>
-                            <option value="Organic Strawberry Yoghurt">Organic Strawberry Yoghurt</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="batch-number" class="block font-bold mb-1 text-sm">Batch Number</label>
-                        <input type="text" id="batch-number" name="batch_number" class="w-full p-2 rounded border text-sm" required>
-                    </div>
-                    <div>
-                        <label for="quantity-available" class="block font-bold mb-1 text-sm">Quantity </label>
-                        <input type="number" id="quantity-available" name="quantity_available" min="0" class="w-full p-2 rounded border text-sm" required>
-                    </div>
-                    <div>
-                        <label for="unit-cost" class="block font-bold mb-1 text-sm">Unit Cost (UGX)</label>
-                        <input type="number" id="unit-cost" name="unit_cost" min="0" step="0.01" class="w-full p-2 rounded border text-sm" required>
-                    </div>
-                    <div>
-                        <label for="total-value" class="block font-bold mb-1 text-sm">Total Value (UGX)</label>
-                        <input type="number" id="total-value" name="total_value" class="w-full p-2 rounded border text-sm bg-gray-100" readonly>
-                        <p class="text-xs text-gray-500 mt-1">Auto-calculated: Unit Cost × Quantity</p>
-                    </div>
-                    <div>
-                        <label for="production-date" class="block font-bold mb-1 text-sm">Production Date</label>
-                        <input type="date" id="production-date" name="production_date" class="w-full p-2 rounded border text-sm" required>
-                    </div>
-                    <div>
-                        <label for="expiry-date" class="block font-bold mb-1 text-sm">Expiry Date</label>
-                        <input type="date" id="expiry-date" name="expiry_date" class="w-full p-2 rounded border text-sm" required>
-                    </div>
-                    <div>
-                        <label for="storage-temperature" class="block font-bold mb-1 text-sm">Storage Temp (°C)</label>
-                        <input type="number" id="storage-temperature" name="storage_temperature" min="-10" max="20" step="0.1" value="4.0" class="w-full p-2 rounded border text-sm" required>
-                    </div>
-                    <div>
-                        <label for="storage-location" class="block font-bold mb-1 text-sm">Storage Location</label>
-                        <select id="storage-location" name="storage_location" class="w-full p-2 rounded border text-sm" required>
-                            <option value="refrigerator">Refrigerator</option>
-                            <option value="cold_room">Cold Room</option>
-                            <option value="freezer">Freezer</option>
-                            <option value="warehouse">Warehouse</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <label for="product-notes" class="block font-bold mb-1 text-sm">Notes</label>
-                    <textarea id="product-notes" name="notes" class="w-full p-2 rounded border text-sm" rows="2"></textarea>
-                </div>
-                <div class="mt-4">
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg w-full text-sm md:text-base">Add Product Inventory</button>
-                </div>
-            </form>
-            <div id="add-product-inventory-success" class="mt-2 text-green-600 font-bold hidden text-sm">Product inventory added successfully!</div>
-        </div>
-
-
-        <!-- Product Inventory Statistics Table -->
-        <div class="bg-white rounded-lg shadow-md p-4 md:p-6 mb-8">
-            <h2 class="text-lg md:text-xl font-semibold mb-4">Product Inventory Statistics</h2>
-            <table class="min-w-full mb-4 border border-gray-400">
-                <thead>
-                    <tr class="border-b border-gray-400">
-                        <th class="px-4 py-2 text-left border-r border-gray-300">Product Name</th>
-                        <th class="px-4 py-2 text-left border-r border-gray-300">Available Quantity</th>
-                        <th class="px-4 py-2 text-left">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @php
-                        $products = \App\Models\YogurtProduct::all();
-                        $warning_max = session('inventory_warning_max', 4);
-                        $low_max = session('inventory_low_max', 14);
-                        $productQuantities = \App\Models\Inventory::select('yogurt_product_id', \DB::raw('SUM(quantity_available) as total_quantity'))
-                            ->groupBy('yogurt_product_id')->pluck('total_quantity', 'yogurt_product_id');
-                        $confirmedOrderQuantities = \App\Models\OrderItem::whereHas('order', function($q) {
-                            $q->where('order_status', 'confirmed');
-                        })->select('yogurt_product_id', \DB::raw('SUM(quantity) as total_confirmed'))
-                            ->groupBy('yogurt_product_id')->pluck('total_confirmed', 'yogurt_product_id');
-                    @endphp
-                    @forelse($products as $product)
-                        @php
-                            $added = $productQuantities[$product->id] ?? 0;
-                            $confirmed = $confirmedOrderQuantities[$product->id] ?? 0;
-                            $quantity = $added - $confirmed;
-                            if ($quantity < 0) $quantity = 0;
-                            $status = 'Available';
-                            if ($quantity === 0) {
-                                $status = 'Out of Stock';
-                            } elseif ($quantity <= $warning_max) {
-                                $status = 'Warning';
-                            } elseif ($quantity <= $low_max) {
-                                $status = 'Low';
-                            }
-                        @endphp
-                        <tr class="border-b border-gray-300">
-                            <td class="px-4 py-2 border-r border-gray-200">{{ $product->product_name }}</td>
-                            <td class="px-4 py-2 border-r border-gray-200">{{ $quantity }}</td>
-                            <td class="px-4 py-2">@if($status === 'Out of Stock')<span class="text-red-600 font-semibold">{{ $status }}</span>@elseif($status === 'Warning')<span class="text-yellow-600 font-semibold">{{ $status }}</span>@elseif($status === 'Low')<span class="text-orange-600 font-semibold">{{ $status }}</span>@else<span class="text-green-600 font-semibold">{{ $status }}</span>@endif</td>
-
+        @php
+            $warning_max = session('inventory_warning_max', 4);
+            $low_max = session('inventory_low_max', 14);
+        @endphp
         <div>
             <h2 class="text-lg md:text-xl font-semibold mb-4">Product Inventory</h2>
-            
             <!-- Search and Filter -->
             <div class="mb-4 flex flex-col sm:flex-row gap-4">
                 <div class="flex-1">
@@ -186,7 +73,6 @@
                     </select>
                 </div>
             </div>
-
             <!-- Desktop Table -->
             <div class="lg:block bg-white rounded-lg shadow-md p-4 overflow-x-auto">
                 <table class="user-table w-full text-left">
@@ -202,37 +88,25 @@
                             <th class="pb-2 text-sm font-semibold">Value (UGX)</th>
                             <th class="pb-2 text-sm font-semibold">Expiry</th>
                             <th class="pb-2 text-sm font-semibold">Actions</th>
-
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="3" class="px-4 py-2 text-center text-gray-500">No products found.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-            <!-- Status Key and Range Adjustment Form -->
-            <div class="mb-2">
-                <h3 class="font-semibold mb-1">Status Key:</h3>
-                <ul class="text-sm mb-2">
-                    <li><span class="text-red-600 font-bold">Out of Stock</span>: 0</li>
-                    <li><span class="text-yellow-600 font-bold">Warning</span>: 1 - {{ $warning_max }}</li>
-                    <li><span class="text-orange-600 font-bold">Low</span>: {{ $warning_max+1 }} - {{ $low_max }}</li>
-                    <li><span class="text-green-600 font-bold">Available</span>: {{ $low_max+1 }} and above</li>
-                </ul>
-                <form method="POST" action="{{ route('vendor.inventory-status-ranges') }}" class="flex flex-col md:flex-row gap-2 items-center">
-                    @csrf
-                    <label class="text-sm">Warning max:
-                        <input type="number" name="warning_max" value="{{ $warning_max }}" min="1" max="{{ $low_max }}" class="border rounded p-1 w-16 ml-1">
-                    </label>
-                    <label class="text-sm">Low max:
-                        <input type="number" name="low_max" value="{{ $low_max }}" min="{{ $warning_max+1 }}" class="border rounded p-1 w-16 ml-1">
-                    </label>
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">Save Ranges</button>
-                </form>
-                @if(session('range_success'))
-                    <div class="text-green-600 text-sm mt-1">{{ session('range_success') }}</div>
-                @endif
+                    </thead>
+                    <tbody id="product-inventory-list">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+            <!-- Pagination -->
+            <div class="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div class="text-sm text-gray-600">
+                    Showing <span id="product-start">0</span> to <span id="product-end">0</span> of <span id="product-total">0</span> entries
+                </div>
+                <div class="flex gap-2">
+                    <button id="product-prev" class="px-3 py-1 border rounded text-sm disabled:opacity-50" disabled>Previous</button>
+                    <div id="product-pages" class="flex gap-1">
+                        <!-- Populated by JS -->
+                    </div>
+                    <button id="product-next" class="px-3 py-1 border rounded text-sm disabled:opacity-50" disabled>Next</button>
+                </div>
             </div>
         </div>
 
@@ -291,11 +165,6 @@
                 </table>
             </div>
 
-            <!-- Mobile Cards -->
-            <div class="lg:hidden space-y-4" id="raw-materials-cards">
-                <!-- Populated by JS -->
-            </div>
-
             <!-- Pagination -->
             <div class="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div class="text-sm text-gray-600">
@@ -313,6 +182,7 @@
     </div>
 </main>
 
+<!-- Move all scripts to the very end of the file -->
 <script>
 // Helper to get CSRF token
 function getCSRFToken() {
@@ -326,42 +196,92 @@ const itemsPerPage = 10;
 let productData = [];
 let rawMaterialData = [];
 
-// Tab functionality
+// Add real-time summary card update
+async function loadInventorySummaryCards() {
+    try {
+        const response = await fetch('/api/vendor/inventory/summary');
+        const data = await response.json();
+        console.log('Inventory summary data:', data);
+        // Helper to safely format numbers
+        function safeNumber(val) {
+            if (val === null || val === undefined || isNaN(val)) return '-';
+            if (typeof val === 'string' && val.trim() === '') return '-';
+            return Number(val).toLocaleString();
+        }
+        document.getElementById('summary-total-products').textContent = safeNumber(data.product_summary?.total_batches);
+        document.getElementById('summary-total-value').textContent = safeNumber(data.product_summary?.total_value) + ' UGX';
+        document.getElementById('summary-total-available').textContent = safeNumber(data.product_summary?.total_available);
+        document.getElementById('summary-total-reserved').textContent = safeNumber(data.product_summary?.total_reserved);
+        document.getElementById('summary-total-damaged').textContent = safeNumber(data.product_summary?.total_damaged);
+        document.getElementById('summary-total-expired').textContent = safeNumber(data.product_summary?.total_expired);
+    } catch (error) {
+        console.error('Error loading inventory summary:', error);
+        [
+            'summary-total-products',
+            'summary-total-value',
+            'summary-total-available',
+            'summary-total-reserved',
+            'summary-total-damaged',
+            'summary-total-expired'
+        ].forEach(id => {
+            document.getElementById(id).textContent = '-';
+        });
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    loadInventorySummaryCards();
+    // Tab functionality
     const productsTab = document.getElementById('products-tab');
     const rawMaterialsTab = document.getElementById('raw-materials-tab');
     const productsSection = document.getElementById('products-section');
     const rawMaterialsSection = document.getElementById('raw-materials-section');
 
-    productsTab.addEventListener('click', function() {
-        productsTab.classList.add('border-blue-500', 'text-blue-600');
-        productsTab.classList.remove('border-transparent', 'text-gray-500');
-        rawMaterialsTab.classList.remove('border-blue-500', 'text-blue-600');
-        rawMaterialsTab.classList.add('border-transparent', 'text-gray-500');
-        productsSection.classList.remove('hidden');
-        rawMaterialsSection.classList.add('hidden');
-    });
+    if (productsTab && rawMaterialsTab && productsSection && rawMaterialsSection) {
+        productsTab.addEventListener('click', function() {
+            productsTab.classList.add('border-blue-500', 'text-blue-600');
+            productsTab.classList.remove('border-transparent', 'text-gray-500');
+            rawMaterialsTab.classList.remove('border-blue-500', 'text-blue-600');
+            rawMaterialsTab.classList.add('border-transparent', 'text-gray-500');
+            productsSection.classList.remove('hidden');
+            rawMaterialsSection.classList.add('hidden');
+        });
 
-    rawMaterialsTab.addEventListener('click', function() {
-        rawMaterialsTab.classList.add('border-blue-500', 'text-blue-600');
-        rawMaterialsTab.classList.remove('border-transparent', 'text-gray-500');
-        productsTab.classList.remove('border-blue-500', 'text-blue-600');
-        productsTab.classList.add('border-transparent', 'text-gray-500');
-        rawMaterialsSection.classList.remove('hidden');
-        productsSection.classList.add('hidden');
-    });
+        rawMaterialsTab.addEventListener('click', function() {
+            rawMaterialsTab.classList.add('border-blue-500', 'text-blue-600');
+            rawMaterialsTab.classList.remove('border-transparent', 'text-gray-500');
+            productsTab.classList.remove('border-blue-500', 'text-blue-600');
+            productsTab.classList.add('border-transparent', 'text-gray-500');
+            rawMaterialsSection.classList.remove('hidden');
+            productsSection.classList.add('hidden');
+        });
+    }
 
-    // Search and filter event listeners
-    document.getElementById('product-search').addEventListener('input', filterProducts);
-    document.getElementById('product-status-filter').addEventListener('change', filterProducts);
-    document.getElementById('product-sort').addEventListener('change', filterProducts);
-    
-    document.getElementById('raw-material-search').addEventListener('input', filterRawMaterials);
-    document.getElementById('raw-material-status-filter').addEventListener('change', filterRawMaterials);
-    document.getElementById('raw-material-sort').addEventListener('change', filterRawMaterials);
-
+    const productSearch = document.getElementById('product-search');
+    if (productSearch) {
+        productSearch.addEventListener('input', filterProducts);
+    }
+    const productStatusFilter = document.getElementById('product-status-filter');
+    if (productStatusFilter) {
+        productStatusFilter.addEventListener('change', filterProducts);
+    }
+    const productSort = document.getElementById('product-sort');
+    if (productSort) {
+        productSort.addEventListener('change', filterProducts);
+    }
+    const rawMaterialSearch = document.getElementById('raw-material-search');
+    if (rawMaterialSearch) {
+        rawMaterialSearch.addEventListener('input', filterRawMaterials);
+    }
+    const rawMaterialStatusFilter = document.getElementById('raw-material-status-filter');
+    if (rawMaterialStatusFilter) {
+        rawMaterialStatusFilter.addEventListener('change', filterRawMaterials);
+    }
+    const rawMaterialSort = document.getElementById('raw-material-sort');
+    if (rawMaterialSort) {
+        rawMaterialSort.addEventListener('change', filterRawMaterials);
+    }
     // Load initial data
-    loadInventorySummary();
     loadProductInventory();
     loadRawMaterials();
 });
@@ -460,36 +380,6 @@ function renderProductInventory() {
             </td>
         `;
         tbody.appendChild(tr);
-    });
-    
-    // Mobile cards
-    const cardsContainer = document.getElementById('product-inventory-cards');
-    cardsContainer.innerHTML = '';
-    
-    paginatedData.forEach(inventory => {
-        const statusClass = inventory.inventory_status === 'available' ? 'text-green-600' : 
-                          inventory.inventory_status === 'low_stock' ? 'text-yellow-600' : 'text-red-600';
-        
-        const card = document.createElement('div');
-        card.className = 'product-card';
-        card.innerHTML = `
-            <div class="flex justify-between items-start mb-2">
-                <h3 class="font-semibold text-sm">${inventory.product_name}</h3>
-                <span class="font-bold ${statusClass} text-xs">${inventory.inventory_status.replace('_', ' ').toUpperCase()}</span>
-            </div>
-            <div class="grid grid-cols-2 gap-2 text-xs mb-3">
-                <div><span class="font-semibold">Batch:</span> ${inventory.batch_number}</div>
-                <div><span class="font-semibold">Available:</span> ${inventory.quantity_available}</div>
-                <div><span class="font-semibold">Reserved:</span> ${inventory.quantity_reserved}</div>
-                <div class="text-[10px]"><span class="font-semibold">Value:</span> ${parseFloat(inventory.total_value).toLocaleString()} UGX</div>
-                <div><span class="font-semibold">Expiry:</span> ${inventory.expiry_date}</div>
-            </div>
-            <div class="flex gap-2">
-                <button class="action-btn edit-btn bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs flex-1" onclick="editProductInventory(${inventory.yogurt_product_id})">Edit</button>
-                <button class="action-btn delete-btn bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs flex-1" onclick="deleteProductInventory(${inventory.id})">Delete</button>
-            </div>
-        `;
-        cardsContainer.appendChild(card);
     });
     
     // Update pagination info
@@ -616,38 +506,6 @@ function renderRawMaterials() {
             </td>
         `;
         tbody.appendChild(tr);
-    });
-    
-    // Mobile cards
-    const cardsContainer = document.getElementById('raw-materials-cards');
-    cardsContainer.innerHTML = '';
-    
-    paginatedData.forEach(material => {
-        const statusClass = material.status === 'available' ? 'text-green-600' : 
-                          material.status === 'in_use' ? 'text-blue-600' : 
-                          material.status === 'expired' ? 'text-red-600' : 'text-gray-600';
-        
-        const card = document.createElement('div');
-        card.className = 'product-card';
-        card.innerHTML = `
-            <div class="flex justify-between items-start mb-2">
-                <h3 class="font-semibold text-sm">${material.material_name}</h3>
-                <span class="font-bold ${statusClass} text-xs">${material.status.toUpperCase()}</span>
-            </div>
-            <div class="grid grid-cols-2 gap-2 text-xs mb-3">
-                <div><span class="font-semibold">Type:</span> ${material.material_type}</div>
-                <div><span class="font-semibold">Quantity:</span> ${material.quantity} ${material.unit_of_measure}</div>
-                <div class="text-[10px]"><span class="font-semibold">Unit Price:</span> ${parseFloat(material.unit_price).toLocaleString()} UGX</div>
-                <div class="text-[10px]"><span class="font-semibold">Total Cost:</span> ${parseFloat(material.total_cost).toLocaleString()} UGX</div>
-                <div><span class="font-semibold">Grade:</span> ${material.quality_grade}</div>
-                <div><span class="font-semibold">Expiry:</span> ${material.expiry_date}</div>
-            </div>
-            <div class="flex gap-2">
-                <button class="action-btn edit-btn bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs flex-1" onclick="editRawMaterial(${material.id})">Edit</button>
-                <button class="action-btn delete-btn bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs flex-1" onclick="deleteRawMaterial(${material.id})">Delete</button>
-            </div>
-        `;
-        cardsContainer.appendChild(card);
     });
     
     // Update pagination info

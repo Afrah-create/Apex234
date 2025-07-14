@@ -35,4 +35,15 @@ class YogurtProduct extends Model
     {
         return $this->inventories()->sum('quantity_available');
     }
+
+    public function rawMaterialRequirements()
+    {
+        // Example: adjust these values per product as needed
+        // [material_type => quantity_per_batch]
+        return [
+            'milk' => 5,    // 5L per batch
+            'sugar' => 1,   // 1kg per batch
+            'fruit' => 2,   // 2kg per batch
+        ];
+    }
 } 
