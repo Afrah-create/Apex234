@@ -453,13 +453,6 @@ class VendorInventoryController extends Controller
         ]);
     }
 
-    // Show edit form for a raw material
-    public function showRawMaterial($id)
-    {
-        $rawMaterial = RawMaterial::findOrFail($id);
-        return view('vendor.edit-raw-material', compact('rawMaterial'));
-    }
-
     // Get all dairy farms for the form
     public function getDairyFarms(): JsonResponse
     {

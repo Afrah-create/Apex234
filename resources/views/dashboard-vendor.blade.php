@@ -341,6 +341,14 @@
             loadVendorProductionSummary();
             loadVendorRawMaterialStats(); // Added this line to load raw material stats
 
+            // Add this after the definition of loadVendorRawMaterialStats
+            window.refreshVendorRawMaterialStats = loadVendorRawMaterialStats;
+
+            // Add polling to auto-refresh raw material stats and chart every 30 seconds
+            setInterval(() => {
+                loadVendorRawMaterialStats();
+            }, 30000);
+
             // Load cart from backend
             fetch('/api/cart')
               .then(res => res.json())

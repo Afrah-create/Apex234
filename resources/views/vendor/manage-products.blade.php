@@ -501,7 +501,6 @@ function renderRawMaterials() {
             <td class="py-2"><span class="font-bold ${statusClass} text-sm">${material.status.toUpperCase()}</span></td>
             <td class="py-2 text-sm">${material.expiry_date}</td>
             <td class="py-2">
-                <button class="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded mr-1 text-xs" onclick="editRawMaterial(${material.id})">Edit</button>
                 <button class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs" onclick="deleteRawMaterial(${material.id})">Delete</button>
             </td>
         `;
@@ -656,11 +655,6 @@ async function deleteProductInventory(id) {
             alert('Error deleting product inventory');
         }
     })();
-}
-
-// Edit raw material - redirect to edit view
-function editRawMaterial(id) {
-    window.location.href = `/vendor/raw-materials/${id}/edit`;
 }
 
 // Delete raw material

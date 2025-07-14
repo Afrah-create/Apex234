@@ -152,4 +152,37 @@ class AdminDistributionCenterController extends Controller
         $center->delete();
         return redirect()->route('admin.distribution-centers.index')->with('success', 'Distribution center deleted!');
     }
+
+    /**
+     * Get inventory statistics for all vendors at a distribution center.
+     */
+    public function vendorInventoryStats($id)
+    {
+        $center = \App\Models\DistributionCenter::findOrFail($id);
+        $vendors = $center->vendors;
+        $stats = [];
+        foreach ($vendors as $vendor) {
+            $vendorStats = \App\Models\Inventory::where('distribution_center_id', $center->id)
+                ->whereHas('yogurtProduct', function($q) use ($vendor) {
+                    $q->where('vendor_id', $vendor->id);
+                })
+                ->select('yogurt_product_id', \DB::raw('SUM(quantity_available) as available'))
+                ->groupBy('yogurt_product_id')
+                ->get()
+                ->map(function($row) {
+                    $product = \App\Models\YogurtProduct::find($row->yogurt_product_id);
+                    return [
+                        'product_id' => $row->yogurt_product_id,
+                        'product_name' => $product ? $product->product_name : 'Unknown',
+                        'available' => (float) $row->available,
+                    ];
+                });
+            $stats[$vendor->id] = [
+                'vendor_id' => $vendor->id,
+                'vendor_name' => $vendor->business_name,
+                'products' => $vendorStats,
+            ];
+        }
+        return response()->json($stats);
+    }
 }

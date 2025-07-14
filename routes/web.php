@@ -227,7 +227,6 @@ Route::middleware(['auth', 'verified'])->prefix('vendor')->name('vendor.')->grou
     })->name('manage-products');
     Route::post('/reserve-batch/{id}', [\App\Http\Controllers\VendorProductionController::class, 'reserveBatch'])->name('reserve-batch');
     Route::get('/products/{id}/edit', [\App\Http\Controllers\VendorProductController::class, 'show'])->name('products.edit');
-    Route::get('/raw-materials/{id}/edit', [\App\Http\Controllers\VendorInventoryController::class, 'showRawMaterial'])->name('raw-materials.edit');
 });
 
 // Password reset by token (code) form
