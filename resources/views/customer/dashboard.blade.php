@@ -605,7 +605,7 @@
             <a href="{{ route('customer.orders.index') }}">Orders</a>
             <a href="{{ route('help.index') }}">Help</a>
             <a href="{{ route('privacy.policy') }}">Privacy Policy</a>
-            <a href="#">Terms</a>
+            <a href="{{ route('terms.use') }}">Terms</a>
             <a href="#">Contact</a>
         </div>
         <div class="footer-copy">&copy; {{ date('Y') }} Caramel Yogurt. All rights reserved.</div>
