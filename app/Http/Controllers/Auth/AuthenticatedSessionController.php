@@ -46,8 +46,10 @@ class AuthenticatedSessionController extends Controller
                 return redirect()->route('dashboard.supplier');
             case 'vendor':
                 $vendorApplicant = VendorApplicant::where('email', $user->email)->latest()->first();
-                if (!$vendorApplicant || $vendorApplicant->status === 'pending') {
-                    return redirect()->route('vendor-applicant.status', ['email' => $user->email]);
+                if (!$vendorApplicant || !in_array($vendorApplicant->status, ['approved'])) {
+                    Auth::logout();
+                    return redirect()->route('vendor-applicant.status', ['email' => $user->email])
+                        ->withErrors(['Your vendor application is not approved yet.']);
                 }
                 return redirect()->route('dashboard.vendor');
             case 'employee':
@@ -70,8 +72,10 @@ class AuthenticatedSessionController extends Controller
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
+
+        // Set a session flash variable to indicate logout just happened
+        session()->flash('force_refresh', true);
 
         return redirect('/');
     }

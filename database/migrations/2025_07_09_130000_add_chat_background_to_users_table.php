@@ -9,7 +9,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->text('chat_background')->nullable()->after('profile_photo');
+            $table->string('chat_background')->nullable();
         });
     }
 

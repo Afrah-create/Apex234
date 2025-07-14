@@ -80,6 +80,7 @@ class VendorInventoryController extends Controller
                 'updated_at'
             ])
             ->where('vendor_id', $vendorId)
+            ->where('status', 'available')
             ->get()
             ->map(function($material) {
                 return [

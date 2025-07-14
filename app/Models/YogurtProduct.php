@@ -9,4 +9,30 @@ class YogurtProduct extends Model
 {
     use HasFactory;
     protected $guarded = [];
+
+    /**
+     * Get all inventory records for this yogurt product.
+     */
+    public function inventory()
+    {
+        return $this->hasMany(Inventory::class, 'yogurt_product_id');
+    }
+
+    /**
+     * Get the most recent inventory record for this yogurt product (optional helper).
+     */
+    public function currentInventory()
+    {
+        return $this->hasOne(Inventory::class, 'yogurt_product_id')->latestOfMany();
+    }
+
+    public function inventories()
+    {
+        return $this->hasMany(\App\Models\Inventory::class);
+    }
+
+    public function getStockAttribute()
+    {
+        return $this->inventories()->sum('quantity_available');
+    }
 } 

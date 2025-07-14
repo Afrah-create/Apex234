@@ -28,6 +28,8 @@ return new class extends Migration
             $table->timestamp('last_generated_at')->nullable();
             $table->timestamp('next_generation_at')->nullable();
             $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
+            $table->string('stakeholder_type')->nullable();
+            $table->unsignedBigInteger('stakeholder_id')->nullable();
             $table->timestamps();
             
             $table->index(['is_active', 'next_generation_at']);

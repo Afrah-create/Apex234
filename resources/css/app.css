@@ -5,3 +5,52 @@
 .hidden {
   display: none !important;
 }
+
+/* --- Enlarged Login Page Features (moved from custom.css) --- */
+.auth-login-form label,
+.auth-login-form .text-sm,
+.auth-login-form .text-gray-600,
+.auth-login-form .text-gray-900 {
+    font-size: 1.15rem !important;
+}
+.auth-login-form input[type="email"],
+.auth-login-form input[type="password"],
+.auth-login-form input[type="checkbox"] {
+    font-size: 1.15rem !important;
+    padding: 0.75rem 1rem !important;
+    height: 2.7rem !important;
+}
+.auth-login-form .ms-2 {
+    font-size: 1.08rem !important;
+}
+.auth-login-form .mt-4 {
+    margin-top: 1.5rem !important;
+}
+.auth-login-form .mb-4 {
+    margin-bottom: 1.2rem !important;
+}
+.auth-login-form .underline,
+.auth-login-form a {
+    font-size: 1.08rem !important;
+}
+.auth-login-form button,
+.auth-login-form .btn,
+.auth-login-form .btn-primary,
+.auth-login-form [type="submit"] {
+    font-size: 1.18rem !important;
+    padding: 0.7rem 2.2rem !important;
+    border-radius: 0.5rem !important;
+}
+
+.auth-login-form {
+    max-width: 480px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+}
+.auth-login-form input[type="email"],
+.auth-login-form input[type="password"] {
+    width: 100%;
+    min-width: 260px;
+    box-sizing: border-box;
+}

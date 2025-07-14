@@ -27,6 +27,7 @@
                 <option value="retailer" {{ old('role') == 'retailer' ? 'selected' : '' }}>Retailer</option>
                 <option value="supplier" {{ old('role') == 'supplier' ? 'selected' : '' }}>Supplier</option>
                 <option value="vendor" {{ old('role') == 'vendor' ? 'selected' : '' }}>Vendor</option>
+                <option value="customer" {{ old('role') == 'customer' ? 'selected' : '' }}>Customer</option>
             </select>
             <x-input-error :messages="$errors->get('role')" class="mt-2" />
         </div>

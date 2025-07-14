@@ -17,17 +17,6 @@
                 <p id="total-products">-</p>
         </div>
         </div>
-        <div class="summary-card" style="--summary-card-border: #3b82f6;">
-            <div class="icon" style="background: #dbeafe; color: #3b82f6;">
-                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                </svg>
-            </div>
-            <div class="details">
-                <p>Total Raw Materials</p>
-                <p id="total-raw-materials">-</p>
-            </div>
-        </div>
         <div class="summary-card" style="--summary-card-border: #f59e0b;">
             <div class="icon" style="background: #fef3c7; color: #f59e0b;">
                 <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -86,7 +75,7 @@
                         <input type="text" id="batch-number" name="batch_number" class="w-full p-2 rounded border text-sm" required>
                     </div>
                     <div>
-                        <label for="quantity-available" class="block font-bold mb-1 text-sm">Quantity Available</label>
+                        <label for="quantity-available" class="block font-bold mb-1 text-sm">Quantity </label>
                         <input type="number" id="quantity-available" name="quantity_available" min="0" class="w-full p-2 rounded border text-sm" required>
                     </div>
                     <div>
@@ -131,6 +120,50 @@
             <div id="add-product-inventory-success" class="mt-2 text-green-600 font-bold hidden text-sm">Product inventory added successfully!</div>
         </div>
 
+
+        <!-- Product Inventory Statistics Table -->
+        <div class="bg-white rounded-lg shadow-md p-4 md:p-6 mb-8">
+            <h2 class="text-lg md:text-xl font-semibold mb-4">Product Inventory Statistics</h2>
+            <table class="min-w-full mb-4 border border-gray-400">
+                <thead>
+                    <tr class="border-b border-gray-400">
+                        <th class="px-4 py-2 text-left border-r border-gray-300">Product Name</th>
+                        <th class="px-4 py-2 text-left border-r border-gray-300">Available Quantity</th>
+                        <th class="px-4 py-2 text-left">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @php
+                        $products = \App\Models\YogurtProduct::all();
+                        $warning_max = session('inventory_warning_max', 4);
+                        $low_max = session('inventory_low_max', 14);
+                        $productQuantities = \App\Models\Inventory::select('yogurt_product_id', \DB::raw('SUM(quantity_available) as total_quantity'))
+                            ->groupBy('yogurt_product_id')->pluck('total_quantity', 'yogurt_product_id');
+                        $confirmedOrderQuantities = \App\Models\OrderItem::whereHas('order', function($q) {
+                            $q->where('order_status', 'confirmed');
+                        })->select('yogurt_product_id', \DB::raw('SUM(quantity) as total_confirmed'))
+                            ->groupBy('yogurt_product_id')->pluck('total_confirmed', 'yogurt_product_id');
+                    @endphp
+                    @forelse($products as $product)
+                        @php
+                            $added = $productQuantities[$product->id] ?? 0;
+                            $confirmed = $confirmedOrderQuantities[$product->id] ?? 0;
+                            $quantity = $added - $confirmed;
+                            if ($quantity < 0) $quantity = 0;
+                            $status = 'Available';
+                            if ($quantity === 0) {
+                                $status = 'Out of Stock';
+                            } elseif ($quantity <= $warning_max) {
+                                $status = 'Warning';
+                            } elseif ($quantity <= $low_max) {
+                                $status = 'Low';
+                            }
+                        @endphp
+                        <tr class="border-b border-gray-300">
+                            <td class="px-4 py-2 border-r border-gray-200">{{ $product->product_name }}</td>
+                            <td class="px-4 py-2 border-r border-gray-200">{{ $quantity }}</td>
+                            <td class="px-4 py-2">@if($status === 'Out of Stock')<span class="text-red-600 font-semibold">{{ $status }}</span>@elseif($status === 'Warning')<span class="text-yellow-600 font-semibold">{{ $status }}</span>@elseif($status === 'Low')<span class="text-orange-600 font-semibold">{{ $status }}</span>@else<span class="text-green-600 font-semibold">{{ $status }}</span>@endif</td>
+
         <div>
             <h2 class="text-lg md:text-xl font-semibold mb-4">Product Inventory</h2>
             
@@ -169,32 +202,42 @@
                             <th class="pb-2 text-sm font-semibold">Value (UGX)</th>
                             <th class="pb-2 text-sm font-semibold">Expiry</th>
                             <th class="pb-2 text-sm font-semibold">Actions</th>
+
                         </tr>
-                    </thead>
-                    <tbody id="product-inventory-list">
-                        <!-- Populated by JS -->
-                    </tbody>
-                </table>
+                    @empty
+                        <tr>
+                            <td colspan="3" class="px-4 py-2 text-center text-gray-500">No products found.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+            <!-- Status Key and Range Adjustment Form -->
+            <div class="mb-2">
+                <h3 class="font-semibold mb-1">Status Key:</h3>
+                <ul class="text-sm mb-2">
+                    <li><span class="text-red-600 font-bold">Out of Stock</span>: 0</li>
+                    <li><span class="text-yellow-600 font-bold">Warning</span>: 1 - {{ $warning_max }}</li>
+                    <li><span class="text-orange-600 font-bold">Low</span>: {{ $warning_max+1 }} - {{ $low_max }}</li>
+                    <li><span class="text-green-600 font-bold">Available</span>: {{ $low_max+1 }} and above</li>
+                </ul>
+                <form method="POST" action="{{ route('vendor.inventory-status-ranges') }}" class="flex flex-col md:flex-row gap-2 items-center">
+                    @csrf
+                    <label class="text-sm">Warning max:
+                        <input type="number" name="warning_max" value="{{ $warning_max }}" min="1" max="{{ $low_max }}" class="border rounded p-1 w-16 ml-1">
+                    </label>
+                    <label class="text-sm">Low max:
+                        <input type="number" name="low_max" value="{{ $low_max }}" min="{{ $warning_max+1 }}" class="border rounded p-1 w-16 ml-1">
+                    </label>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">Save Ranges</button>
+                </form>
+                @if(session('range_success'))
+                    <div class="text-green-600 text-sm mt-1">{{ session('range_success') }}</div>
+                @endif
             </div>
+        </div>
 
-            <!-- Mobile Cards -->
-            <div class="lg:hidden space-y-4" id="product-inventory-cards">
-                <!-- Populated by JS -->
-            </div>
-
-            <!-- Pagination -->
-            <div class="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div class="text-sm text-gray-600">
-                    Showing <span id="product-start">0</span> to <span id="product-end">0</span> of <span id="product-total">0</span> entries
-                </div>
-                <div class="flex gap-2">
-                    <button id="product-prev" class="px-3 py-1 border rounded text-sm disabled:opacity-50" disabled>Previous</button>
-                    <div id="product-pages" class="flex gap-1">
-                        <!-- Populated by JS -->
-                    </div>
-                    <button id="product-next" class="px-3 py-1 border rounded text-sm disabled:opacity-50" disabled>Next</button>
-                </div>
-            </div>
+        <div>
+            {{-- Lower Product Inventory section removed as per request --}}
         </div>
     </div>
 
@@ -330,7 +373,6 @@ async function loadInventorySummary() {
         const data = await response.json();
         
         document.getElementById('total-products').textContent = data.product_summary.total_batches || 0;
-        document.getElementById('total-raw-materials').textContent = data.raw_material_summary.total_materials || 0;
         document.getElementById('total-value').textContent = 
             ((data.product_summary.total_value || 0) + (data.raw_material_summary.total_cost || 0)).toLocaleString() + ' UGX';
         
@@ -732,28 +774,30 @@ function editProductInventory(id) {
 
 // Delete product inventory
 async function deleteProductInventory(id) {
-    if (!confirm('Are you sure you want to delete this product inventory?')) return;
-    
-    try {
-        const response = await fetch(`/api/vendor/inventory/products/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': getCSRFToken()
+    (async function() {
+        const confirmed = await showConfirmModal('Are you sure you want to delete this product inventory?', 'Delete Product Inventory');
+        if (!confirmed) return;
+        try {
+            const response = await fetch(`/api/vendor/inventory/products/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': getCSRFToken()
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                loadProductInventory();
+                loadInventorySummary();
+            } else {
+                alert('Error deleting product inventory: ' + (result.error || 'Unknown error'));
             }
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            loadProductInventory();
-            loadInventorySummary();
-        } else {
-            alert('Error deleting product inventory: ' + (result.error || 'Unknown error'));
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error deleting product inventory');
         }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Error deleting product inventory');
-    }
+    })();
 }
 
 // Edit raw material - redirect to edit view
@@ -763,28 +807,30 @@ function editRawMaterial(id) {
 
 // Delete raw material
 async function deleteRawMaterial(id) {
-    if (!confirm('Are you sure you want to delete this raw material?')) return;
-    
-    try {
-        const response = await fetch(`/api/vendor/inventory/raw-materials/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': getCSRFToken()
+    (async function() {
+        const confirmed = await showConfirmModal('Are you sure you want to delete this raw material?', 'Delete Raw Material');
+        if (!confirmed) return;
+        try {
+            const response = await fetch(`/api/vendor/inventory/raw-materials/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': getCSRFToken()
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                loadRawMaterials();
+                loadInventorySummary();
+            } else {
+                alert('Error deleting raw material: ' + (result.error || 'Unknown error'));
             }
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            loadRawMaterials();
-            loadInventorySummary();
-        } else {
-            alert('Error deleting raw material: ' + (result.error || 'Unknown error'));
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error deleting raw material');
         }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Error deleting raw material');
-    }
+    })();
 }
 
 // Auto-refresh data every 30 seconds for real-time updates
