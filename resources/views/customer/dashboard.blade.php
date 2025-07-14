@@ -16,7 +16,7 @@
             background: #f5f5f5;
             border-bottom: 1px solid #ececec;
             font-size: 0.95rem;
-            color: #ff9900;
+            color: #2563eb;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -36,7 +36,7 @@
             align-items: center;
             justify-content: space-between;
             padding: 18px 32px 18px 32px;
-            border-bottom: 3px solid #ff9900;
+            border-bottom: 3px solid #2563eb;
         }
         .header-logo {
             display: flex;
@@ -83,7 +83,7 @@
             font-size: 1.2rem;
         }
         .header-searchbtn {
-            background: #ff9900;
+            background: #2563eb;
             color: #fff;
             border: none;
             border-radius: 0 4px 4px 0;
@@ -95,7 +95,7 @@
             transition: background 0.2s;
         }
         .header-searchbtn:hover {
-            background: #e67c00;
+            background: #1e40af;
         }
         .header-actions {
             display: flex;
@@ -156,7 +156,7 @@
         }
         .header-orange-bar {
             height: 6px;
-            background: #ff9900;
+            background: #2563eb;
             width: 100%;
         }
         /* Carousel */
@@ -167,7 +167,7 @@
             position: relative;
             border-radius: 18px;
             overflow: hidden;
-            box-shadow: 0 4px 32px rgba(255,153,0,0.07);
+            box-shadow: 0 4px 32px rgba(37,99,235,0.07);
             min-height: 240px;
             height: 240px;
         }
@@ -207,7 +207,7 @@
         .carousel-overlay {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(120deg, rgba(255,255,255,0.05) 0%, rgba(255,153,0,0.13) 100%);
+            background: linear-gradient(120deg, rgba(255,255,255,0.05) 0%, rgba(37,99,235,0.13) 100%);
             z-index: 1;
         }
         .carousel-content {
@@ -260,13 +260,13 @@
             height: 14px;
             border-radius: 50%;
             background: #fff;
-            border: 2px solid #ff9900;
+            border: 2px solid #2563eb;
             opacity: 0.6;
             cursor: pointer;
             transition: opacity 0.2s, background 0.2s;
         }
         .carousel-indicator.active {
-            background: #ff9900;
+            background: #2563eb;
             opacity: 1;
         }
         /* Products */
@@ -299,7 +299,7 @@
             position: relative;
         }
         .product-card:hover {
-            box-shadow: 0 8px 32px rgba(255,153,0,0.13);
+            box-shadow: 0 8px 32px rgba(37,99,235,0.13);
             transform: translateY(-4px) scale(1.02);
         }
         .product-image {
@@ -322,7 +322,7 @@
             text-align: center;
         }
         .product-price {
-            color: #ff9900;
+            color: #2563eb;
             font-size: 1.08rem;
             font-weight: 500;
             margin-bottom: 8px;
@@ -347,7 +347,7 @@
             font-size: 1rem;
         }
         .product-card button {
-            background: #38c172;
+            background: #2563eb;
             color: #fff;
             border: none;
             border-radius: 4px;
@@ -358,7 +358,7 @@
             transition: background 0.18s;
         }
         .product-card button:hover {
-            background: #2fa360;
+            background: #1e40af;
         }
         /* Toast */
         #cart-toast {
@@ -369,7 +369,7 @@
             min-width: 220px;
             max-width: 320px;
             background: #fff;
-            border-left: 6px solid #38c172;
+            border-left: 6px solid #2563eb;
             box-shadow: 0 4px 24px rgba(0,0,0,0.13);
             padding: 18px 28px 18px 18px;
             border-radius: 8px;
@@ -402,7 +402,7 @@
             justify-content: center;
         }
         .footer-links a {
-            color: #ff9900;
+            color: #2563eb;
             text-decoration: none;
             font-size: 1.08rem;
             font-weight: 500;
@@ -453,11 +453,11 @@
         <div class="header-actions">
             <div class="header-action account-action" tabindex="0" style="position:relative;">
                 @php $user = Auth::user(); @endphp
-                <img src="{{ $user->profile_photo_url }}" alt="Profile Photo" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid #ff9900;vertical-align:middle;cursor:pointer;" />
+                <img src="{{ $user->profile_photo_url }}" alt="Profile Photo" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid #2563eb;vertical-align:middle;cursor:pointer;" />
                 <div class="account-dropdown" id="accountDropdown">
-                    <a href="{{ route('profile.edit') }}"><svg width="18" height="18" fill="none" stroke="#ff9900" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a8.38 8.38 0 0 1 13 0"/></svg> Update Profile</a>
-                    <a href="{{ route('customer.orders.index') }}"><svg width="18" height="18" fill="none" stroke="#ff9900" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M16 3v4M8 3v4"/></svg> View Orders</a>
-                    <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();"><svg width="18" height="18" fill="none" stroke="#ff9900" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M3 21V3a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v4"/></svg> Logout</a>
+                    <a href="{{ route('profile.edit') }}"><svg width="18" height="18" fill="none" stroke="#2563eb" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a8.38 8.38 0 0 1 13 0"/></svg> Update Profile</a>
+                    <a href="{{ route('customer.orders.index') }}"><svg width="18" height="18" fill="none" stroke="#2563eb" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M16 3v4M8 3v4"/></svg> View Orders</a>
+                    <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();"><svg width="18" height="18" fill="none" stroke="#2563eb" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M3 21V3a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v4"/></svg> Logout</a>
                     <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">@csrf</form>
                 </div>
             </div>
@@ -478,7 +478,7 @@
                     }
                 @endphp
                 @if($cartCount > 0)
-                    <span style="position:absolute;top:-8px;right:-12px;background:#ff9900;color:#fff;font-size:0.98rem;font-weight:600;padding:2px 8px;border-radius:16px;min-width:24px;text-align:center;box-shadow:0 2px 8px rgba(255,153,0,0.13);">{{ $cartCount }}</span>
+                    <span style="position:absolute;top:-8px;right:-12px;background:#2563eb;color:#fff;font-size:0.98rem;font-weight:600;padding:2px 8px;border-radius:16px;min-width:24px;text-align:center;box-shadow:0 2px 8px rgba(37,99,235,0.13);">{{ $cartCount }}</span>
                 @endif
             </a>
         </div>
@@ -577,7 +577,7 @@
                         <form action="{{ route('cart.add', $product) }}" method="POST" class="mt-2">
                             @csrf
                             <input type="number" name="quantity" value="1" min="1" class="w-16 p-1 border rounded mr-2">
-                            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded">Add to Cart</button>
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded">Add to Cart</button>
                         </form>
                     @endif
                 </div>
@@ -585,8 +585,8 @@
         </div>
     </div>
     @if(session('success'))
-        <div id="cart-toast" style="position:fixed;top:32px;right:32px;z-index:9999;min-width:220px;max-width:320px;background:#fff;border-left:6px solid #38c172;box-shadow:0 4px 24px rgba(0,0,0,0.13);padding:18px 28px 18px 18px;border-radius:8px;font-size:1.08rem;color:#222;display:flex;align-items:center;gap:12px;">
-            <svg width="28" height="28" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#38c172"/><path d="M8 12.5l3 3 5-5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div id="cart-toast" style="position:fixed;top:32px;right:32px;z-index:9999;min-width:220px;max-width:320px;background:#fff;border-left:6px solid #2563eb;box-shadow:0 4px 24px rgba(0,0,0,0.13);padding:18px 28px 18px 18px;border-radius:8px;font-size:1.08rem;color:#222;display:flex;align-items:center;gap:12px;">
+            <svg width="28" height="28" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#2563eb"/><path d="M8 12.5l3 3 5-5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             <span>{{ session('success') }}</span>
             <button onclick="this.parentElement.style.display='none'" style="background:none;border:none;font-size:1.3rem;line-height:1;color:#888;cursor:pointer;margin-left:auto;">&times;</button>
         </div>
