@@ -441,12 +441,12 @@
         <div class="header-logo">
             <img src="{{ asset('images/apex-logo.png') }}" alt="Apex Logo" class="apex-logo" />CARAMEL YOGHURT
         </div>
-        <form class="header-search" onsubmit="return false;">
+        <form class="header-search" method="GET" action="{{ route('dashboard.customer') }}">
             <div class="header-searchbox">
                 <span class="search-icon">
                     <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 </span>
-                <input type="text" placeholder="Search yoghurt, dairy products, and more">
+                <input type="text" name="search" placeholder="Search yoghurt, dairy products, and more" value="{{ request('search', $search ?? '') }}">
             </div>
             <button class="header-searchbtn" type="submit">Search</button>
         </form>
@@ -461,7 +461,7 @@
                     <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">@csrf</form>
                 </div>
             </div>
-            <a class="header-action" href="#">
+            <a class="header-action" href="{{ route('help.index') }}">
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-size="12" fill="#222">?</text></svg>
                 Help <svg class="dropdown" width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left:2px;vertical-align:middle;"><path d="M6 8L10 12L14 8" stroke="#222" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </a>
@@ -603,7 +603,7 @@
             <a href="/dashboard/customer">Home</a>
             <a href="/dashboard/customer">Shop</a>
             <a href="{{ route('customer.orders.index') }}">Orders</a>
-            <a href="#">Help</a>
+            <a href="{{ route('help.index') }}">Help</a>
             <a href="#">Privacy Policy</a>
             <a href="#">Terms</a>
             <a href="#">Contact</a>
