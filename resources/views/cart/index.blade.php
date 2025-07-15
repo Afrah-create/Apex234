@@ -16,7 +16,7 @@
             background: #f5f5f5;
             border-bottom: 1px solid #ececec;
             font-size: 0.95rem;
-            color: #ff9900;
+            color: #2563eb;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -36,7 +36,7 @@
             align-items: center;
             justify-content: space-between;
             padding: 18px 32px 18px 32px;
-            border-bottom: 3px solid #ff9900;
+            border-bottom: 3px solid #2563eb;
         }
         .header-logo {
             display: flex;
@@ -83,7 +83,7 @@
             font-size: 1.2rem;
         }
         .header-searchbtn {
-            background: #ff9900;
+            background: #2563eb;
             color: #fff;
             border: none;
             border-radius: 0 4px 4px 0;
@@ -95,7 +95,7 @@
             transition: background 0.2s;
         }
         .header-searchbtn:hover {
-            background: #e67c00;
+            background: #1e40af;
         }
         .header-actions {
             display: flex;
@@ -156,7 +156,7 @@
         }
         .header-orange-bar {
             height: 6px;
-            background: #ff9900;
+            background: #2563eb;
             width: 100%;
         }
         /* Cart Card Centering and Padding */
@@ -194,19 +194,19 @@
             font-size: 1.13rem;
         }
         .cart-empty-btn {
-            background: #FFA500;
+            background: #2563eb;
             color: #fff;
             font-size: 1.18rem;
             font-weight: 500;
             padding: 14px 38px;
             border-radius: 8px;
-            box-shadow: 0 4px 16px rgba(255,153,0,0.13);
+            box-shadow: 0 4px 16px rgba(37,99,235,0.13);
             transition: background 0.2s;
             text-decoration: none;
             display: inline-block;
         }
         .cart-empty-btn:hover {
-            background: #e67c00;
+            background: #1e40af;
         }
         @media (max-width: 600px) {
             .cart-empty-card {
@@ -241,7 +241,7 @@
             background: #fcfcfc;
         }
         .cart-table tbody tr:hover {
-            background: #fff7e6;
+            background: #e6f0ff;
         }
         .cart-table img {
             width: 56px;
@@ -252,7 +252,7 @@
             background: #f5f5f5;
         }
         .cart-table .cart-action-btn {
-            background: #ff9900;
+            background: #2563eb;
             color: #fff;
             border: none;
             border-radius: 6px;
@@ -263,7 +263,7 @@
             transition: background 0.18s;
         }
         .cart-table .cart-action-btn:hover {
-            background: #e67c00;
+            background: #1e40af;
         }
         .cart-table input[type='number'] {
             width: 56px;
@@ -276,7 +276,7 @@
         
         /* Checkout Buttons */
         .checkout-btn-primary {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
             color: #fff;
             border: none;
             border-radius: 12px;
@@ -288,20 +288,20 @@
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+            box-shadow: 0 4px 15px rgba(37,99,235,0.3);
             position: relative;
             overflow: hidden;
         }
         .checkout-btn-primary:hover {
-            background: linear-gradient(135deg, #218838 0%, #1ea085 100%);
+            background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+            box-shadow: 0 6px 20px rgba(37,99,235,0.4);
             color: #fff;
             text-decoration: none;
         }
         .checkout-btn-primary:active {
             transform: translateY(0);
-            box-shadow: 0 2px 10px rgba(40, 167, 69, 0.3);
+            box-shadow: 0 2px 10px rgba(37,99,235,0.3);
         }
         
         .checkout-btn-secondary {
@@ -363,7 +363,7 @@
 <body>
     <div class="header-orange-bar"></div>
     <div class="header-topbar">
-        <div>Sell with Caramel Yoghurt</div>
+        <div>Enjoy Caramel Yoghurt</div>
         <div class="caramel-mini">
             <span style="color:#222; font-weight:bold;">CARAMEL</span>
             <span style="color:#bfa76a; font-size:1em; font-weight:normal;">FRESH</span>
@@ -386,15 +386,15 @@
         <div class="header-actions">
             <div class="header-action account-action" tabindex="0" style="position:relative;">
                 @php $user = Auth::user(); @endphp
-                <img src="{{ $user->profile_photo_url }}" alt="Profile Photo" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid #ff9900;vertical-align:middle;cursor:pointer;" />
+                <img src="{{ $user->profile_photo_url }}" alt="Profile Photo" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid #2563eb;vertical-align:middle;cursor:pointer;" />
                 <div class="account-dropdown" id="accountDropdown">
-                    <a href="{{ route('profile.edit') }}"><svg width="18" height="18" fill="none" stroke="#ff9900" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a8.38 8.38 0 0 1 13 0"/></svg> Update Profile</a>
-                    <a href="{{ route('customer.orders.index') }}"><svg width="18" height="18" fill="none" stroke="#ff9900" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M16 3v4M8 3v4"/></svg> View Orders</a>
-                    <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();"><svg width="18" height="18" fill="none" stroke="#ff9900" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M3 21V3a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v4"/></svg> Logout</a>
+                    <a href="{{ route('profile.edit') }}"><svg width="18" height="18" fill="none" stroke="#2563eb" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a8.38 8.38 0 0 1 13 0"/></svg> Update Profile</a>
+                    <a href="{{ route('customer.orders.index') }}"><svg width="18" height="18" fill="none" stroke="#2563eb" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M16 3v4M8 3v4"/></svg> View Orders</a>
+                    <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();"><svg width="18" height="18" fill="none" stroke="#2563eb" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M3 21V3a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v4"/></svg> Logout</a>
                     <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">@csrf</form>
                 </div>
             </div>
-            <a class="header-action" href="#">
+            <a class="header-action" href="{{ route('help.index') }}">
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-size="12" fill="#222">?</text></svg>
                 Help <svg class="dropdown" width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left:2px;vertical-align:middle;"><path d="M6 8L10 12L14 8" stroke="#222" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </a>
@@ -478,9 +478,9 @@
                         <svg width="110" height="110" fill="none" viewBox="0 0 110 110">
                             <circle cx="55" cy="55" r="55" fill="#fafafa"/>
                             <g>
-                                <rect x="33" y="40" width="44" height="28" rx="7" fill="#FFA500"/>
-                                <circle cx="44" cy="75" r="7" fill="#FFA500"/>
-                                <circle cx="66" cy="75" r="7" fill="#FFA500"/>
+                                <rect x="33" y="40" width="44" height="28" rx="7" fill="#2563eb"/>
+                                <circle cx="44" cy="75" r="7" fill="#2563eb"/>
+                                <circle cx="66" cy="75" r="7" fill="#2563eb"/>
                                 <polygon points="38,40 72,40 77,60 33,60" fill="#fff" opacity=".18"/>
                                 <circle cx="55" cy="54" r="8" fill="#fff" opacity=".18"/>
                             </g>
@@ -499,8 +499,8 @@
                 <a href="/dashboard/customer">Home</a>
                 <a href="/dashboard/customer">Shop</a>
                 <a href="{{ route('customer.orders.index') }}">Orders</a>
-                <a href="#">Help</a>
-                <a href="#">Privacy Policy</a>
+                <a href="{{ route('help.index') }}">Help</a>
+                <a href="{{ route('privacy.policy') }}">Privacy Policy</a>
                 <a href="#">Terms</a>
                 <a href="#">Contact</a>
             </div>
@@ -530,14 +530,14 @@
             justify-content: center;
         }
         .footer-links a {
-            color: #ff9900;
+            color: #fff;
             text-decoration: none;
             font-size: 1.08rem;
             font-weight: 500;
             transition: color 0.2s;
         }
         .footer-links a:hover {
-            color: #fff;
+            color: #2563eb;
             text-decoration: underline;
         }
         .footer-copy {
