@@ -39,6 +39,7 @@ Route::get('/test-mail', function () {
     }
 });
 
+// Main dashboard route
 Route::get('/dashboard', function () {
     $user = Auth::user();
     if ($user instanceof User) {
@@ -119,7 +120,7 @@ Route::middleware(['auth'])->group(function () {
         ->only(['index', 'show', 'store']);
 });
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

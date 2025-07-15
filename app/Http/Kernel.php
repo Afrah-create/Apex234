@@ -19,7 +19,7 @@ class Kernel extends HttpKernel
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
-        \App\Http\Middleware\NoCacheHeaders::class, // Added to prevent caching after logout
+        \App\Http\Middleware\NoCacheHeaders::class, // Re-added to global middleware
     ];
 
     /**
@@ -63,7 +63,6 @@ class Kernel extends HttpKernel
         'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
-        'nocache' => \App\Http\Middleware\NoCache::class,
         'secure.session' => \App\Http\Middleware\SecureSessionMiddleware::class,
     ];
 }
