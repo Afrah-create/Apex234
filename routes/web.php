@@ -148,7 +148,6 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
 Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/orders')->name('admin.orders.')->group(function () {
     Route::get('/', [AdminOrderController::class, 'index'])->name('index');
     Route::get('/{id}', [AdminOrderController::class, 'show'])->name('show');
-    Route::get('/{id}/edit', [AdminOrderController::class, 'edit'])->name('edit');
     Route::put('/{id}', [AdminOrderController::class, 'update'])->name('update');
     Route::delete('/{id}', [AdminOrderController::class, 'destroy'])->name('destroy');
     Route::patch('/{id}/status', [AdminOrderController::class, 'updateStatus'])->name('update-status');
@@ -156,6 +155,7 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     // API routes for data
     Route::get('/api/orders-data', [AdminOrderController::class, 'getOrdersData'])->name('api.orders-data');
     Route::get('/api/order-statistics', [AdminOrderController::class, 'getOrderStatistics'])->name('api.order-statistics');
+    Route::patch('/{order}/status', [App\Http\Controllers\AdminOrderController::class, 'updateStatus'])->name('admin.orders.updateStatus');
 });
 
 // Admin inventory analytics
@@ -512,3 +512,5 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
 
 Route::middleware(['auth', 'verified'])->get('/vendor/my-reports', [\App\Http\Controllers\VendorDashboardController::class, 'myReports'])->name('vendor.my-reports');
 Route::middleware(['auth', 'verified'])->get('/vendor/reports', [\App\Http\Controllers\VendorDashboardController::class, 'reportsPage'])->name('vendor.reports');
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])
+    ->get('/admin/distribution-centers/{id}/vendor-inventory-stats', [\App\Http\Controllers\AdminDistributionCenterController::class, 'vendorInventoryStats']);

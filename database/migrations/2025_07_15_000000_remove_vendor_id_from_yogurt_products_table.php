@@ -12,6 +12,12 @@ return new class extends Migration {
     {
         Schema::table('yogurt_products', function (Blueprint $table) {
             if (Schema::hasColumn('yogurt_products', 'vendor_id')) {
+                // Drop the foreign key constraint if it exists
+                try {
+                    $table->dropForeign(['vendor_id']);
+                } catch (\Exception $e) {
+                    // Ignore if the foreign key does not exist
+                }
                 $table->dropColumn('vendor_id');
             }
         });
@@ -24,7 +30,7 @@ return new class extends Migration {
     {
         Schema::table('yogurt_products', function (Blueprint $table) {
             $table->unsignedBigInteger('vendor_id')->nullable();
-            // You may want to add the foreign key constraint back if needed
+            // Optionally add the foreign key constraint back
             // $table->foreign('vendor_id')->references('id')->on('vendors')->onDelete('set null');
         });
     }

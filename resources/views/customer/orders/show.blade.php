@@ -219,19 +219,44 @@
     </div>
     <div class="header-orange-bar"></div>
     <div class="container mx-auto py-8">
-        <h1 class="text-2xl font-bold mb-4">Order Details</h1>
-        <div class="bg-white shadow rounded p-6 mb-4">
-            <p><strong>Order #:</strong> {{ $order->order_number }}</p>
-            <p><strong>Date:</strong> {{ $order->order_date }}</p>
-            <p><strong>Status:</strong> {{ ucfirst($order->order_status) }}</p>
-            <p><strong>Total:</strong> {{ $order->total_amount ?? '-' }}</p>
-            <p><strong>Delivery Address:</strong> {{ $order->delivery_address }}</p>
-            <p><strong>Delivery Contact:</strong> {{ $order->delivery_contact }}</p>
-            <p><strong>Delivery Phone:</strong> {{ $order->delivery_phone }}</p>
-            <p><strong>Special Instructions:</strong> {{ $order->special_instructions ?? '-' }}</p>
-            <p><strong>Notes:</strong> {{ $order->notes ?? '-' }}</p>
+        <div class="order-details-card">
+            <h1 class="order-details-title">Order Details</h1>
+            <table class="order-details-table">
+                <tr><th>Order #</th><td>{{ $order->order_number }}</td></tr>
+                <tr><th>Date</th><td>{{ $order->order_date }}</td></tr>
+                <tr><th>Status</th><td>{{ ucfirst($order->order_status) }}</td></tr>
+                <tr><th>Total</th><td>{{ $order->total_amount ?? '-' }}</td></tr>
+                <tr><th>Delivery Address</th><td>{{ $order->delivery_address }}</td></tr>
+                <tr><th>Delivery Contact</th><td>{{ $order->delivery_contact }}</td></tr>
+                <tr><th>Delivery Phone</th><td>{{ $order->delivery_phone }}</td></tr>
+                <tr><th>Special Instructions</th><td>{{ $order->special_instructions ?? '-' }}</td></tr>
+                <tr><th>Notes</th><td>{{ $order->notes ?? '-' }}</td></tr>
+            </table>
+            <h2 class="order-items-title">Order Items</h2>
+            <table class="order-items-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Unit Price</th>
+                        <th>Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach($order->orderItems as $index => $item)
+                    <tr>
+                        <td>{{ $index + 1 }}</td>
+                        <td>{{ $item->yogurtProduct->name ?? 'Product' }}</td>
+                        <td>{{ $item->quantity }}</td>
+                        <td>{{ $item->unit_price }}</td>
+                        <td>{{ $item->total_price }}</td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
+            <a href="{{ route('customer.orders.index') }}" class="back-link">Back to My Orders</a>
         </div>
-        <a href="{{ route('customer.orders.index') }}" class="text-blue-600 hover:underline">Back to My Orders</a>
     </div>
     <script>
     // Account dropdown logic
@@ -249,5 +274,89 @@
         });
     }
     </script>
+    <style>
+    .order-details-card {
+        background: #fff;
+        max-width: 600px;
+        margin: 40px auto 0 auto;
+        border-radius: 12px;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+        padding: 32px 28px 28px 28px;
+    }
+    .order-details-title {
+        font-size: 2.1rem;
+        font-weight: bold;
+        margin-bottom: 18px;
+        color: #222;
+        letter-spacing: 1px;
+    }
+    .order-details-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 32px;
+    }
+    .order-details-table th {
+        text-align: left;
+        padding: 8px 12px 8px 0;
+        color: #555;
+        font-weight: 600;
+        width: 180px;
+        background: none;
+        border: none;
+    }
+    .order-details-table td {
+        padding: 8px 0;
+        color: #222;
+        background: none;
+        border: none;
+    }
+    .order-items-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+        margin-top: 18px;
+        color: #ff9900;
+    }
+    .order-items-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 24px;
+        background: #fafafa;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+    .order-items-table th, .order-items-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #ececec;
+        text-align: left;
+    }
+    .order-items-table th {
+        background: #ff9900;
+        color: #fff;
+        font-weight: 600;
+    }
+    .order-items-table tr:last-child td {
+        border-bottom: none;
+    }
+    .back-link {
+        display: inline-block;
+        margin-top: 18px;
+        color: #ff9900;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 1.05rem;
+        transition: color 0.2s;
+    }
+    .back-link:hover {
+        color: #e67c00;
+        text-decoration: underline;
+    }
+    @media (max-width: 700px) {
+        .order-details-card { padding: 16px 4vw; }
+        .order-details-title { font-size: 1.3rem; }
+        .order-items-title { font-size: 1.05rem; }
+    }
+    </style>
 </body>
 </html> 

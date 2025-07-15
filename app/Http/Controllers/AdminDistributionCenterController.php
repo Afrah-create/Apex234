@@ -160,29 +160,39 @@ class AdminDistributionCenterController extends Controller
     {
         $center = \App\Models\DistributionCenter::findOrFail($id);
         $vendors = $center->vendors;
-        $stats = [];
+        $vendorStatsArr = [];
         foreach ($vendors as $vendor) {
-            $vendorStats = \App\Models\Inventory::where('distribution_center_id', $center->id)
-                ->whereHas('yogurtProduct', function($q) use ($vendor) {
-                    $q->where('vendor_id', $vendor->id);
-                })
-                ->select('yogurt_product_id', \DB::raw('SUM(quantity_available) as available'))
-                ->groupBy('yogurt_product_id')
-                ->get()
-                ->map(function($row) {
-                    $product = \App\Models\YogurtProduct::find($row->yogurt_product_id);
-                    return [
-                        'product_id' => $row->yogurt_product_id,
-                        'product_name' => $product ? $product->product_name : 'Unknown',
-                        'available' => (float) $row->available,
+            // Get all inventory records for this vendor at this center, for products produced by this vendor
+            $inventories = \App\Models\Inventory::where('distribution_center_id', $center->id)
+                ->where('vendor_id', $vendor->id)
+                ->get();
+            $productStats = [];
+            foreach ($inventories as $inv) {
+                $product = $inv->yogurtProduct;
+                // Only include if the product belongs to this vendor
+                if ($product && $product->vendor_id == $vendor->id) {
+                    $productStats[] = [
+                        'product_id' => $product->id,
+                        'product_name' => $product->product_name,
+                        'available' => (float) $inv->quantity_available,
+                        'reserved' => (float) $inv->quantity_reserved,
+                        'damaged' => (float) $inv->quantity_damaged,
+                        'expired' => (float) $inv->quantity_expired,
                     ];
-                });
-            $stats[$vendor->id] = [
+                }
+            }
+            $vendorStatsArr[] = [
                 'vendor_id' => $vendor->id,
                 'vendor_name' => $vendor->business_name,
-                'products' => $vendorStats,
+                'products' => $productStats,
             ];
         }
-        return response()->json($stats);
+        return response()->json([
+            'distribution_center' => [
+                'id' => $center->id,
+                'center_name' => $center->center_name,
+            ],
+            'vendors' => $vendorStatsArr
+        ]);
     }
 }

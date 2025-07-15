@@ -24,11 +24,13 @@ class AdminOrderController extends Controller
             ->select(
                 'orders.*',
                 'retailers.store_name as retailer_name',
-                'distribution_centers.center_name'
+                'distribution_centers.center_name',
+                'users.name as customer_name'
             )
-            ->join('retailers', 'orders.retailer_id', '=', 'retailers.id')
-            ->join('distribution_centers', 'orders.distribution_center_id', '=', 'distribution_centers.id')
-            ->orderBy('orders.created_at', 'desc')
+            ->leftJoin('retailers', 'orders.retailer_id', '=', 'retailers.id')
+            ->leftJoin('distribution_centers', 'orders.distribution_center_id', '=', 'distribution_centers.id')
+            ->leftJoin('users', 'orders.user_id', '=', 'users.id')
+            ->orderBy('orders.order_date', 'desc')
             ->get();
 
         return response()->json($orders);
@@ -71,15 +73,6 @@ class AdminOrderController extends Controller
     {
         $order = Order::with(['retailer', 'distributionCenter'])->findOrFail($id);
         return view('admin.orders.show', compact('order'));
-    }
-
-    public function edit($id)
-    {
-        $order = Order::with(['retailer', 'distributionCenter'])->findOrFail($id);
-        $retailers = Retailer::all();
-        $distributionCenters = DistributionCenter::all();
-        
-        return view('admin.orders.edit', compact('order', 'retailers', 'distributionCenters'));
     }
 
     public function update(Request $request, $id)
