@@ -121,7 +121,7 @@
 
 <!-- Distribution Center Vendor Inventory Table -->
 <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-    <h2 class="text-xl font-semibold text-gray-900 mb-6">Distribution Center Inventory by Vendor</h2>
+    <h2 class="text-xl font-semibold text-gray-900 mb-6">Distribution Center Inventory</h2>
     <div class="overflow-x-auto" id="dc-vendor-inventory-table">
         <!-- Data will be loaded dynamically -->
     </div>
@@ -303,8 +303,8 @@
                     return;
                 }
                 centers.forEach(center => {
-                    // Fetch vendor inventory stats for each center
-                    fetch(`/admin/distribution-centers/${center.id}/vendor-inventory-stats`)
+                    // Fetch inventory stats for each center (not grouped by vendor)
+                    fetch(`/admin/distribution-centers/${center.id}/inventory-stats`)
                         .then(res => res.json())
                         .then(data => {
                             // Center header
@@ -312,54 +312,40 @@
                             dcHeader.className = 'text-lg font-bold mb-4 text-green-800';
                             dcHeader.textContent = `Distribution Center: ${data.distribution_center.center_name}`;
                             container.appendChild(dcHeader);
-                            // Vendors
-                            if (!data.vendors.length) {
-                                const noVendors = document.createElement('div');
-                                noVendors.className = 'text-gray-500 mb-6';
-                                noVendors.textContent = 'No vendors assigned to this distribution center.';
-                                container.appendChild(noVendors);
+                            // Products table
+                            const table = document.createElement('table');
+                            table.className = 'min-w-full mb-4 divide-y divide-gray-200 border';
+                            table.innerHTML = `
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Product Name</th>
+                                        <th class="px-6 py-3 text-left text-xs font-bold text-green-700 uppercase tracking-wider">Available Units</th>
+                                        <th class="px-6 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">Reserved Units</th>
+                                        <th class="px-6 py-3 text-left text-xs font-bold text-red-700 uppercase tracking-wider">Damaged Units</th>
+                                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Expired Units</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            `;
+                            const tbody = table.querySelector('tbody');
+                            if (!data.products || data.products.length === 0) {
+                                const tr = document.createElement('tr');
+                                tr.innerHTML = `<td class="px-6 py-2 text-gray-400" colspan="5">No products</td>`;
+                                tbody.appendChild(tr);
                             } else {
-                                data.vendors.forEach(vendor => {
-                                    const vendorHeader = document.createElement('h3');
-                                    vendorHeader.className = 'text-lg font-semibold mt-6 mb-2 text-blue-800';
-                                    vendorHeader.textContent = vendor.vendor_name;
-                                    container.appendChild(vendorHeader);
-                                    // Vendor table
-                                    const table = document.createElement('table');
-                                    table.className = 'min-w-full mb-4 divide-y divide-gray-200 border';
-                                    table.innerHTML = `
-                                        <thead class="bg-gray-50">
-                                            <tr>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Available</th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reserved</th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Damaged</th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expired</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody></tbody>
+                                data.products.forEach(product => {
+                                    const tr = document.createElement('tr');
+                                    tr.innerHTML = `
+                                        <td class="px-6 py-2">${product.product_name}</td>
+                                        <td class="px-6 py-2">${product.available ?? 0}</td>
+                                        <td class="px-6 py-2">${product.reserved ?? 0}</td>
+                                        <td class="px-6 py-2">${product.damaged ?? 0}</td>
+                                        <td class="px-6 py-2">${product.expired ?? 0}</td>
                                     `;
-                                    const tbody = table.querySelector('tbody');
-                                    if (!vendor.products || vendor.products.length === 0) {
-                                        const tr = document.createElement('tr');
-                                        tr.innerHTML = `<td class="px-6 py-2 text-gray-400" colspan="5">No products</td>`;
-                                        tbody.appendChild(tr);
-                                    } else {
-                                        vendor.products.forEach(product => {
-                                            const tr = document.createElement('tr');
-                                            tr.innerHTML = `
-                                                <td class="px-6 py-2">${product.product_name}</td>
-                                                <td class="px-6 py-2">${product.available ?? 0}</td>
-                                                <td class="px-6 py-2">${product.reserved ?? 0}</td>
-                                                <td class="px-6 py-2">${product.damaged ?? 0}</td>
-                                                <td class="px-6 py-2">${product.expired ?? 0}</td>
-                                            `;
-                                            tbody.appendChild(tr);
-                                        });
-                                    }
-                                    container.appendChild(table);
+                                    tbody.appendChild(tr);
                                 });
                             }
+                            container.appendChild(table);
                         });
                 });
             });

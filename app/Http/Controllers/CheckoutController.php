@@ -225,6 +225,36 @@ class CheckoutController extends Controller
             $orderProcessingService = new OrderProcessingService();
             $orderProcessingService->processCustomerOrder($order);
 
+            // --- Append new order data to CSV ---
+            try {
+                $csvPath = storage_path('app/orders_export.csv');
+                $isNewFile = !file_exists($csvPath);
+                $file = fopen($csvPath, 'a');
+                if ($isNewFile) {
+                    // Write header
+                    fputcsv($file, ['Order ID', 'Order Date', 'Product ID', 'Product Name', 'Quantity', 'Unit Price', 'Total Price']);
+                }
+                foreach ($cartItems as $cartItem) {
+                    $product = $cartItem->product;
+                    fputcsv($file, [
+                        $order->id,
+                        $order->created_at,
+                        $cartItem->product_id,
+                        $product->product_name ?? '',
+                        $cartItem->quantity,
+                        $product->selling_price,
+                        $cartItem->quantity * $product->selling_price,
+                    ]);
+                }
+                fclose($file);
+            } catch (\Exception $e) {
+                \Log::error('Failed to append order to CSV', [
+                    'order_id' => $order->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+            // --- End CSV append ---
+
             DB::commit();
 
             Log::info('Customer order created successfully', [

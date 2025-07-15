@@ -116,6 +116,20 @@ class AdminOrderController extends Controller
         ]);
     }
 
+    /**
+     * Update the payment status of an order (admin action)
+     */
+    public function updatePaymentStatus(Request $request, $id)
+    {
+        $request->validate([
+            'payment_status' => 'required|in:pending,paid,failed',
+        ]);
+        $order = \App\Models\Order::findOrFail($id);
+        $order->payment_status = $request->payment_status;
+        $order->save();
+        return redirect()->route('admin.orders.index')->with('success', 'Payment status updated successfully.');
+    }
+
     // Archive a raw material order (admin)
     public function archiveRawMaterialOrder($id)
     {

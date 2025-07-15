@@ -158,6 +158,10 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::patch('/{order}/status', [App\Http\Controllers\AdminOrderController::class, 'updateStatus'])->name('admin.orders.updateStatus');
 });
 
+// Admin order payment status update
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])
+    ->patch('/admin/orders/{id}/update-payment-status', [\App\Http\Controllers\AdminOrderController::class, 'updatePaymentStatus'])->name('admin.orders.updatePaymentStatus');
+
 // Admin inventory analytics
 Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/inventory')->name('admin.inventory.')->group(function () {
     Route::get('/', [InventoryController::class, 'index'])->name('index');
@@ -512,3 +516,7 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
 
 Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])
     ->get('/admin/distribution-centers/{id}/vendor-inventory-stats', [\App\Http\Controllers\AdminDistributionCenterController::class, 'vendorInventoryStats']);
+
+// Add this route for flat inventory stats by product (not grouped by vendor)
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])
+    ->get('/admin/distribution-centers/{id}/inventory-stats', [\App\Http\Controllers\AdminDistributionCenterController::class, 'inventoryStats']);

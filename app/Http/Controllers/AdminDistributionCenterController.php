@@ -154,45 +154,41 @@ class AdminDistributionCenterController extends Controller
     }
 
     /**
-     * Get inventory statistics for all vendors at a distribution center.
+     * Get inventory statistics for all products at a distribution center (summed by product).
      */
-    public function vendorInventoryStats($id)
+    public function inventoryStats($id)
     {
         $center = \App\Models\DistributionCenter::findOrFail($id);
-        $vendors = $center->vendors;
-        $vendorStatsArr = [];
-        foreach ($vendors as $vendor) {
-            // Get all inventory records for this vendor at this center, for products produced by this vendor
-            $inventories = \App\Models\Inventory::where('distribution_center_id', $center->id)
-                ->where('vendor_id', $vendor->id)
-                ->get();
-            $productStats = [];
-            foreach ($inventories as $inv) {
-                $product = $inv->yogurtProduct;
-                // Only include if the product belongs to this vendor
-                if ($product && $product->vendor_id == $vendor->id) {
-                    $productStats[] = [
+        $inventories = \App\Models\Inventory::where('distribution_center_id', $center->id)
+            ->with('yogurtProduct')
+            ->get();
+        $productStats = [];
+        foreach ($inventories as $inv) {
+            $product = $inv->yogurtProduct;
+            if ($product) {
+                $pid = $product->id;
+                if (!isset($productStats[$pid])) {
+                    $productStats[$pid] = [
                         'product_id' => $product->id,
                         'product_name' => $product->product_name,
-                        'available' => (float) $inv->quantity_available,
-                        'reserved' => (float) $inv->quantity_reserved,
-                        'damaged' => (float) $inv->quantity_damaged,
-                        'expired' => (float) $inv->quantity_expired,
+                        'available' => 0,
+                        'reserved' => 0,
+                        'damaged' => 0,
+                        'expired' => 0,
                     ];
                 }
+                $productStats[$pid]['available'] += (float) $inv->quantity_available;
+                $productStats[$pid]['reserved'] += (float) $inv->quantity_reserved;
+                $productStats[$pid]['damaged'] += (float) $inv->quantity_damaged;
+                $productStats[$pid]['expired'] += (float) $inv->quantity_expired;
             }
-            $vendorStatsArr[] = [
-                'vendor_id' => $vendor->id,
-                'vendor_name' => $vendor->business_name,
-                'products' => $productStats,
-            ];
         }
         return response()->json([
             'distribution_center' => [
                 'id' => $center->id,
                 'center_name' => $center->center_name,
             ],
-            'vendors' => $vendorStatsArr
+            'products' => array_values($productStats)
         ]);
     }
 }
