@@ -129,6 +129,11 @@
         });
     }
     document.addEventListener('DOMContentLoaded', loadSupplyHistory);
+    window.addEventListener('pageshow', function(event) {
+        if (event.persisted) {
+            window.location.reload();
+        }
+    });
     </script>
 </div>
 @endsection 

@@ -612,6 +612,11 @@
     </div>
 </footer>
     <script>
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        });
         const slides = document.querySelectorAll('#retailer-carousel .carousel-slide');
         const indicators = document.querySelectorAll('#retailer-carousel .carousel-indicator');
         let current = 0;
