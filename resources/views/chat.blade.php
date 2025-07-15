@@ -17,6 +17,43 @@
         background: #fff;
         border-right: 1px solid #eee;
         overflow-y: auto;
+        position: relative;
+    }
+    .user-list .search-bar {
+        position: sticky;
+        top: 0;
+        background: #fff;
+        z-index: 2;
+        padding: 16px 24px 8px 24px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        align-items: center;
+    }
+    .search-input-wrapper {
+        position: relative;
+        width: 100%;
+    }
+    .search-input-wrapper input[type="text"] {
+        width: 100%;
+        padding: 10px 38px 10px 14px;
+        border-radius: 8px;
+        border: 1px solid #eee;
+        font-size: 1em;
+        outline: none;
+    }
+    .search-icon-btn {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        color: #888;
+        font-size: 1.2em;
     }
     .user-list .user {
         padding: 18px 24px;
@@ -25,6 +62,7 @@
         align-items: center;
         border-bottom: 1px solid #f0f0f0;
         transition: background 0.2s;
+        position: relative;
     }
     .user-list .user:hover, .user-list .user.active {
         background: #e7fbe9;
@@ -53,6 +91,19 @@
         font-size: 0.85rem;
         color: #aaa;
         margin-left: 8px;
+    }
+    .unread-badge {
+        display: none;
+        position: absolute;
+        right: 24px;
+        top: 18px;
+        background: #e53e3e;
+        color: #fff;
+        border-radius: 50%;
+        padding: 2px 8px;
+        font-size: 0.85em;
+        font-weight: bold;
+        z-index: 3;
     }
     .chat-main {
         flex: 1;
@@ -143,6 +194,17 @@
 <div class="chat-container">
     <!-- User List -->
     <div class="user-list" id="userList">
+        <div class="search-bar">
+            <div class="search-input-wrapper">
+                <input type="text" id="userSearchInput" placeholder="Search users..." />
+                <button class="search-icon-btn" id="searchIconBtn" title="Search">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                </button>
+            </div>
+        </div>
         <div style="padding: 24px; color: #888; text-align: center;" id="userListLoading">Loading users...</div>
     </div>
     <!-- Chat Main -->
@@ -196,6 +258,7 @@
     const chatInput = document.getElementById('chatInput');
     const chatFileInput = document.getElementById('chatFileInput');
     const attachFileBtn = document.getElementById('attachFileBtn');
+    const userSearchInput = document.getElementById('userSearchInput');
 
     // Fetch users and unread counts
     function loadUsersAndBadges() {
@@ -205,9 +268,42 @@
         ]).then(([data, unread]) => {
             users = data;
             unreadCounts = unread;
-            userList.innerHTML = '';
+            // Only clear user list items, not the search bar
+            let searchBar = document.querySelector('.user-list .search-bar');
+            if (!searchBar) {
+                searchBar = document.createElement('div');
+                searchBar.className = 'search-bar';
+                searchBar.innerHTML = `
+                    <div class="search-input-wrapper">
+                        <input type="text" id="userSearchInput" placeholder="Search users..." />
+                        <button class="search-icon-btn" id="searchIconBtn" title="Search">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <circle cx="11" cy="11" r="8" />
+                                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                            </svg>
+                        </button>
+                    </div>`;
+                userList.innerHTML = '';
+                userList.appendChild(searchBar);
+                // Attach handlers
+                window.userSearchInput = searchBar.querySelector('#userSearchInput');
+                window.userSearchInput.addEventListener('input', userSearchInputHandler);
+                searchBar.querySelector('#searchIconBtn').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    userSearchInputHandler();
+                    window.userSearchInput.focus();
+                });
+            } else {
+                // Only clear user list items, not the search bar
+                Array.from(userList.children).forEach((child, idx) => { if (idx > 0) child.remove(); });
+            }
+            // Preserve search value
+            const searchValue = window.userSearchInput.value;
             if (!users.length) {
-                userList.innerHTML = '<div style="padding: 24px; color: #888; text-align: center;">No users found.</div>';
+                const noUserDiv = document.createElement('div');
+                noUserDiv.style = 'padding: 24px; color: #888; text-align: center;';
+                noUserDiv.textContent = 'No users found.';
+                userList.appendChild(noUserDiv);
                 return;
             }
             users.forEach(user => {
@@ -220,22 +316,59 @@
                         <div class="last-message" id="last-message-${user.id}"></div>
                     </div>
                     <div class="message-time" id="last-time-${user.id}"></div>
-                    <span class="unread-badge" id="unread-badge-${user.id}" style="display:none;position:absolute;right:24px;top:18px;background:#e53e3e;color:#fff;border-radius:50%;padding:2px 8px;font-size:0.85em;font-weight:bold;"></span>
+                    <span class="unread-badge" id="unread-badge-${user.id}"></span>
                 `;
                 div.style.position = 'relative';
                 div.onclick = () => selectUser(user);
                 userList.appendChild(div);
                 // Show badge if unread
                 if (unreadCounts[user.id]) {
-                    const badge = document.getElementById('unread-badge-' + user.id);
+                    const badge = div.querySelector('.unread-badge');
                     badge.textContent = unreadCounts[user.id];
                     badge.style.display = '';
                 }
             });
+            // Restore search value and re-filter
+            window.userSearchInput.value = searchValue;
+            userSearchInputHandler();
             tryAutoSelectUser();
         });
     }
-    loadUsersAndBadges();
+
+    // Handler for search input (by name or email)
+    function userSearchInputHandler() {
+        const search = userSearchInput.value.toLowerCase();
+        let anyVisible = false;
+        Array.from(userList.getElementsByClassName('user')).forEach(div => {
+            const name = div.querySelector('.user-name').textContent.toLowerCase();
+            const userObj = users.find(u => u.name === div.querySelector('.user-name').textContent);
+            const email = userObj && userObj.email ? userObj.email.toLowerCase() : '';
+            const match = (name.includes(search) || email.includes(search));
+            div.style.display = match ? '' : 'none';
+            if (match) anyVisible = true;
+        });
+        // Remove any previous 'user does not exist' message
+        let noUserMsg = document.getElementById('noUserMsg');
+        if (noUserMsg) noUserMsg.remove();
+        if (!anyVisible) {
+            noUserMsg = document.createElement('div');
+            noUserMsg.id = 'noUserMsg';
+            noUserMsg.style = 'padding: 24px; color: #888; text-align: center;';
+            noUserMsg.textContent = 'User does not exist.';
+            userList.appendChild(noUserMsg);
+        }
+    }
+
+    // Attach search handler to both input and icon button
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchIconBtn = document.getElementById('searchIconBtn');
+        userSearchInput.addEventListener('input', userSearchInputHandler);
+        searchIconBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            userSearchInputHandler();
+            userSearchInput.focus();
+        });
+    });
 
     function selectUser(user) {
         currentUserId = user.id;
@@ -244,14 +377,14 @@
         // Highlight selected user
         Array.from(document.getElementsByClassName('user')).forEach(el => el.classList.remove('active'));
         const idx = users.findIndex(u => u.id === user.id);
-        if (userList.children[idx]) userList.children[idx].classList.add('active');
+        if (userList.children[idx + 1]) userList.children[idx + 1].classList.add('active'); // +1 for search bar
         // Update header
         chatHeader.textContent = user.name;
         // Show form
         chatForm.style.display = '';
         chatInput.value = '';
         chatInput.focus();
-        // Mark as read visually
+        // Mark as read visually only for this user
         const badge = document.getElementById('unread-badge-' + user.id);
         if (badge) badge.style.display = 'none';
         // Load messages
@@ -316,11 +449,11 @@
         });
     });
 
-    // Poll for new messages and unread counts every 10 seconds, but only update if a user is selected
+    // Poll for new messages and unread counts every 5 seconds, but only update if a user is selected
     setInterval(() => {
         if (currentUserId) loadMessages();
         loadUsersAndBadges();
-    }, 10000);
+    }, 5000);
 
     // After users are loaded, if a ?user_id= param is present, auto-select that user
     function getQueryParam(name) {
@@ -335,6 +468,9 @@
             if (user) selectUser(user);
         }
     }
+
+    // Filter users in the list as you type (by name or email)
+    // This function is now handled by userSearchInputHandler
 
     // Background logic
     const chatMain = document.getElementById('chatMain');
