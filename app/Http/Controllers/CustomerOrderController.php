@@ -6,9 +6,17 @@ use Illuminate\Http\Request;
 use App\Models\Order;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Services\OrderProcessingService;
 
 class CustomerOrderController extends Controller
 {
+    protected $orderProcessingService;
+
+    public function __construct(OrderProcessingService $orderProcessingService)
+    {
+        $this->orderProcessingService = $orderProcessingService;
+    }
+
     // List all orders for the authenticated customer
     public function index()
     {
@@ -19,7 +27,7 @@ class CustomerOrderController extends Controller
     // Show a specific order for the authenticated customer
     public function show($id)
     {
-        $order = Auth::user()->orders()->where('order_type', 'customer')->findOrFail($id);
+        $order = Auth::user()->orders()->findOrFail($id);
         return view('customer.orders.show', compact('order'));
     }
 
@@ -71,6 +79,9 @@ class CustomerOrderController extends Controller
         }
         $order->total_amount = $total;
         $order->save();
+
+        // Process the order (deduct inventory, confirm, assign distribution center)
+        $this->orderProcessingService->processCustomerOrder($order);
 
         return redirect()->route('customer.orders.show', $order->id)
             ->with('success', 'Order placed successfully!');

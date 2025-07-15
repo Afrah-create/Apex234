@@ -212,6 +212,15 @@ document.addEventListener('DOMContentLoaded', function() {
         scheduledReportsSection.style.display = scheduledReportsVisible ? '' : 'none';
         toggleBtn.textContent = scheduledReportsVisible ? 'Hide Scheduled Reports' : 'Show Scheduled Reports';
     });
+
+    // Add notification div if not present
+    if (!document.getElementById('bulk-action-message')) {
+        const notificationDiv = document.createElement('div');
+        notificationDiv.id = 'bulk-action-message';
+        notificationDiv.className = 'fixed top-6 right-6 bg-green-600 text-white px-6 py-3 rounded shadow-lg z-50';
+        notificationDiv.style.display = 'none';
+        document.body.appendChild(notificationDiv);
+    }
 });
 
 // Populate the report type dropdown on page load
@@ -396,11 +405,11 @@ async function generateReport() {
             currentReportData = result.data;
             displayReportResults(result.data);
         } else {
-            alert('Error generating report: ' + result.message);
+            showBulkActionMessage('Error generating report: ' + result.message, 'error');
         }
     } catch (error) {
         console.error('Error generating report:', error);
-        alert('Error generating report. Please try again.');
+        showBulkActionMessage('Error generating report. Please try again.', 'error');
     }
 }
 
@@ -599,18 +608,18 @@ async function exportReport() {
         if (result.success) {
             window.open(result.download_url, '_blank');
         } else {
-            alert('Error exporting report: ' + result.message);
+            showBulkActionMessage('Error exporting report: ' + result.message, 'error');
         }
     } catch (error) {
         console.error('Error exporting report:', error);
-        alert('Error exporting report. Please try again.');
+        showBulkActionMessage('Error exporting report. Please try again.', 'error');
     }
 }
 
 // Export current report
 function exportCurrentReport() {
     if (!currentReportData) {
-        alert('No report data to export');
+        showBulkActionMessage('No report data to export', 'error');
         return;
     }
 
@@ -633,12 +642,12 @@ function exportCurrentReport() {
         if (result.success) {
             window.open(result.download_url, '_blank');
         } else {
-            alert('Error exporting report: ' + result.message);
+            showBulkActionMessage('Error exporting report: ' + result.message, 'error');
         }
     })
     .catch(error => {
         console.error('Error exporting report:', error);
-        alert('Error exporting report. Please try again.');
+        showBulkActionMessage('Error exporting report. Please try again.', 'error');
     });
 }
 
@@ -646,7 +655,7 @@ function exportCurrentReport() {
 function printReport() {
     const reportContent = document.getElementById('report-results');
     if (!reportContent) {
-        alert('No report to print!');
+        showBulkActionMessage('No report to print!', 'error');
         return;
     }
     // Gather report metadata
@@ -686,7 +695,7 @@ function printReport() {
 // Schedule report
 function scheduleReport() {
     // Implementation for scheduling reports
-    alert('Report scheduling feature coming soon!');
+    showBulkActionMessage('Report scheduling feature coming soon!', 'info');
 }
 
 // Refresh reports
@@ -810,7 +819,7 @@ function createScheduledReportCard(report) {
 // Edit scheduled report
 function editScheduledReport(id) {
     // Implementation for editing scheduled report
-    alert('Edit scheduled report functionality coming soon!');
+    showBulkActionMessage('Edit scheduled report functionality coming soon!', 'info');
 }
 
 // Toggle scheduled report status
@@ -829,11 +838,11 @@ async function toggleScheduledReport(id) {
         if (result.success) {
             loadScheduledReports();
         } else {
-            alert('Error updating report status: ' + result.message);
+            showBulkActionMessage('Error updating report status: ' + result.message, 'error');
         }
     } catch (error) {
         console.error('Error toggling scheduled report:', error);
-        alert('Error updating report status. Please try again.');
+        showBulkActionMessage('Error updating report status. Please try again.', 'error');
     }
 }
 
@@ -851,13 +860,13 @@ async function triggerScheduledReport(id) {
         const result = await response.json();
         
         if (result.success) {
-            alert('Report generated and delivered successfully!');
+            showBulkActionMessage('Report generated and delivered successfully!', 'success');
         } else {
-            alert('Error triggering report: ' + result.message);
+            showBulkActionMessage('Error triggering report: ' + result.message, 'error');
         }
     } catch (error) {
         console.error('Error triggering scheduled report:', error);
-        alert('Error triggering report. Please try again.');
+        showBulkActionMessage('Error triggering report. Please try again.', 'error');
     }
 }
 
@@ -880,11 +889,11 @@ async function deleteScheduledReport(id) {
             if (result.success) {
                 loadScheduledReports();
             } else {
-                alert('Error deleting report: ' + result.message);
+                showBulkActionMessage('Error deleting report: ' + result.message, 'error');
             }
         } catch (error) {
             console.error('Error deleting scheduled report:', error);
-            alert('Error deleting report. Please try again.');
+            showBulkActionMessage('Error deleting report. Please try again.', 'error');
         }
     })();
 }
@@ -1112,15 +1121,15 @@ async function submitScheduledReport(reportConfig) {
         const result = await response.json();
         
         if (result.success) {
-            alert('Report scheduled successfully!');
+            showBulkActionMessage('Report scheduled successfully!', 'success');
             closeSchedulingModal();
             loadScheduledReports();
         } else {
-            alert('Error scheduling report: ' + result.message);
+            showBulkActionMessage('Error scheduling report: ' + result.message, 'error');
         }
     } catch (error) {
         console.error('Error scheduling report:', error);
-        alert('Error scheduling report. Please try again.');
+        showBulkActionMessage('Error scheduling report. Please try again.', 'error');
     }
 }
 
@@ -1134,6 +1143,15 @@ function closeSchedulingModal() {
 
 // Initialize date inputs
 updateDateInputs('30');
+
+// Add or update showBulkActionMessage function
+function showBulkActionMessage(msg, type = 'success') {
+    const el = document.getElementById('bulk-action-message');
+    el.textContent = msg;
+    el.style.background = type === 'error' ? '#dc2626' : '#16a34a'; // red for error, green for success
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 2500);
+}
 </script>
 
 <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
