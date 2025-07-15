@@ -99,7 +99,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     const bellBtn = document.getElementById('notificationBellBtn');
     const dropdown = document.getElementById('notificationDropdown');
-    const notificationDot = document.getElementById('notificationDot');
+                const notificationDot = document.getElementById('notificationDot');
     const chatNotificationDot = document.getElementById('chatNotificationDot');
     const notificationMessages = document.getElementById('notificationMessages');
 
@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     notificationDot.classList.add('hidden');
                 }
             });
-    }
+        }
     updateChatBadges();
     setInterval(updateChatBadges, 15000); // Poll every 15s
 

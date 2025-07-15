@@ -283,7 +283,7 @@
                             </svg>
                         </button>
                     </div>`;
-                userList.innerHTML = '';
+            userList.innerHTML = '';
                 userList.appendChild(searchBar);
                 // Attach handlers
                 window.userSearchInput = searchBar.querySelector('#userSearchInput');
