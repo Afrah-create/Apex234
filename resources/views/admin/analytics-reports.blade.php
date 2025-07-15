@@ -37,6 +37,7 @@
         <div class="relative" style="height: 300px;">
             <canvas id="customerSegmentationChart"></canvas>
         </div>
+        
     </div>
 </main>
 
@@ -114,7 +115,7 @@
         customerSegmentationChart = new Chart(segmentationCtx.getContext('2d'), {
             type: 'doughnut',
             data: {
-                labels: ['Premium Buyers', 'Regular Consumers', 'Occasional Buyers'],
+                labels: [], // Will be filled dynamically
                 datasets: [{
                     data: [], // Will be filled by API
                     backgroundColor: [
@@ -136,6 +137,15 @@
                 plugins: {
                     legend: {
                         position: 'bottom',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                return `${label}: ${value} customers`;
+                            }
+                        }
                     }
                 }
             }
@@ -581,24 +591,14 @@
                 console.log('Customer segmentation data received:', data);
                 
                 if (customerSegmentationChart && data.segments) {
-                    const labels = Object.keys(data.segments).map(key => 
+                    // Use the actual segment keys and capitalize for labels
+                    const labels = Object.keys(data.segments).map(key =>
                         key.charAt(0).toUpperCase() + key.slice(1) + ' Customers'
                     );
                     const values = Object.values(data.segments);
-                    
-                    console.log('Chart data:', { labels, values });
-                    
                     customerSegmentationChart.data.labels = labels;
                     customerSegmentationChart.data.datasets[0].data = values;
                     customerSegmentationChart.update();
-                    
-                    console.log('Customer segmentation chart updated');
-                } else {
-                    console.warn('Customer segmentation data missing or chart not available:', {
-                        hasChart: !!customerSegmentationChart,
-                        hasSegments: !!data.segments,
-                        data: data
-                    });
                 }
             })
             .catch(error => {

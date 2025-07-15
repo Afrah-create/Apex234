@@ -102,8 +102,20 @@ class VendorDashboardController extends Controller
     // Order status summary for vendor
     public function orderStatus(): JsonResponse
     {
-        $vendorId = Auth::id();
-        $orders = Order::select('order_status', DB::raw('COUNT(*) as count'))
+        $vendor = Auth::user()->vendor;
+        if (!$vendor) {
+            return response()->json([
+                'pending' => 0,
+                'confirmed' => 0,
+                'shipped' => 0,
+                'delivered' => 0,
+            ]);
+        }
+        $productIds = YogurtProduct::where('vendor_id', $vendor->id)->pluck('id');
+        $orders = \App\Models\Order::whereHas('orderItems.yogurtProduct', function($q) use ($vendor) {
+                $q->where('vendor_id', $vendor->id);
+            })
+            ->select('order_status', DB::raw('COUNT(*) as count'))
             ->groupBy('order_status')
             ->get();
         $statuses = [
@@ -150,11 +162,20 @@ class VendorDashboardController extends Controller
     // Production summary for vendor
     public function productionSummary(): JsonResponse
     {
-        $vendorId = Auth::id();
-        $batchesProduced = DB::table('inventories')->count();
-        $unitsProduced = DB::table('inventories')->sum('quantity_available');
-        $unitsSold = DB::table('inventories')->sum('quantity_reserved');
-        $unitsInInventory = DB::table('inventories')->sum('quantity_available');
+        $vendor = Auth::user()->vendor;
+        if (!$vendor) {
+            return response()->json([
+                'batches_produced' => 0,
+                'units_produced' => 0,
+                'units_sold' => 0,
+                'units_inventory' => 0,
+            ]);
+        }
+        $productIds = YogurtProduct::where('vendor_id', $vendor->id)->pluck('id');
+        $batchesProduced = Inventory::whereIn('yogurt_product_id', $productIds)->count();
+        $unitsProduced = Inventory::whereIn('yogurt_product_id', $productIds)->sum('quantity_available');
+        $unitsSold = Inventory::whereIn('yogurt_product_id', $productIds)->sum('quantity_reserved');
+        $unitsInInventory = Inventory::whereIn('yogurt_product_id', $productIds)->sum('quantity_available');
         return response()->json([
             'batches_produced' => $batchesProduced,
             'units_produced' => $unitsProduced,
