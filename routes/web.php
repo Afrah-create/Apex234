@@ -507,3 +507,6 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::put('/{id}', [\App\Http\Controllers\AdminDistributionCenterController::class, 'update'])->name('update');
     Route::delete('/{id}', [\App\Http\Controllers\AdminDistributionCenterController::class, 'destroy'])->name('destroy');
 });
+
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])
+    ->get('/admin/distribution-centers/{id}/vendor-inventory-stats', [\App\Http\Controllers\AdminDistributionCenterController::class, 'vendorInventoryStats']);

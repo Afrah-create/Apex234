@@ -16,8 +16,19 @@ class VendorDashboardController extends Controller
     // Inventory summary for vendor
     public function inventorySummary(): JsonResponse
     {
-        $vendorId = Auth::id();
-        $productIds = YogurtProduct::where('status', 'active')->pluck('id');
+        $vendor = Auth::user()->vendor;
+        if (!$vendor) {
+            return response()->json([
+                'total_products' => 0,
+                'total_available' => 0,
+                'total_reserved' => 0,
+                'total_damaged' => 0,
+                'total_expired' => 0,
+                'low_stock_items' => 0,
+                'out_of_stock_items' => 0,
+            ]);
+        }
+        $productIds = YogurtProduct::where('vendor_id', $vendor->id)->where('status', 'active')->pluck('id');
         $summary = [
             'total_products' => $productIds->count(),
             'total_available' => Inventory::whereIn('yogurt_product_id', $productIds)->sum('quantity_available'),
@@ -33,8 +44,14 @@ class VendorDashboardController extends Controller
     // Inventory chart data for vendor
     public function inventoryChart(): JsonResponse
     {
-        $vendorId = Auth::id();
-        $products = YogurtProduct::where('status', 'active')->get();
+        $vendor = Auth::user()->vendor;
+        if (!$vendor) {
+            return response()->json([
+                'labels' => [],
+                'datasets' => []
+            ]);
+        }
+        $products = YogurtProduct::where('vendor_id', $vendor->id)->where('status', 'active')->get();
         $inventoryData = Inventory::whereIn('yogurt_product_id', $products->pluck('id'))
             ->join('yogurt_products', 'inventories.yogurt_product_id', '=', 'yogurt_products.id')
             ->select(

@@ -19,53 +19,39 @@
         <p class="text-gray-600">Real-time inventory analytics and insights for the Caramel Yogurt supply chain management system.</p>
     </div>
 
-    <!-- Inventory Summary Cards -->
-    <div class="summary-cards">
-        <a href="{{ route('admin.products.index') }}" style="text-decoration:none;">
-        <div class="summary-card" style="--summary-card-border: #22c55e; cursor:pointer; transition:box-shadow 0.2s;" onmouseover="this.style.boxShadow='0 4px 16px rgba(34,197,94,0.13)';" onmouseout="this.style.boxShadow='';">
-            <div class="icon" style="background: #bbf7d0; color: #22c55e;">
-                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                </svg>
-            </div>
-            <div class="details">
-                <p>Total Products</p>
-                <p id="totalProducts">-</p>
-            </div>
+    <!-- Inventory Summary Stats -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8 flex flex-wrap gap-6 items-center justify-between">
+        <div>
+            <span class="block text-xs text-gray-500">Total Products</span>
+            <span id="totalProducts" class="text-lg font-bold text-gray-900">-</span>
         </div>
-        </a>
-        <div class="summary-card" style="--summary-card-border: #3b82f6;">
-            <div class="icon" style="background: #dbeafe; color: #3b82f6;">
-                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-            </div>
-            <div class="details">
-                <p>Available Stock</p>
-                <p id="totalAvailable">-</p>
-            </div>
+        <div>
+            <span class="block text-xs text-gray-500">Available</span>
+            <span id="totalAvailable" class="text-lg font-bold text-green-700">-</span>
         </div>
-        <div class="summary-card" style="--summary-card-border: #f59e0b;">
-            <div class="icon" style="background: #fef3c7; color: #f59e0b;">
-                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-            </div>
-            <div class="details">
-                <p>Reserved Inventory</p>
-                <p id="totalReserved">-</p>
-            </div>
+        <div>
+            <span class="block text-xs text-gray-500">Reserved</span>
+            <span id="totalReserved" class="text-lg font-bold text-blue-700">-</span>
         </div>
-        <div class="summary-card" style="--summary-card-border: #ef4444;">
-            <div class="icon" style="background: #fee2e2; color: #ef4444;">
-                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-                </svg>
-            </div>
-            <div class="details">
-                <p>Critical Alerts</p>
-                <p id="lowStockItems">-</p>
-            </div>
+        <div>
+            <span class="block text-xs text-gray-500">Damaged</span>
+            <span id="totalDamaged" class="text-lg font-bold text-red-700">-</span>
+        </div>
+        <div>
+            <span class="block text-xs text-gray-500">Expired</span>
+            <span id="totalExpired" class="text-lg font-bold text-gray-700">-</span>
+        </div>
+        <div>
+            <span class="block text-xs text-gray-500">Low Stock Items</span>
+            <span id="lowStockCount" class="text-lg font-bold text-yellow-700">-</span>
+        </div>
+        <div>
+            <span class="block text-xs text-gray-500">Out of Stock Items</span>
+            <span id="outOfStockCount" class="text-lg font-bold text-red-800">-</span>
+        </div>
+        <div>
+            <span class="block text-xs text-gray-500">Critical Alerts</span>
+            <span id="lowStockItems" class="text-lg font-bold text-orange-700">-</span>
         </div>
     </div>
 
@@ -132,6 +118,14 @@
             </table>
         </div>
     </div>
+
+<!-- Distribution Center Vendor Inventory Table -->
+<div class="bg-white rounded-lg shadow-md p-6 mb-8">
+    <h2 class="text-xl font-semibold text-gray-900 mb-6">Distribution Center Inventory by Vendor</h2>
+    <div class="overflow-x-auto" id="dc-vendor-inventory-table">
+        <!-- Data will be loaded dynamically -->
+    </div>
+</div>
 </main>
 
 <!-- Chart.js CDN -->
@@ -151,6 +145,7 @@
             loadInventoryData();
             loadInventoryTable();
         }, 30000);
+        loadAllDistributionCentersWithVendors();
     });
 
     function initializeCharts() {
@@ -295,6 +290,79 @@
             button.innerHTML = originalText;
             button.disabled = false;
         }, 2000);
+    }
+
+    function loadAllDistributionCentersWithVendors() {
+        fetch('/api/distribution-centers')
+            .then(response => response.json())
+            .then(centers => {
+                const container = document.getElementById('dc-vendor-inventory-table');
+                container.innerHTML = '';
+                if (!centers.length) {
+                    container.innerHTML = '<div class="text-gray-500">No distribution centers found.</div>';
+                    return;
+                }
+                centers.forEach(center => {
+                    // Fetch vendor inventory stats for each center
+                    fetch(`/admin/distribution-centers/${center.id}/vendor-inventory-stats`)
+                        .then(res => res.json())
+                        .then(data => {
+                            // Center header
+                            const dcHeader = document.createElement('h2');
+                            dcHeader.className = 'text-lg font-bold mb-4 text-green-800';
+                            dcHeader.textContent = `Distribution Center: ${data.distribution_center.center_name}`;
+                            container.appendChild(dcHeader);
+                            // Vendors
+                            if (!data.vendors.length) {
+                                const noVendors = document.createElement('div');
+                                noVendors.className = 'text-gray-500 mb-6';
+                                noVendors.textContent = 'No vendors assigned to this distribution center.';
+                                container.appendChild(noVendors);
+                            } else {
+                                data.vendors.forEach(vendor => {
+                                    const vendorHeader = document.createElement('h3');
+                                    vendorHeader.className = 'text-lg font-semibold mt-6 mb-2 text-blue-800';
+                                    vendorHeader.textContent = vendor.vendor_name;
+                                    container.appendChild(vendorHeader);
+                                    // Vendor table
+                                    const table = document.createElement('table');
+                                    table.className = 'min-w-full mb-4 divide-y divide-gray-200 border';
+                                    table.innerHTML = `
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Available</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reserved</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Damaged</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expired</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    `;
+                                    const tbody = table.querySelector('tbody');
+                                    if (!vendor.products || vendor.products.length === 0) {
+                                        const tr = document.createElement('tr');
+                                        tr.innerHTML = `<td class="px-6 py-2 text-gray-400" colspan="5">No products</td>`;
+                                        tbody.appendChild(tr);
+                                    } else {
+                                        vendor.products.forEach(product => {
+                                            const tr = document.createElement('tr');
+                                            tr.innerHTML = `
+                                                <td class="px-6 py-2">${product.product_name}</td>
+                                                <td class="px-6 py-2">${product.available ?? 0}</td>
+                                                <td class="px-6 py-2">${product.reserved ?? 0}</td>
+                                                <td class="px-6 py-2">${product.damaged ?? 0}</td>
+                                                <td class="px-6 py-2">${product.expired ?? 0}</td>
+                                            `;
+                                            tbody.appendChild(tr);
+                                        });
+                                    }
+                                    container.appendChild(table);
+                                });
+                            }
+                        });
+                });
+            });
     }
 </script>
 @endsection 
