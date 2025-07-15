@@ -25,10 +25,12 @@ class VendorInventoryController extends Controller
     // Get all inventory data (products and raw materials)
     public function index(): JsonResponse
     {
-        $vendorId = Auth::id();
+        $vendor = Auth::user()->vendor;
+        $vendorId = $vendor ? $vendor->id : null;
         
-        // Get product inventory
+        // Get product inventory for this vendor only
         $productInventory = Inventory::with(['yogurtProduct'])
+            ->where('vendor_id', $vendorId)
             ->whereHas('yogurtProduct', function($query) {
                 $query->whereIn('product_name', array_column($this->allowedProducts, 'product_name'));
             })
@@ -57,7 +59,7 @@ class VendorInventoryController extends Controller
                 ];
             });
 
-        // Get raw materials inventory
+        // Get raw materials inventory for this vendor only
         $rawMaterials = DB::table('raw_materials')
             ->select([
                 'id',
@@ -80,6 +82,7 @@ class VendorInventoryController extends Controller
                 'updated_at'
             ])
             ->where('vendor_id', $vendorId)
+            ->where('status', 'available')
             ->get()
             ->map(function($material) {
                 return [
@@ -386,10 +389,12 @@ class VendorInventoryController extends Controller
     // Get inventory summary for dashboards
     public function getInventorySummary(): JsonResponse
     {
-        $vendorId = Auth::id();
+        $vendor = Auth::user()->vendor;
+        $vendorId = $vendor ? $vendor->id : null;
         
-        // Product inventory summary
+        // Product inventory summary for this vendor only
         $productSummary = Inventory::with(['yogurtProduct'])
+            ->where('vendor_id', $vendorId)
             ->whereHas('yogurtProduct', function($query) {
                 $query->whereIn('product_name', array_column($this->allowedProducts, 'product_name'));
             })
@@ -450,13 +455,6 @@ class VendorInventoryController extends Controller
             'raw_material_type_data' => $rawMaterialTypeData,
             'raw_material_status_data' => $rawMaterialStatusData
         ]);
-    }
-
-    // Show edit form for a raw material
-    public function showRawMaterial($id)
-    {
-        $rawMaterial = RawMaterial::findOrFail($id);
-        return view('vendor.edit-raw-material', compact('rawMaterial'));
     }
 
     // Get all dairy farms for the form

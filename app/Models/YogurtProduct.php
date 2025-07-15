@@ -10,6 +10,22 @@ class YogurtProduct extends Model
     use HasFactory;
     protected $guarded = [];
 
+    /**
+     * Get all inventory records for this yogurt product.
+     */
+    public function inventory()
+    {
+        return $this->hasMany(Inventory::class, 'yogurt_product_id');
+    }
+
+    /**
+     * Get the most recent inventory record for this yogurt product (optional helper).
+     */
+    public function currentInventory()
+    {
+        return $this->hasOne(Inventory::class, 'yogurt_product_id')->latestOfMany();
+    }
+
     public function inventories()
     {
         return $this->hasMany(\App\Models\Inventory::class);
@@ -18,5 +34,16 @@ class YogurtProduct extends Model
     public function getStockAttribute()
     {
         return $this->inventories()->sum('quantity_available');
+    }
+
+    public function rawMaterialRequirements()
+    {
+        // Example: adjust these values per product as needed
+        // [material_type => quantity_per_batch]
+        return [
+            'milk' => 5,    // 5L per batch
+            'sugar' => 1,   // 1kg per batch
+            'fruit' => 2,   // 2kg per batch
+        ];
     }
 } 

@@ -19,7 +19,7 @@
                 </ul>
             </div>
         @endif
-        <form method="POST" action="{{ route('supplier.add-raw-material') }}" class="space-y-5">
+        <form method="POST" action="{{ route('supplier.store-raw-material') }}" class="space-y-5">
             @csrf
             <div class="flex flex-col sm:flex-row sm:items-center gap-2">
                 <label class="sm:w-40 font-semibold text-gray-700">Material Name</label>

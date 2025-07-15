@@ -21,7 +21,13 @@ class VendorProductController extends Controller
     // List vendor's products
     public function index(): JsonResponse
     {
-        $products = YogurtProduct::where('status', '!=', 'deleted')->get();
+        $vendor = Auth::user()->vendor;
+        if (!$vendor) {
+            return response()->json([]);
+        }
+        $products = YogurtProduct::where('vendor_id', $vendor->id)
+            ->where('status', '!=', 'deleted')
+            ->get();
         return response()->json($products);
     }
 
@@ -105,7 +111,7 @@ class VendorProductController extends Controller
         $product->save();
         
         // Update inventory quantities if provided
-        $inventory = Inventory::where('yogurt_product_id', $id)->first();
+        $inventory = $product->currentInventory;
         if ($inventory) {
             if ($request->filled('quantity_available')) {
                 $inventory->quantity_available = $request->quantity_available;

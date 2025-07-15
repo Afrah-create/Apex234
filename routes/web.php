@@ -12,6 +12,7 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\VendorApplicantController;
 use App\Http\Controllers\SupplierController;
 use App\Models\YogurtProduct;
+use App\Http\Controllers\CartController;
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -38,6 +39,7 @@ Route::get('/test-mail', function () {
     }
 });
 
+// Main dashboard route
 Route::get('/dashboard', function () {
     $user = Auth::user();
     if ($user instanceof User) {
@@ -81,6 +83,8 @@ Route::get('/dashboard', function () {
                 return redirect()->route('dashboard.vendor');
             case 'employee':
                 return redirect()->route('dashboard.employee');
+            case 'customer':
+                return redirect()->route('dashboard.customer');
             default:
                 $employeeRecord = \App\Models\Employee::where('user_id', $user->id)->first();
                 if ($employeeRecord) {
@@ -103,6 +107,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard/employee/warehouse-staff', [\App\Http\Controllers\EmployeeDashboardController::class, 'warehouseStaffDashboard'])->name('dashboard.employee.warehouse-staff');
     Route::get('/dashboard/employee/driver', [\App\Http\Controllers\EmployeeDashboardController::class, 'driverDashboard'])->name('dashboard.employee.driver');
     Route::get('/dashboard/employee/sales-manager', [\App\Http\Controllers\EmployeeDashboardController::class, 'salesManagerDashboard'])->name('dashboard.employee.sales-manager');
+    Route::get('/dashboard/customer', [\App\Http\Controllers\CustomerDashboardController::class, 'index'])->name('dashboard.customer');
     Route::get('/vendor/manage-orders', function () {
         return view('vendor.manage-orders');
     })->name('vendor.manage-orders');
@@ -110,9 +115,12 @@ Route::middleware(['auth'])->group(function () {
         return view('vendor.manage-products');
     })->name('vendor.manage-products');
     Route::post('/retailer/orders', [\App\Http\Controllers\RetailerOrderController::class, 'store'])->name('retailer.orders.store');
+    Route::resource('customer/orders', \App\Http\Controllers\CustomerOrderController::class)
+        ->names('customer.orders')
+        ->only(['index', 'show', 'store']);
 });
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -131,13 +139,15 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
 // Admin employee store route
 Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/employees')->name('admin.employees.')->group(function () {
     Route::post('/', [\App\Http\Controllers\AdminEmployeeController::class, 'store'])->name('store');
+    Route::get('/{employee}/edit', [\App\Http\Controllers\AdminEmployeeController::class, 'edit'])->name('edit');
+    Route::put('/{employee}', [\App\Http\Controllers\AdminEmployeeController::class, 'update'])->name('update');
+    Route::delete('/{employee}', [\App\Http\Controllers\AdminEmployeeController::class, 'destroy'])->name('destroy');
 });
 
 // Admin order management
 Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/orders')->name('admin.orders.')->group(function () {
     Route::get('/', [AdminOrderController::class, 'index'])->name('index');
     Route::get('/{id}', [AdminOrderController::class, 'show'])->name('show');
-    Route::get('/{id}/edit', [AdminOrderController::class, 'edit'])->name('edit');
     Route::put('/{id}', [AdminOrderController::class, 'update'])->name('update');
     Route::delete('/{id}', [AdminOrderController::class, 'destroy'])->name('destroy');
     Route::patch('/{id}/status', [AdminOrderController::class, 'updateStatus'])->name('update-status');
@@ -145,6 +155,7 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     // API routes for data
     Route::get('/api/orders-data', [AdminOrderController::class, 'getOrdersData'])->name('api.orders-data');
     Route::get('/api/order-statistics', [AdminOrderController::class, 'getOrderStatistics'])->name('api.order-statistics');
+    Route::patch('/{order}/status', [App\Http\Controllers\AdminOrderController::class, 'updateStatus'])->name('admin.orders.updateStatus');
 });
 
 // Admin inventory analytics
@@ -215,8 +226,8 @@ Route::middleware(['auth', 'verified'])->prefix('vendor')->name('vendor.')->grou
     Route::get('/manage-products', function () {
         return view('vendor.manage-products');
     })->name('manage-products');
+    Route::post('/reserve-batch/{id}', [\App\Http\Controllers\VendorProductionController::class, 'reserveBatch'])->name('reserve-batch');
     Route::get('/products/{id}/edit', [\App\Http\Controllers\VendorProductController::class, 'show'])->name('products.edit');
-    Route::get('/raw-materials/{id}/edit', [\App\Http\Controllers\VendorInventoryController::class, 'showRawMaterial'])->name('raw-materials.edit');
 });
 
 // Password reset by token (code) form
@@ -293,7 +304,7 @@ Route::middleware(['auth', 'verified'])->get('/supplier/raw-material-inventory/a
 })->name('supplier.add-raw-material');
 
 // Supplier Add Raw Material POST (Blade form)
-Route::middleware(['auth', 'verified'])->post('/supplier/raw-material-inventory/add', [\App\Http\Controllers\SupplierController::class, 'storeRawMaterialBlade'])->name('supplier.add-raw-material');
+Route::middleware(['auth', 'verified'])->post('/supplier/raw-material-inventory/add', [\App\Http\Controllers\SupplierController::class, 'storeRawMaterialBlade'])->name('supplier.store-raw-material');
 
 // Supplier Profile Page
 Route::middleware(['auth', 'verified'])->get('/supplier/profile', [\App\Http\Controllers\SupplierController::class, 'profile'])->name('supplier.profile');
@@ -368,14 +379,141 @@ Route::middleware(['auth', 'verified'])->get('/vendor/deliveries', [\App\Http\Co
 Route::middleware(['auth'])->get('/api/cart', [\App\Http\Controllers\CartController::class, 'getCart']);
 Route::middleware(['auth'])->post('/api/cart', [\App\Http\Controllers\CartController::class, 'saveCart']);
 
+// Prefer the new closure-based /help route
+Route::get('/help', function () {
+    return view('help.index');
+})->name('help.index');
+
 require __DIR__.'/auth.php';
 
 Route::get('/api/admin/raw-material-orders', [\App\Http\Controllers\AdminOrderController::class, 'allRawMaterialOrders']);
 Route::get('/admin/raw-material-orders/export-csv', [\App\Http\Controllers\AdminOrderController::class, 'exportRawMaterialOrdersCsv']);
 Route::get('/admin/raw-material-orders/export-pdf', [\App\Http\Controllers\AdminOrderController::class, 'exportRawMaterialOrdersPdf']);
 
+// Vendor Production Batch Management
+Route::middleware(['auth', 'verified'])->prefix('vendor/production')->group(function () {
+    Route::get('/', [\App\Http\Controllers\VendorProductionController::class, 'index'])->name('vendor.production.index');
+    Route::get('/create', [\App\Http\Controllers\VendorProductionController::class, 'create'])->name('vendor.production.create');
+    Route::post('/store', [\App\Http\Controllers\VendorProductionController::class, 'store'])->name('vendor.production.store');
+});
+
+// Machine Learning Analytics Routes (temporary - for testing)
+Route::middleware(['auth', 'verified'])->prefix('api/analytics')->group(function () {
+    Route::get('/customer-segmentation', [AnalyticsController::class, 'getCustomerSegmentation']);
+    Route::get('/demand-forecast', [AnalyticsController::class, 'getDemandForecast']);
+    Route::get('/sales-predictions', [AnalyticsController::class, 'getPredictions']);
+    Route::get('/predictions', [AnalyticsController::class, 'getPredictions']); // Added for compatibility
+    Route::get('/inventory-optimization', [AnalyticsController::class, 'getInventoryOptimization']);
+    Route::get('/risk-assessment', [AnalyticsController::class, 'getRiskAssessment']);
+    Route::get('/trend-analysis', [AnalyticsController::class, 'getTrendAnalysis']);
+    Route::get('/kpi', [AnalyticsController::class, 'kpi']);
+});
+
+// Test route to verify machine learning is working
+Route::get('/api/test-ml', function () {
+    return response()->json([
+        'message' => 'Machine Learning API is working!',
+        'timestamp' => now()->toISOString()
+    ]);
+});
+
+// Temporary test route for retailer segmentation
+Route::get('/test-retailer-segmentation', function () {
+    try {
+        $mlService = app(\App\Services\MachineLearningService::class);
+        $segmentation = $mlService->performRetailerSegmentation();
+        
+        return response()->json([
+            'success' => true,
+            'segmentation' => $segmentation,
+            'test_info' => [
+                'timestamp' => now()->toISOString(),
+                'retailer_count' => \App\Models\Retailer::count(),
+                'order_count' => \App\Models\Order::count()
+            ]
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Test failed',
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
+});
+
+// Admin Product Management
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/products', [\App\Http\Controllers\AdminProductController::class, 'index'])->name('products.index');
+    Route::post('/products/{product}/update', [\App\Http\Controllers\AdminProductController::class, 'update'])->name('products.update');
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    Route::post('/cart/add/{product}', [CartController::class, 'add'])->name('cart.add');
+    Route::post('/cart/update/{product}', [CartController::class, 'update'])->name('cart.update');
+    Route::post('/cart/remove/{product}', [CartController::class, 'remove'])->name('cart.remove');
+    
+    // Checkout routes
+    Route::get('/checkout', [\App\Http\Controllers\CheckoutController::class, 'index'])->name('checkout.index');
+    Route::post('/checkout', [\App\Http\Controllers\CheckoutController::class, 'store'])->name('checkout.store');
+    
+    // Test route for checkout (remove in production)
+    Route::get('/test-checkout', function() {
+        if (!Auth::check()) {
+            return 'Please login first';
+        }
+        $cartItems = \App\Models\CartItem::with('product')->where('user_id', Auth::id())->get();
+        return response()->json([
+            'user_id' => Auth::id(),
+            'cart_items_count' => $cartItems->count(),
+            'cart_items' => $cartItems->map(function($item) {
+                return [
+                    'product_name' => $item->product->product_name,
+                    'quantity' => $item->quantity,
+                    'price' => $item->product->selling_price
+                ];
+            })
+        ]);
+    });
+});
+
 // Vendor inventory status ranges
 Route::middleware(['auth', 'verified'])->post('/vendor/inventory-status-ranges', [\App\Http\Controllers\VendorDashboardController::class, 'saveInventoryStatusRanges'])->name('vendor.inventory-status-ranges');
 
+<<<<<<< HEAD
 Route::get('/retailer/orders/history', [App\Http\Controllers\RetailerOrderHistoryController::class, 'index'])->name('retailer.orders.history');
 Route::get('/retailer/offers', [App\Http\Controllers\RetailerOffersController::class, 'index'])->name('retailer.offers');
+=======
+Route::middleware(['auth', 'verified'])->get('/vendor/production', [\App\Http\Controllers\VendorProductionController::class, 'index'])->name('vendor.production.index');
+Route::middleware(['auth', 'verified'])->post('/vendor/production', [\App\Http\Controllers\VendorProductionController::class, 'store'])->name('vendor.production.store');
+
+Route::middleware(['auth'])->get('/chat', [\App\Http\Controllers\ChatController::class, 'index'])->name('chat');
+Route::middleware(['auth'])->get('/chat/recipients', [\App\Http\Controllers\ChatController::class, 'getRecipients']);
+Route::middleware(['auth'])->get('/chat/unread-counts', [\App\Http\Controllers\ChatController::class, 'getUnreadCountsPerUser']);
+Route::middleware(['auth'])->get('/chat/background', [\App\Http\Controllers\ChatController::class, 'getChatBackground']);
+Route::middleware(['auth'])->post('/chat/background', [\App\Http\Controllers\ChatController::class, 'setChatBackground']);
+
+Route::get('/privacy-policy', function () {
+    return view('privacy-policy');
+})->name('privacy.policy');
+
+Route::get('/terms-of-use', function () {
+    return view('terms-of-use');
+})->name('terms.use');
+
+Route::get('/contact', function () {
+    return view('contact');
+})->name('contact');
+
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/distribution-centers')->name('admin.distribution-centers.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\AdminDistributionCenterController::class, 'index'])->name('index');
+    Route::get('/create', [\App\Http\Controllers\AdminDistributionCenterController::class, 'create'])->name('create');
+    Route::post('/', [\App\Http\Controllers\AdminDistributionCenterController::class, 'store'])->name('store');
+    Route::get('/{id}/edit', [\App\Http\Controllers\AdminDistributionCenterController::class, 'edit'])->name('edit');
+    Route::put('/{id}', [\App\Http\Controllers\AdminDistributionCenterController::class, 'update'])->name('update');
+    Route::delete('/{id}', [\App\Http\Controllers\AdminDistributionCenterController::class, 'destroy'])->name('destroy');
+});
+
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])
+    ->get('/admin/distribution-centers/{id}/vendor-inventory-stats', [\App\Http\Controllers\AdminDistributionCenterController::class, 'vendorInventoryStats']);
+>>>>>>> 8ed38154569af11dcb808187235ebabcb8caef93

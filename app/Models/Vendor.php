@@ -48,6 +48,11 @@ class Vendor extends Model
         return $this->hasMany(Inventory::class);
     }
 
+    public function distributionCenters()
+    {
+        return $this->belongsToMany(\App\Models\DistributionCenter::class, 'distribution_center_vendor');
+    }
+
     public function isApproved()
     {
         return $this->status === 'approved';

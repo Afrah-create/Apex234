@@ -212,6 +212,15 @@ document.addEventListener('DOMContentLoaded', function() {
         scheduledReportsSection.style.display = scheduledReportsVisible ? '' : 'none';
         toggleBtn.textContent = scheduledReportsVisible ? 'Hide Scheduled Reports' : 'Show Scheduled Reports';
     });
+
+    // Add notification div if not present
+    if (!document.getElementById('bulk-action-message')) {
+        const notificationDiv = document.createElement('div');
+        notificationDiv.id = 'bulk-action-message';
+        notificationDiv.className = 'fixed top-6 right-6 bg-green-600 text-white px-6 py-3 rounded shadow-lg z-50';
+        notificationDiv.style.display = 'none';
+        document.body.appendChild(notificationDiv);
+    }
 });
 
 // Populate the report type dropdown on page load
@@ -396,11 +405,11 @@ async function generateReport() {
             currentReportData = result.data;
             displayReportResults(result.data);
         } else {
-            alert('Error generating report: ' + result.message);
+            showBulkActionMessage('Error generating report: ' + result.message, 'error');
         }
     } catch (error) {
         console.error('Error generating report:', error);
-        alert('Error generating report. Please try again.');
+        showBulkActionMessage('Error generating report. Please try again.', 'error');
     }
 }
 
@@ -599,18 +608,18 @@ async function exportReport() {
         if (result.success) {
             window.open(result.download_url, '_blank');
         } else {
-            alert('Error exporting report: ' + result.message);
+            showBulkActionMessage('Error exporting report: ' + result.message, 'error');
         }
     } catch (error) {
         console.error('Error exporting report:', error);
-        alert('Error exporting report. Please try again.');
+        showBulkActionMessage('Error exporting report. Please try again.', 'error');
     }
 }
 
 // Export current report
 function exportCurrentReport() {
     if (!currentReportData) {
-        alert('No report data to export');
+        showBulkActionMessage('No report data to export', 'error');
         return;
     }
 
@@ -633,12 +642,12 @@ function exportCurrentReport() {
         if (result.success) {
             window.open(result.download_url, '_blank');
         } else {
-            alert('Error exporting report: ' + result.message);
+            showBulkActionMessage('Error exporting report: ' + result.message, 'error');
         }
     })
     .catch(error => {
         console.error('Error exporting report:', error);
-        alert('Error exporting report. Please try again.');
+        showBulkActionMessage('Error exporting report. Please try again.', 'error');
     });
 }
 
@@ -646,7 +655,7 @@ function exportCurrentReport() {
 function printReport() {
     const reportContent = document.getElementById('report-results');
     if (!reportContent) {
-        alert('No report to print!');
+        showBulkActionMessage('No report to print!', 'error');
         return;
     }
     // Gather report metadata
@@ -686,7 +695,7 @@ function printReport() {
 // Schedule report
 function scheduleReport() {
     // Implementation for scheduling reports
-    alert('Report scheduling feature coming soon!');
+    showBulkActionMessage('Report scheduling feature coming soon!', 'info');
 }
 
 // Refresh reports
@@ -810,7 +819,7 @@ function createScheduledReportCard(report) {
 // Edit scheduled report
 function editScheduledReport(id) {
     // Implementation for editing scheduled report
-    alert('Edit scheduled report functionality coming soon!');
+    showBulkActionMessage('Edit scheduled report functionality coming soon!', 'info');
 }
 
 // Toggle scheduled report status
@@ -829,11 +838,11 @@ async function toggleScheduledReport(id) {
         if (result.success) {
             loadScheduledReports();
         } else {
-            alert('Error updating report status: ' + result.message);
+            showBulkActionMessage('Error updating report status: ' + result.message, 'error');
         }
     } catch (error) {
         console.error('Error toggling scheduled report:', error);
-        alert('Error updating report status. Please try again.');
+        showBulkActionMessage('Error updating report status. Please try again.', 'error');
     }
 }
 
@@ -851,42 +860,42 @@ async function triggerScheduledReport(id) {
         const result = await response.json();
         
         if (result.success) {
-            alert('Report generated and delivered successfully!');
+            showBulkActionMessage('Report generated and delivered successfully!', 'success');
         } else {
-            alert('Error triggering report: ' + result.message);
+            showBulkActionMessage('Error triggering report: ' + result.message, 'error');
         }
     } catch (error) {
         console.error('Error triggering scheduled report:', error);
-        alert('Error triggering report. Please try again.');
+        showBulkActionMessage('Error triggering report. Please try again.', 'error');
     }
 }
 
 // Delete scheduled report
 async function deleteScheduledReport(id) {
-    if (!confirm('Are you sure you want to delete this scheduled report?')) {
-        return;
-    }
-    
-    try {
-        const response = await fetch(`{{ route('api.reports.scheduled.delete', ['id' => ':id']) }}`.replace(':id', id), {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+    (async function() {
+        const confirmed = await showConfirmModal('Are you sure you want to delete this scheduled report?', 'Delete Scheduled Report');
+        if (!confirmed) return;
+        try {
+            const response = await fetch(`{{ route('api.reports.scheduled.delete', ['id' => ':id']) }}`.replace(':id', id), {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                loadScheduledReports();
+            } else {
+                showBulkActionMessage('Error deleting report: ' + result.message, 'error');
             }
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            loadScheduledReports();
-        } else {
-            alert('Error deleting report: ' + result.message);
+        } catch (error) {
+            console.error('Error deleting scheduled report:', error);
+            showBulkActionMessage('Error deleting report. Please try again.', 'error');
         }
-    } catch (error) {
-        console.error('Error deleting scheduled report:', error);
-        alert('Error deleting report. Please try again.');
-    }
+    })();
 }
 
 // Enhanced schedule report function
@@ -964,6 +973,24 @@ function showSchedulingModal(reportConfig) {
                         <input type="time" id="schedule-time" name="time" class="w-full p-2 border border-gray-300 rounded-lg" required>
                     </div>
                     <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Stakeholder Type</label>
+                        <select id="schedule-stakeholder-type" name="stakeholder_type" class="w-full p-2 border border-gray-300 rounded-lg" required>
+                            <option value="">Select Stakeholder Type</option>
+                            <option value="admin">Admin</option>
+                            <option value="vendor">Vendor</option>
+                            <option value="retailer">Retailer</option>
+                            <option value="supplier">Supplier</option>
+                            <option value="employee">Employee</option>
+                        </select>
+                    </div>
+                    <div id="stakeholder-select-container" style="display:none;">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Stakeholder</label>
+                        <select id="schedule-stakeholder-id" name="stakeholder_id" class="w-full p-2 border border-gray-300 rounded-lg">
+                            <option value="">Select Stakeholder</option>
+                            <!-- Options will be populated dynamically -->
+                        </select>
+                    </div>
+                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Recipients (comma-separated emails)</label>
                         <input type="text" id="schedule-recipients" name="recipients" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="email1@example.com, email2@example.com" required>
                     </div>
@@ -992,6 +1019,22 @@ function showSchedulingModal(reportConfig) {
     
     // Setup form event listeners
     setupSchedulingForm(reportConfig);
+
+    // Add event listener for stakeholder type
+    setTimeout(() => {
+        const stakeholderTypeSelect = document.getElementById('schedule-stakeholder-type');
+        const stakeholderSelectContainer = document.getElementById('stakeholder-select-container');
+        const stakeholderIdSelect = document.getElementById('schedule-stakeholder-id');
+        stakeholderTypeSelect.addEventListener('change', function() {
+            if (this.value && this.value !== 'admin') {
+                stakeholderSelectContainer.style.display = 'block';
+                populateStakeholderDropdown(this.value, stakeholderIdSelect);
+            } else {
+                stakeholderSelectContainer.style.display = 'none';
+                stakeholderIdSelect.innerHTML = '<option value="">Select Stakeholder</option>';
+            }
+        });
+    }, 100);
 }
 
 // Setup scheduling form
@@ -1000,6 +1043,9 @@ function setupSchedulingForm(reportConfig) {
     const frequencySelect = document.getElementById('schedule-frequency');
     const weeklyOptions = document.getElementById('weekly-options');
     const monthlyOptions = document.getElementById('monthly-options');
+    const stakeholderTypeSelect = document.getElementById('schedule-stakeholder-type');
+    const stakeholderSelectContainer = document.getElementById('stakeholder-select-container');
+    const stakeholderSelect = document.getElementById('schedule-stakeholder-id');
     
     // Set default time
     document.getElementById('schedule-time').value = '09:00';
@@ -1009,12 +1055,31 @@ function setupSchedulingForm(reportConfig) {
         weeklyOptions.style.display = this.value === 'weekly' ? 'block' : 'none';
         monthlyOptions.style.display = this.value === 'monthly' || this.value === 'quarterly' || this.value === 'yearly' ? 'block' : 'none';
     });
-    
+
     // Handle form submission
     form.addEventListener('submit', function(e) {
         e.preventDefault();
         submitScheduledReport(reportConfig);
     });
+}
+
+// Add this function to populate the stakeholder dropdown (for now, dummy data)
+function populateStakeholderDropdown(type, selectElem) {
+    selectElem.innerHTML = '<option value="">Loading...</option>';
+    // TODO: Replace with AJAX call to fetch real stakeholders
+    setTimeout(() => {
+        let options = '<option value="">Select Stakeholder</option>';
+        if (type === 'vendor') {
+            options += '<option value="5">Vendor 5</option>';
+        } else if (type === 'retailer') {
+            options += '<option value="10">Retailer 10</option>';
+        } else if (type === 'supplier') {
+            options += '<option value="20">Supplier 20</option>';
+        } else if (type === 'employee') {
+            options += '<option value="30">Employee 30</option>';
+        }
+        selectElem.innerHTML = options;
+    }, 500);
 }
 
 // Submit scheduled report
@@ -1038,6 +1103,11 @@ async function submitScheduledReport(reportConfig) {
         format: formData.get('format')
     };
     
+    const stakeholderType = document.getElementById('schedule-stakeholder-type').value;
+    const stakeholderId = document.getElementById('schedule-stakeholder-id').value;
+    scheduleData.stakeholder_type = stakeholderType;
+    scheduleData.stakeholder_id = stakeholderId || null;
+
     try {
         const response = await fetch('{{ route("api.reports.scheduled.create") }}', {
             method: 'POST',
@@ -1051,15 +1121,15 @@ async function submitScheduledReport(reportConfig) {
         const result = await response.json();
         
         if (result.success) {
-            alert('Report scheduled successfully!');
+            showBulkActionMessage('Report scheduled successfully!', 'success');
             closeSchedulingModal();
             loadScheduledReports();
         } else {
-            alert('Error scheduling report: ' + result.message);
+            showBulkActionMessage('Error scheduling report: ' + result.message, 'error');
         }
     } catch (error) {
         console.error('Error scheduling report:', error);
-        alert('Error scheduling report. Please try again.');
+        showBulkActionMessage('Error scheduling report. Please try again.', 'error');
     }
 }
 
@@ -1073,6 +1143,15 @@ function closeSchedulingModal() {
 
 // Initialize date inputs
 updateDateInputs('30');
+
+// Add or update showBulkActionMessage function
+function showBulkActionMessage(msg, type = 'success') {
+    const el = document.getElementById('bulk-action-message');
+    el.textContent = msg;
+    el.style.background = type === 'error' ? '#dc2626' : '#16a34a'; // red for error, green for success
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 2500);
+}
 </script>
 
 <link rel="stylesheet" href="{{ asset('css/custom.css') }}">

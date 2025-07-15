@@ -11,10 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('reatilers', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
+        // Schema::table('users', function (Blueprint $table) {
+        //     $table->string('chat_background')->nullable();
+        // });
     }
 
     /**
@@ -22,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('reatilers');
+        // Schema::table('users', function (Blueprint $table) {
+        //     $table->dropColumn('chat_background');
+        // });
     }
 };

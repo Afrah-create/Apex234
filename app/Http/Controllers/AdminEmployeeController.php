@@ -13,15 +13,21 @@ class AdminEmployeeController extends Controller
     public function index()
     {
         $users = User::with('roles')->paginate(10);
-        $employees = Employee::with('vendor')->get();
+        $employees = Employee::with(['vendor', 'distributionCenter'])->get();
         $vendors = Vendor::where('status', 'approved')->get();
-        return view('admin.users.index', compact('users', 'employees', 'vendors'));
+        $distributionCenters = \App\Models\DistributionCenter::orderBy('center_name')->paginate(15);
+        $vendorApplicants = \App\Models\VendorApplicant::whereIn('status', ['validated', 'pending'])->get();
+        return view('admin.users.index', compact('users', 'employees', 'vendors', 'distributionCenters', 'vendorApplicants'));
     }
 
     public function assignVendor(Request $request, Employee $employee)
     {
-        $request->validate(['vendor_id' => 'nullable|exists:vendors,id']);
+        $request->validate([
+            'vendor_id' => 'nullable|exists:vendors,id',
+            'distribution_center_id' => 'nullable|exists:distribution_centers,id',
+        ]);
         $employee->vendor_id = $request->vendor_id;
+        $employee->distribution_center_id = $request->distribution_center_id;
         $employee->save();
 
         // Notify the employee's user (if exists)
@@ -39,7 +45,7 @@ class AdminEmployeeController extends Controller
             }
         }
 
-        return back()->with('success', 'Vendor assignment updated!');
+        return back()->with('success', 'Assignment updated!');
     }
 
     public function store(Request $request)
@@ -50,6 +56,7 @@ class AdminEmployeeController extends Controller
             'password' => 'required|string|min:8|confirmed',
             'role' => 'required|in:Production Worker,Warehouse Staff,Driver,Sales Manager',
             'vendor_id' => 'nullable|exists:vendors,id',
+            'distribution_center_id' => 'nullable|exists:distribution_centers,id',
             'status' => 'required|in:Active,On Leave,Terminated',
         ]);
 
@@ -70,11 +77,50 @@ class AdminEmployeeController extends Controller
             'name' => $request->name,
             'role' => $request->role,
             'vendor_id' => $request->vendor_id,
+            'distribution_center_id' => $request->distribution_center_id,
             'status' => $request->status,
             'user_id' => $user->id,
         ]);
 
         return redirect()->route('admin.users.index')->with('success', 'Employee created!');
+    }
+
+    public function edit($id)
+    {
+        $employee = \App\Models\Employee::findOrFail($id);
+        $vendors = \App\Models\Vendor::all();
+        $distributionCenters = \App\Models\DistributionCenter::all();
+        return view('admin.users.partials.edit-employee', compact('employee', 'vendors', 'distributionCenters'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $employee = \App\Models\Employee::findOrFail($id);
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'role' => 'required|in:Production Worker,Warehouse Staff,Driver,Sales Manager',
+            'vendor_id' => 'nullable|exists:vendors,id',
+            'distribution_center_id' => 'nullable|exists:distribution_centers,id',
+            'status' => 'required|in:Active,On Leave,Terminated',
+        ]);
+        $employee->update($request->only(['name', 'role', 'vendor_id', 'distribution_center_id', 'status']));
+        // Optionally update the linked user name
+        if ($employee->user) {
+            $employee->user->name = $request->name;
+            $employee->user->save();
+        }
+        return redirect()->route('admin.users.index')->with('success', 'Employee updated successfully!');
+    }
+
+    public function destroy($id)
+    {
+        $employee = \App\Models\Employee::findOrFail($id);
+        // Optionally delete the linked user account
+        if ($employee->user) {
+            $employee->user->delete();
+        }
+        $employee->delete();
+        return redirect()->route('admin.users.index')->with('success', 'Employee deleted successfully!');
     }
 
     // Export filtered employee assignments as CSV

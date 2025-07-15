@@ -2,14 +2,6 @@
 
 @section('content')
     <main class="main-content">
-<<<<<<< HEAD
-        <h1>Executive Dashboard</h1>
-        <p>Welcome to the Caramel Yogurt Management System. Monitor real-time production metrics, inventory analytics, and supply chain performance.</p>
-        <!-- Admin Profile Image -->
-        <div class="flex justify-center mt-8 mb-8">
-            <img src="" alt="Admin Image" style="max-width:200px;">
-        </div>
-=======
         <!-- Navigation Section -->
         <div class="bg-white rounded-lg shadow-md p-6 mb-8">
             <div class="flex items-center justify-between mb-4">
@@ -36,9 +28,11 @@
                 </div>
             </div>
             <p class="text-gray-600">Welcome to the Caramel Yogurt Management System. Monitor real-time production metrics, inventory analytics, and supply chain performance.</p>
+            <!-- Admin Profile Image -->
+            <div class="flex justify-center mt-8 mb-8">
+                <img src="" alt="Admin Image" style="max-width:200px;">
+            </div>
         </div>
-
->>>>>>> c866787e28e0745ab2973dc53e7ffa8c03e02f30
         <!-- Inventory Summary Cards -->
         <div class="summary-cards">
             <div class="summary-card" style="--summary-card-border: #22c55e;">

@@ -37,19 +37,19 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="mb-4">
                     <label class="block font-bold mb-1 text-sm text-green-700">Available Quantity</label>
-                    <input type="number" name="quantity_available" id="quantity_available" class="w-full p-2 rounded border text-sm bg-gray-100" value="{{ $inventory->quantity_available ?? 0 }}" min="0" readonly>
+                    <input type="number" name="quantity_available" id="quantity_available" class="w-full p-2 rounded border text-sm bg-gray-100" value="{{ $product->currentInventory->quantity_available ?? 0 }}" min="0" readonly>
                     <p class="text-xs text-gray-500 mt-1">Ready for sale</p>
                 </div>
                 
                 <div class="mb-4">
                     <label class="block font-bold mb-1 text-sm text-orange-700">Reserved Quantity</label>
-                    <input type="number" name="quantity_reserved" id="quantity_reserved" class="w-full p-2 rounded border text-sm" value="{{ $inventory->quantity_reserved ?? 0 }}" min="0">
+                    <input type="number" name="quantity_reserved" id="quantity_reserved" class="w-full p-2 rounded border text-sm" value="{{ $product->currentInventory->quantity_reserved ?? 0 }}" min="0">
                     <p class="text-xs text-gray-500 mt-1">Held for orders</p>
                 </div>
                 
                 <div class="mb-4">
                     <label class="block font-bold mb-1 text-sm text-red-700">Damaged Quantity</label>
-                    <input type="number" name="quantity_damaged" id="quantity_damaged" class="w-full p-2 rounded border text-sm" value="{{ $inventory->quantity_damaged ?? 0 }}" min="0">
+                    <input type="number" name="quantity_damaged" id="quantity_damaged" class="w-full p-2 rounded border text-sm" value="{{ $product->currentInventory->quantity_damaged ?? 0 }}" min="0">
                     <p class="text-xs text-gray-500 mt-1">Not sellable</p>
                 </div>
             </div>
