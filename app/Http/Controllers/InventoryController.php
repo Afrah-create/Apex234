@@ -139,4 +139,20 @@ class InventoryController extends Controller
             'summary' => $summary
         ]);
     }
+
+    public function adminCombinedInventorySummary()
+    {
+        $summary = \App\Models\Inventory::join('yogurt_products', 'inventories.yogurt_product_id', '=', 'yogurt_products.id')
+            ->select(
+                'yogurt_products.product_name',
+                'inventories.distribution_center_id',
+                DB::raw('SUM(inventories.quantity_available) as total_available'),
+                DB::raw('SUM(inventories.quantity_reserved) as total_reserved'),
+                DB::raw('SUM(inventories.quantity_damaged) as total_damaged'),
+                DB::raw('SUM(inventories.quantity_expired) as total_expired')
+            )
+            ->groupBy('yogurt_products.id', 'yogurt_products.product_name', 'inventories.distribution_center_id')
+            ->get();
+        return response()->json($summary);
+    }
 } 
