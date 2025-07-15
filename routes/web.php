@@ -376,3 +376,6 @@ Route::get('/admin/raw-material-orders/export-pdf', [\App\Http\Controllers\Admin
 
 // Vendor inventory status ranges
 Route::middleware(['auth', 'verified'])->post('/vendor/inventory-status-ranges', [\App\Http\Controllers\VendorDashboardController::class, 'saveInventoryStatusRanges'])->name('vendor.inventory-status-ranges');
+
+Route::get('/retailer/orders/history', [App\Http\Controllers\RetailerOrderHistoryController::class, 'index'])->name('retailer.orders.history');
+Route::get('/retailer/offers', [App\Http\Controllers\RetailerOffersController::class, 'index'])->name('retailer.offers');
