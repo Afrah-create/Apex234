@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Auth\Events\Login;
 use App\Models\CartItem;
 use App\Models\YogurtProduct;
+use App\Models\Inventory;
+use App\Models\InventoryObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Inventory::observe(InventoryObserver::class);
         Event::listen(Login::class, function ($event) {
             $user = $event->user;
             $sessionCart = session('cart', []);

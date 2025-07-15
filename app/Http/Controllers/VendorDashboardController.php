@@ -104,25 +104,28 @@ class VendorDashboardController extends Controller
     // Raw material statistics for vendor (all materials)
     public function rawMaterialStats(): JsonResponse
     {
-        $vendorId = auth()->id();
+        $vendorId = Auth::id();
         $materialTypes = ['milk', 'sugar', 'fruit'];
+        $statuses = ['available', 'expired', 'disposed'];
         $result = [];
         foreach ($materialTypes as $type) {
-            $stats = DB::table('raw_materials')
-                ->where('material_type', $type)
-                ->where('vendor_id', $vendorId)
-            ->select(
-                    DB::raw('SUM(available) as available'),
-                    DB::raw('SUM(in_use) as in_use'),
-                    DB::raw('SUM(expired) as expired'),
-                    DB::raw('SUM(disposed) as disposed')
-            )->first();
             $result[ucfirst($type)] = [
-                'available' => (int)($stats->available ?? 0),
-                'in_use' => (int)($stats->in_use ?? 0),
-                'expired' => (int)($stats->expired ?? 0),
-                'disposed' => (int)($stats->disposed ?? 0),
+                'available' => 0,
+                'expired' => 0,
+                'disposed' => 0,
             ];
+        }
+        $rows = DB::table('raw_materials')
+            ->select('material_type', 'status', DB::raw('SUM(quantity) as total'))
+            ->where('vendor_id', $vendorId)
+            ->groupBy('material_type', 'status')
+            ->get();
+        foreach ($rows as $row) {
+            $type = ucfirst($row->material_type);
+            $status = $row->status;
+            if (isset($result[$type][$status])) {
+                $result[$type][$status] = (float) $row->total;
+            }
         }
         return response()->json($result);
     }
@@ -146,7 +149,7 @@ class VendorDashboardController extends Controller
     // Show all deliveries for the logged-in vendor
     public function deliveries()
     {
-        $vendor = auth()->user()->vendor;
+        $vendor = Auth::user()->vendor;
         if (!$vendor) {
             abort(403, 'No vendor profile found.');
         }
@@ -158,7 +161,7 @@ class VendorDashboardController extends Controller
 
     public function showDashboard()
     {
-        $vendor = auth()->user()->vendor;
+        $vendor = Auth::user()->vendor;
         $employees = $vendor ? $vendor->employees : collect();
         $lowStockNotifications = collect();
         if ($vendor) {

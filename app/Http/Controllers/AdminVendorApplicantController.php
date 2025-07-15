@@ -52,6 +52,16 @@ class AdminVendorApplicantController extends Controller
             'contact_phone' => $applicant->phone,
         ]);
         
+        // Automatically assign vendor to the distribution center with the fewest vendors, but only among operational centers
+        $distributionCenter = \App\Models\DistributionCenter::where('status', 'operational')->withCount('vendors')->orderBy('vendors_count')->first();
+        if (!$distributionCenter) {
+            // If no operational centers, fallback to any center
+            $distributionCenter = \App\Models\DistributionCenter::withCount('vendors')->orderBy('vendors_count')->first();
+        }
+        if ($distributionCenter) {
+            $distributionCenter->vendors()->attach($vendor->id);
+        }
+        
         $applicant->update(['status' => 'approved']);
         
         // Send email to vendor
