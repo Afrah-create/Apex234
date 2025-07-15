@@ -110,6 +110,16 @@
                 <label class="block font-semibold mb-1">Notes</label>
                 <textarea name="notes" class="border rounded px-3 py-2 w-full">{{ old('notes', $center->notes) }}</textarea>
             </div>
+            <div class="md:col-span-2">
+                <label class="block font-semibold mb-1">Assign Vendors</label>
+                <select name="vendors[]" id="vendors" class="border rounded px-3 py-2 w-full" multiple>
+                    @foreach($vendors as $vendor)
+                        <option value="{{ $vendor->id }}" @if($center->vendors->contains($vendor->id)) selected @endif>
+                            {{ $vendor->company_name ?? ($vendor->user->name ?? 'Vendor #'.$vendor->id) }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
         </div>
         <div class="mt-6 flex gap-4">
             <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 font-semibold">Update</button>

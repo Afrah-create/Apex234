@@ -9,4 +9,9 @@ class DistributionCenter extends Model
 {
     use HasFactory;
     protected $guarded = [];
+
+    public function vendors()
+    {
+        return $this->belongsToMany(\App\Models\Vendor::class, 'distribution_center_vendor');
+    }
 } 
