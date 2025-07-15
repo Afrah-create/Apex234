@@ -5,6 +5,7 @@
     <h1>Vendor Dashboard</h1>
     <div class="mb-4">
         <a href="{{ route('vendor.production.index') }}" class="bg-blue-600 text-white px-4 py-2 rounded">Production</a>
+        <a href="{{ route('vendor.reports') }}" class="bg-blue-600 text-white px-4 py-2 rounded ml-2">Reports</a>
     </div>
     <div>
         <img src="" alt="Vendor Image" style="max-width:200px;">
@@ -48,6 +49,10 @@
         if (event.persisted) {
             window.location.reload();
         }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // The My Reports table and script are removed as per the edit hint.
     });
 </script>
 @endsection 
