@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('yogurt_products', function (Blueprint $table) {
             $table->id();
             $table->foreignId('production_facility_id')->constrained()->onDelete('cascade');
+            $table->foreignId('vendor_id')->nullable();
             $table->string('product_name');
             $table->string('product_code')->unique();
             $table->text('description')->nullable();
@@ -35,7 +36,9 @@ return new class extends Migration
             $table->enum('status', ['active', 'discontinued', 'seasonal', 'out_of_stock'])->default('active');
             $table->text('notes')->nullable();
             $table->timestamps();
-            
+
+            $table->foreign('vendor_id')->references('id')->on('vendors')->onDelete('set null');
+
             // Indexes for better performance
             $table->index(['production_facility_id', 'product_type']);
             $table->index('product_code');

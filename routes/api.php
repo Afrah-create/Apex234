@@ -12,6 +12,11 @@ Route::get('analytics/trend-analysis', [AnalyticsController::class, 'getTrendAna
 Route::get('analytics/kpi', [AnalyticsController::class, 'kpi']);
 Route::get('analytics/customer-segmentation', [App\Http\Controllers\AnalyticsController::class, 'getCustomerSegmentation']);
 
+// Add this route for fetching all distribution centers
+Route::get('/distribution-centers', function() {
+    return \App\Models\DistributionCenter::select('id', 'center_name')->get();
+})->name('api.distribution-centers.index');
+
 // Test route to verify API is working
 Route::get('test', function () {
     return response()->json([

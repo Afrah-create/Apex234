@@ -19,14 +19,14 @@ class InventoryController extends Controller
 
     public function getInventoryChartData(): JsonResponse
     {
-        // Get inventory data grouped by product with total quantities
-        $inventoryData = Inventory::join('yogurt_products', 'inventories.yogurt_product_id', '=', 'yogurt_products.id')
+        // Get all products, left join inventories to include products with zero inventory
+        $inventoryData = YogurtProduct::leftJoin('inventories', 'yogurt_products.id', '=', 'inventories.yogurt_product_id')
             ->select(
                 'yogurt_products.product_name as product_name',
-                DB::raw('SUM(inventories.quantity_available) as total_available'),
-                DB::raw('SUM(inventories.quantity_reserved) as total_reserved'),
-                DB::raw('SUM(inventories.quantity_damaged) as total_damaged'),
-                DB::raw('SUM(inventories.quantity_expired) as total_expired')
+                DB::raw('COALESCE(SUM(inventories.quantity_available), 0) as total_available'),
+                DB::raw('COALESCE(SUM(inventories.quantity_reserved), 0) as total_reserved'),
+                DB::raw('COALESCE(SUM(inventories.quantity_damaged), 0) as total_damaged'),
+                DB::raw('COALESCE(SUM(inventories.quantity_expired), 0) as total_expired')
             )
             ->groupBy('yogurt_products.id', 'yogurt_products.product_name')
             ->get();
