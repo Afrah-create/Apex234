@@ -28,15 +28,16 @@ class VendorDashboardController extends Controller
                 'out_of_stock_items' => 0,
             ]);
         }
-        $productIds = YogurtProduct::where('vendor_id', $vendor->id)->where('status', 'active')->pluck('id');
+        $inventoryQuery = \App\Models\Inventory::where('vendor_id', $vendor->id);
+        $productIds = $inventoryQuery->pluck('yogurt_product_id')->unique();
         $summary = [
             'total_products' => $productIds->count(),
-            'total_available' => Inventory::whereIn('yogurt_product_id', $productIds)->sum('quantity_available'),
-            'total_reserved' => Inventory::whereIn('yogurt_product_id', $productIds)->sum('quantity_reserved'),
-            'total_damaged' => Inventory::whereIn('yogurt_product_id', $productIds)->sum('quantity_damaged'),
-            'total_expired' => Inventory::whereIn('yogurt_product_id', $productIds)->sum('quantity_expired'),
-            'low_stock_items' => Inventory::whereIn('yogurt_product_id', $productIds)->where('inventory_status', 'low_stock')->count(),
-            'out_of_stock_items' => Inventory::whereIn('yogurt_product_id', $productIds)->where('inventory_status', 'out_of_stock')->count(),
+            'total_available' => $inventoryQuery->sum('quantity_available'),
+            'total_reserved' => $inventoryQuery->sum('quantity_reserved'),
+            'total_damaged' => $inventoryQuery->sum('quantity_damaged'),
+            'total_expired' => $inventoryQuery->sum('quantity_expired'),
+            'low_stock_items' => $inventoryQuery->where('inventory_status', 'low_stock')->count(),
+            'out_of_stock_items' => $inventoryQuery->where('inventory_status', 'out_of_stock')->count(),
         ];
         return response()->json($summary);
     }
@@ -51,8 +52,7 @@ class VendorDashboardController extends Controller
                 'datasets' => []
             ]);
         }
-        $products = YogurtProduct::where('vendor_id', $vendor->id)->where('status', 'active')->get();
-        $inventoryData = Inventory::whereIn('yogurt_product_id', $products->pluck('id'))
+        $inventoryData = \App\Models\Inventory::where('vendor_id', $vendor->id)
             ->join('yogurt_products', 'inventories.yogurt_product_id', '=', 'yogurt_products.id')
             ->select(
                 'yogurt_products.product_name as product_name',
@@ -171,11 +171,11 @@ class VendorDashboardController extends Controller
                 'units_inventory' => 0,
             ]);
         }
-        $productIds = YogurtProduct::where('vendor_id', $vendor->id)->pluck('id');
-        $batchesProduced = Inventory::whereIn('yogurt_product_id', $productIds)->count();
-        $unitsProduced = Inventory::whereIn('yogurt_product_id', $productIds)->sum('quantity_available');
-        $unitsSold = Inventory::whereIn('yogurt_product_id', $productIds)->sum('quantity_reserved');
-        $unitsInInventory = Inventory::whereIn('yogurt_product_id', $productIds)->sum('quantity_available');
+        $inventoryQuery = \App\Models\Inventory::where('vendor_id', $vendor->id);
+        $batchesProduced = $inventoryQuery->count();
+        $unitsProduced = $inventoryQuery->sum('quantity_available');
+        $unitsSold = $inventoryQuery->sum('quantity_reserved');
+        $unitsInInventory = $inventoryQuery->sum('quantity_available');
         return response()->json([
             'batches_produced' => $batchesProduced,
             'units_produced' => $unitsProduced,
