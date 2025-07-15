@@ -495,6 +495,24 @@
                 </div>
             </div>
         </div>
+        <div class="carousel-slide" style="background-image: url('{{ asset('images/carousel/production.jpg') }}');">
+            <div class="carousel-overlay"></div>
+            <div class="carousel-content">
+                <div class="carousel-text-bg">
+                    <div class="carousel-title">View Stock</div>
+                    <div class="carousel-desc">Check current inventory and stock levels.</div>
+                </div>
+            </div>
+        </div>
+        <div class="carousel-slide" style="background-image: url('{{ asset('images/carousel/quality.jpg') }}');">
+            <div class="carousel-overlay"></div>
+            <div class="carousel-content">
+                <div class="carousel-text-bg">
+                    <div class="carousel-title">Sales Reports</div>
+                    <div class="carousel-desc">View sales analytics and download reports.</div>
+                </div>
+            </div>
+        </div>
         <div class="carousel-slide" style="background-image: url('{{ asset('images/carousel/transportation.jpg') }}');">
             <div class="carousel-overlay"></div>
             <div class="carousel-content">
