@@ -480,8 +480,9 @@ Route::middleware(['auth'])->group(function () {
 // Vendor inventory status ranges
 Route::middleware(['auth', 'verified'])->post('/vendor/inventory-status-ranges', [\App\Http\Controllers\VendorDashboardController::class, 'saveInventoryStatusRanges'])->name('vendor.inventory-status-ranges');
 
+Route::get('/retailer/orders/history', [App\Http\Controllers\RetailerOrderHistoryController::class, 'index'])->name('retailer.orders.history');
+Route::get('/retailer/offers', [App\Http\Controllers\RetailerOffersController::class, 'index'])->name('retailer.offers');
 Route::middleware(['auth', 'verified'])->get('/vendor/production', [\App\Http\Controllers\VendorProductionController::class, 'index'])->name('vendor.production.index');
-Route::middleware(['auth', 'verified'])->post('/vendor/production', [\App\Http\Controllers\VendorProductionController::class, 'store'])->name('vendor.production.store');
 
 Route::middleware(['auth'])->get('/chat', [\App\Http\Controllers\ChatController::class, 'index'])->name('chat');
 Route::middleware(['auth'])->get('/chat/recipients', [\App\Http\Controllers\ChatController::class, 'getRecipients']);
