@@ -12,6 +12,7 @@
             <a href="{{ route('dashboard.vendor') }}" class="font-bold text-xl">Vendor Dashboard</a>
             <div>
                 <a href="{{ route('vendor.production.index') }}" class="ml-4 hover:underline">Production</a>
+                <a href="{{ route('vendor.my-reports') }}" class="ml-4 hover:underline">Reports</a>
                 <!-- Add other vendor links here -->
             </div>
         </div>

@@ -2,6 +2,9 @@
 
 @section('content')
 <div class="container">
+    <div class="mb-4">
+        <a href="{{ route('supplier.reports') }}" class="bg-blue-600 text-white px-4 py-2 rounded">My Reports</a>
+    </div>
     <h1>Supplier Dashboard</h1>
     <div>
         <img src="" alt="Supplier Image" style="max-width:200px;">
@@ -129,6 +132,11 @@
         });
     }
     document.addEventListener('DOMContentLoaded', loadSupplyHistory);
+    window.addEventListener('pageshow', function(event) {
+        if (event.persisted) {
+            window.location.reload();
+        }
+    });
     </script>
 </div>
 @endsection 

@@ -23,4 +23,11 @@
     <link rel="stylesheet" href="{{ asset('css/admin-dashboard.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="{{ asset('js/admin-dashboard.js') }}"></script>
+    <script>
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        });
+    </script>
 </x-app-layout> 

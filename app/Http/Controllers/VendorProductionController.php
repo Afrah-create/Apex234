@@ -33,7 +33,10 @@ class VendorProductionController extends Controller
 
     public function store(Request $request)
     {
-        $vendor = Auth::user();
+        $vendor = Auth::user()->vendor;
+        if (!$vendor) {
+            return back()->withErrors(['You must be an approved vendor to produce batches.'])->withInput();
+        }
         $request->validate([
             'product_id' => 'required|exists:yogurt_products,id',
             'batches' => 'required|integer|min:1',
@@ -54,7 +57,7 @@ class VendorProductionController extends Controller
         }
 
         // Fetch vendor's available raw materials
-        $materials = \App\Models\RawMaterial::where('vendor_id', Auth::id())
+        $materials = \App\Models\RawMaterial::where('vendor_id', $vendor->user_id)
             ->where('status', 'available')
             ->get()
             ->keyBy('material_type');
@@ -76,7 +79,7 @@ class VendorProductionController extends Controller
 
             // Create batch
             $batch = \App\Models\ProductionBatch::create([
-                'vendor_id' => $vendor->id,
+                'vendor_id' => $vendor->id, // Use vendor's id from vendors table
                 'product_id' => $product->id,
                 'quantity_produced' => $totalUnits,
                 'batch_code' => strtoupper(\Illuminate\Support\Str::random(8)),
@@ -91,6 +94,7 @@ class VendorProductionController extends Controller
             // Add to inventory
             \App\Models\Inventory::create([
                 'yogurt_product_id' => $product->id,
+                'vendor_id' => $vendor->id, // Set vendor_id for inventory
                 'distribution_center_id' => \App\Models\DistributionCenter::first()->id,
                 'batch_number' => $batch->batch_code,
                 'quantity_available' => $totalUnits,
@@ -98,7 +102,7 @@ class VendorProductionController extends Controller
                 'quantity_damaged' => 0,
                 'quantity_expired' => 0,
                 'production_date' => now()->toDateString(),
-                'expiry_date' => now()->addDays(7)->toDateString(), // Changed from 30 to 7 days
+                'expiry_date' => now()->addDays(7)->toDateString(),
                 'storage_temperature' => 4.0,
                 'storage_location' => 'refrigerator',
                 'shelf_location' => null,

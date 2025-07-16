@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('retailer_id')->constrained()->onDelete('cascade');
+            $table->foreignId('retailer_id')->nullable()->constrained()->onDelete('cascade');
             $table->foreignId('distribution_center_id')->constrained()->onDelete('cascade');
             $table->string('order_number')->unique();
             $table->date('order_date');

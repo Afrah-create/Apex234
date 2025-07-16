@@ -49,7 +49,7 @@
                     <span class="sr-only">Profile</span>
                 </a>
             </div>
-            {{ $slot }}
+            @yield('content')
         </main>
     </div>
     <footer class="bg-blue-900 text-white mt-8">

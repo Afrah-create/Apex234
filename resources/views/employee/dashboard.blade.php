@@ -48,4 +48,11 @@
         <p class="text-red-600">No employee record found for your account.</p>
     @endif
 </div>
+<script>
+    window.addEventListener('pageshow', function(event) {
+        if (event.persisted) {
+            window.location.reload();
+        }
+    });
+</script>
 @endsection 

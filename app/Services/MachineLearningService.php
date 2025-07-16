@@ -516,12 +516,14 @@ class MachineLearningService
     private function analyzeCustomerProfile(\App\Models\User $customer): array
     {
         $orders = $customer->orders;
+        $orderTypeCounts = $orders->groupBy('order_type')->map->count()->toArray();
         return [
             'total_orders' => $orders->count(),
             'total_spent' => $orders->sum('total_amount'),
             'avg_order_value' => $orders->count() > 0 ? $orders->sum('total_amount') / $orders->count() : 0,
             'last_order_date' => $orders->max('created_at'),
-            'order_frequency' => $this->calculateOrderFrequency($orders)
+            'order_frequency' => $this->calculateOrderFrequency($orders),
+            'order_type_counts' => $orderTypeCounts, // NEW
         ];
     }
 
@@ -529,9 +531,14 @@ class MachineLearningService
     {
         $totalSpent = $profile['total_spent'];
         $orderFrequency = $profile['order_frequency'];
-        if ($totalSpent > 1000 && $orderFrequency > 2) {
+        $orderTypeCounts = $profile['order_type_counts'] ?? [];
+        $rushOrders = $orderTypeCounts['rush'] ?? 0;
+        $bulkOrders = $orderTypeCounts['bulk'] ?? 0;
+        $regularOrders = $orderTypeCounts['regular'] ?? 0;
+
+        if (($rushOrders + $bulkOrders) > 2 || ($totalSpent > 1000 && $orderFrequency > 2)) {
             return 'premium';
-        } elseif ($totalSpent > 500 || $orderFrequency > 1) {
+        } elseif ($regularOrders > 1 || $totalSpent > 500 || $orderFrequency > 1) {
             return 'regular';
         } else {
             return 'occasional';
