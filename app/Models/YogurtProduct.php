@@ -36,11 +36,11 @@ class YogurtProduct extends Model
         return $this->inventories()->sum('quantity_available');
     }
 
-<<<<<<< HEAD
     public function vendor()
     {
         return $this->belongsTo(\App\Models\Vendor::class);
-=======
+    }
+
     public function rawMaterialRequirements()
     {
         // Example: adjust these values per product as needed
@@ -50,6 +50,5 @@ class YogurtProduct extends Model
             'sugar' => 1,   // 1kg per batch
             'fruit' => 2,   // 2kg per batch
         ];
->>>>>>> b3d5b65b79d7cdae13e09e94d0ae82735a492ac2
     }
 } 

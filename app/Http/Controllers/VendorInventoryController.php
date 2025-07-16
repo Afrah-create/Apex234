@@ -26,22 +26,13 @@ class VendorInventoryController extends Controller
     public function index(): JsonResponse
     {
         $vendor = Auth::user()->vendor;
-<<<<<<< HEAD
-=======
         $vendorId = $vendor ? $vendor->id : null;
->>>>>>> b3d5b65b79d7cdae13e09e94d0ae82735a492ac2
         
         // Get product inventory for this vendor only
         $productInventory = Inventory::with(['yogurtProduct'])
-<<<<<<< HEAD
-            ->whereHas('yogurtProduct', function($query) use ($vendor) {
-                $query->where('vendor_id', $vendor->id)
-                      ->whereIn('product_name', array_column($this->allowedProducts, 'product_name'));
-=======
             ->where('vendor_id', $vendorId)
             ->whereHas('yogurtProduct', function($query) {
                 $query->whereIn('product_name', array_column($this->allowedProducts, 'product_name'));
->>>>>>> b3d5b65b79d7cdae13e09e94d0ae82735a492ac2
             })
             ->get()
             ->map(function($inventory) {
@@ -399,22 +390,12 @@ class VendorInventoryController extends Controller
     public function getInventorySummary(): JsonResponse
     {
         $vendor = Auth::user()->vendor;
-<<<<<<< HEAD
-=======
         $vendorId = $vendor ? $vendor->id : null;
->>>>>>> b3d5b65b79d7cdae13e09e94d0ae82735a492ac2
         
         // Product inventory summary for this vendor only
         $productSummary = Inventory::with(['yogurtProduct'])
-<<<<<<< HEAD
-            ->whereHas('yogurtProduct', function($query) use ($vendor) {
-                $query->where('vendor_id', $vendor->id)
-                      ->whereIn('product_name', array_column($this->allowedProducts, 'product_name'));
-=======
-            ->where('vendor_id', $vendorId)
             ->whereHas('yogurtProduct', function($query) {
                 $query->whereIn('product_name', array_column($this->allowedProducts, 'product_name'));
->>>>>>> b3d5b65b79d7cdae13e09e94d0ae82735a492ac2
             })
             ->selectRaw('
                 SUM(quantity_available) as total_available,

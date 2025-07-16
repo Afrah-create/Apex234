@@ -17,9 +17,6 @@ class VendorDashboardController extends Controller
     public function inventorySummary(): JsonResponse
     {
         $vendor = Auth::user()->vendor;
-<<<<<<< HEAD
-        $productIds = YogurtProduct::where('vendor_id', $vendor->id)->where('status', 'active')->pluck('id');
-=======
         if (!$vendor) {
             return response()->json([
                 'total_products' => 0,
@@ -33,7 +30,6 @@ class VendorDashboardController extends Controller
         }
         $inventoryQuery = \App\Models\Inventory::where('vendor_id', $vendor->id);
         $productIds = $inventoryQuery->pluck('yogurt_product_id')->unique();
->>>>>>> b3d5b65b79d7cdae13e09e94d0ae82735a492ac2
         $summary = [
             'total_products' => $productIds->count(),
             'total_available' => $inventoryQuery->sum('quantity_available'),
@@ -50,10 +46,6 @@ class VendorDashboardController extends Controller
     public function inventoryChart(): JsonResponse
     {
         $vendor = Auth::user()->vendor;
-<<<<<<< HEAD
-        $products = YogurtProduct::where('vendor_id', $vendor->id)->where('status', 'active')->get();
-        $inventoryData = Inventory::whereIn('yogurt_product_id', $products->pluck('id'))
-=======
         if (!$vendor) {
             return response()->json([
                 'labels' => [],
@@ -61,7 +53,6 @@ class VendorDashboardController extends Controller
             ]);
         }
         $inventoryData = \App\Models\Inventory::where('vendor_id', $vendor->id)
->>>>>>> b3d5b65b79d7cdae13e09e94d0ae82735a492ac2
             ->join('yogurt_products', 'inventories.yogurt_product_id', '=', 'yogurt_products.id')
             ->select(
                 'yogurt_products.product_name as product_name',
@@ -112,11 +103,6 @@ class VendorDashboardController extends Controller
     public function orderStatus(): JsonResponse
     {
         $vendor = Auth::user()->vendor;
-<<<<<<< HEAD
-        $productIds = YogurtProduct::where('vendor_id', $vendor->id)->pluck('id');
-        $orderIds = \App\Models\OrderItem::whereIn('yogurt_product_id', $productIds)->pluck('order_id')->unique();
-        $orders = Order::whereIn('id', $orderIds)
-=======
         if (!$vendor) {
             return response()->json([
                 'pending' => 0,
@@ -129,7 +115,6 @@ class VendorDashboardController extends Controller
         $orders = \App\Models\Order::whereHas('orderItems.yogurtProduct', function($q) use ($vendor) {
                 $q->where('vendor_id', $vendor->id);
             })
->>>>>>> b3d5b65b79d7cdae13e09e94d0ae82735a492ac2
             ->select('order_status', DB::raw('COUNT(*) as count'))
             ->groupBy('order_status')
             ->get();
@@ -148,25 +133,11 @@ class VendorDashboardController extends Controller
     // Raw material statistics for vendor (all materials)
     public function rawMaterialStats(): JsonResponse
     {
-<<<<<<< HEAD
-=======
         $vendorId = Auth::id();
->>>>>>> b3d5b65b79d7cdae13e09e94d0ae82735a492ac2
         $materialTypes = ['milk', 'sugar', 'fruit'];
         $statuses = ['available', 'expired', 'disposed'];
         $result = [];
         foreach ($materialTypes as $type) {
-<<<<<<< HEAD
-            $stats = DB::table('raw_materials')
-                ->where('material_type', $type)
-                ->select(
-                    DB::raw('SUM(available) as available'),
-                    DB::raw('SUM(in_use) as in_use'),
-                    DB::raw('SUM(expired) as expired'),
-                    DB::raw('SUM(disposed) as disposed')
-                )->first();
-=======
->>>>>>> b3d5b65b79d7cdae13e09e94d0ae82735a492ac2
             $result[ucfirst($type)] = [
                 'available' => 0,
                 'expired' => 0,
@@ -192,13 +163,6 @@ class VendorDashboardController extends Controller
     public function productionSummary(): JsonResponse
     {
         $vendor = Auth::user()->vendor;
-<<<<<<< HEAD
-        $productIds = YogurtProduct::where('vendor_id', $vendor->id)->pluck('id');
-        $batchesProduced = Inventory::whereIn('yogurt_product_id', $productIds)->count();
-        $unitsProduced = Inventory::whereIn('yogurt_product_id', $productIds)->sum('quantity_available');
-        $unitsSold = Inventory::whereIn('yogurt_product_id', $productIds)->sum('quantity_reserved');
-        $unitsInInventory = Inventory::whereIn('yogurt_product_id', $productIds)->sum('quantity_available');
-=======
         if (!$vendor) {
             return response()->json([
                 'batches_produced' => 0,
@@ -212,7 +176,6 @@ class VendorDashboardController extends Controller
         $unitsProduced = $inventoryQuery->sum('quantity_available');
         $unitsSold = $inventoryQuery->sum('quantity_reserved');
         $unitsInInventory = $inventoryQuery->sum('quantity_available');
->>>>>>> b3d5b65b79d7cdae13e09e94d0ae82735a492ac2
         return response()->json([
             'batches_produced' => $batchesProduced,
             'units_produced' => $unitsProduced,

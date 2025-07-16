@@ -379,14 +379,10 @@ Route::middleware(['auth', 'verified'])->get('/vendor/deliveries', [\App\Http\Co
 Route::middleware(['auth'])->get('/api/cart', [\App\Http\Controllers\CartController::class, 'getCart']);
 Route::middleware(['auth'])->post('/api/cart', [\App\Http\Controllers\CartController::class, 'saveCart']);
 
-<<<<<<< HEAD
-Route::get('/help', [\App\Http\Controllers\HelpController::class, 'index'])->name('help.index');
-=======
 // Prefer the new closure-based /help route
 Route::get('/help', function () {
     return view('help.index');
 })->name('help.index');
->>>>>>> b3d5b65b79d7cdae13e09e94d0ae82735a492ac2
 
 require __DIR__.'/auth.php';
 
@@ -515,19 +511,11 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::delete('/{id}', [\App\Http\Controllers\AdminDistributionCenterController::class, 'destroy'])->name('destroy');
 });
 
-<<<<<<< HEAD
 Route::post('/driver/orders/{order}/proof', [\App\Http\Controllers\DriverOrderController::class, 'uploadProof'])->name('driver.orders.proof');
 Route::post('/vendor/orders/{order}/assign-driver', [\App\Http\Controllers\VendorOrderController::class, 'assignDriver'])->name('vendor.orders.assignDriver');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/vendor/assign-driver', [\App\Http\Controllers\VendorOrderController::class, 'showAssignDriverForm'])->name('vendor.assign-driver');
 });
-=======
-Route::middleware(['auth', 'verified'])->get('/vendor/my-reports', [\App\Http\Controllers\VendorDashboardController::class, 'myReports'])->name('vendor.my-reports');
-Route::middleware(['auth', 'verified'])->get('/vendor/reports', [\App\Http\Controllers\VendorDashboardController::class, 'reportsPage'])->name('vendor.reports');
-Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])
-    ->get('/admin/distribution-centers/{id}/vendor-inventory-stats', [\App\Http\Controllers\AdminDistributionCenterController::class, 'vendorInventoryStats']);
 
-Route::middleware(['auth', 'verified'])->get('/supplier/reports', [\App\Http\Controllers\SupplierDashboardController::class, 'reportsPage'])->name('supplier.reports');
-Route::middleware(['auth', 'verified'])->get('/supplier/my-reports', [\App\Http\Controllers\SupplierDashboardController::class, 'myReports'])->name('supplier.my-reports');
->>>>>>> b3d5b65b79d7cdae13e09e94d0ae82735a492ac2
+Route::middleware(['auth', 'verified'])->get('/vendor/reports', [\App\Http\Controllers\VendorDashboardController::class, 'reportsPage'])->name('vendor.reports');
