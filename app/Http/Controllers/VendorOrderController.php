@@ -305,4 +305,48 @@ class VendorOrderController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    public function assignDriver(Request $request, $orderId)
+    {
+        $request->validate([
+            'driver_id' => 'required|exists:drivers,id',
+        ]);
+
+        $order = \App\Models\Order::findOrFail($orderId);
+
+        // Ensure the driver belongs to the vendor (supplier_id == vendor id)
+        $vendor = auth()->user()->vendor;
+        $driver = \App\Models\Driver::where('id', $request->driver_id)
+            ->where('supplier_id', $vendor->id)
+            ->firstOrFail();
+
+        $order->driver_id = $driver->id;
+        $order->order_status = 'out_for_delivery';
+        $order->save();
+
+        // Optionally: notify the driver
+
+        return back()->with('success', 'Driver assigned successfully!');
+    }
+
+    /**
+     * Show the form for assigning drivers to orders (Vendor UI)
+     */
+    public function showAssignDriverForm()
+    {
+        $vendor = Auth::user()->vendor;
+        $vendorId = $vendor->id;
+        // Get all orders for this vendor that need driver assignment
+        $orders = \App\Models\Order::whereHas('orderItems.yogurtProduct', function($q) use ($vendorId) {
+            $q->where('vendor_id', $vendorId);
+        })
+        ->whereNull('driver_id')
+        ->where('order_status', 'confirmed')
+        ->get();
+        // Get all employees for this vendor with role 'Driver'
+        $drivers = \App\Models\Employee::where('vendor_id', $vendorId)
+            ->where('role', 'Driver')
+            ->get();
+        return view('vendor.assign-driver', compact('orders', 'drivers'));
+    }
 } 

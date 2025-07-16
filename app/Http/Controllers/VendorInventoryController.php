@@ -81,7 +81,6 @@ class VendorInventoryController extends Controller
                 'created_at',
                 'updated_at'
             ])
-            ->where('vendor_id', $vendorId)
             ->where('status', 'available')
             ->get()
             ->map(function($material) {
@@ -116,6 +115,7 @@ class VendorInventoryController extends Controller
     // Create new product inventory
     public function storeProductInventory(Request $request): JsonResponse
     {
+        $vendor = Auth::user()->vendor;
         $request->validate([
             'product_name' => 'required|string|in:' . implode(',', array_column($this->allowedProducts, 'product_name')),
             'batch_number' => 'required|string|unique:inventories,batch_number',
@@ -133,7 +133,7 @@ class VendorInventoryController extends Controller
         ]);
 
         // Get the product
-        $product = YogurtProduct::where('product_name', $request->product_name)->first();
+        $product = YogurtProduct::where('vendor_id', $vendor->id)->where('product_name', $request->product_name)->first();
         if (!$product) {
             return response()->json(['error' => 'Product not found'], 404);
         }
@@ -394,7 +394,6 @@ class VendorInventoryController extends Controller
         
         // Product inventory summary for this vendor only
         $productSummary = Inventory::with(['yogurtProduct'])
-            ->where('vendor_id', $vendorId)
             ->whereHas('yogurtProduct', function($query) {
                 $query->whereIn('product_name', array_column($this->allowedProducts, 'product_name'));
             })

@@ -115,12 +115,41 @@
                                 </td>
                                 <td>{{ $delivery->created_at->format('M d, Y') }}</td>
                                 <td class="action-buttons">
-                                    @if($delivery->status === 'pending')
-                                        <button class="action-btn action-primary">Start</button>
-                                    @elseif($delivery->status === 'in_progress')
-                                        <button class="action-btn action-success">Complete</button>
-                                    @endif
-                                    <button class="action-btn action-secondary">View</button>
+                                    <button class="action-btn action-secondary" onclick="toggleOrderDetails({{ $delivery->id }})">View</button>
+                                </td>
+                            </tr>
+                            <tr id="order-details-{{ $delivery->id }}" style="display:none; background:#f9f9f9;">
+                                <td colspan="6">
+                                    <div style="padding:16px;">
+                                        <strong>Order Details</strong><br>
+                                        <ul>
+                                            <li><b>Retailer:</b> {{ $delivery->retailer->store_name ?? 'N/A' }}</li>
+                                            <li><b>Address:</b> {{ $delivery->delivery_address }}</li>
+                                            <li><b>Contact:</b> {{ $delivery->recipient_name ?? 'N/A' }} ({{ $delivery->recipient_phone ?? 'N/A' }})</li>
+                                            <li><b>Order Number:</b> {{ $delivery->order->order_number ?? 'N/A' }}</li>
+                                            <li><b>Order Items:</b>
+                                                <ul>
+                                                @foreach($delivery->order->orderItems as $item)
+                                                    <li>{{ $item->yogurtProduct->product_name ?? 'Product' }} - {{ $item->quantity }} x {{ $item->unit_price }} UGX</li>
+                                                @endforeach
+                                                </ul>
+                                            </li>
+                                        </ul>
+                                        @if($delivery->order->order_status === 'out_for_delivery')
+                                        <form action="{{ route('driver.orders.proof', $delivery->order->id) }}" method="POST" enctype="multipart/form-data" style="margin-top:12px;">
+                                            @csrf
+                                            <label for="proof_photo">Upload Proof of Delivery (Photo):</label>
+                                            <input type="file" name="proof_photo" accept="image/*" required>
+                                            <button type="submit" class="btn btn-success">Mark as Delivered</button>
+                                        </form>
+                                        @endif
+                                        @if($delivery->order->proof_photo)
+                                            <div style="margin-top:12px;">
+                                                <strong>Proof of Delivery:</strong><br>
+                                                <img src="{{ asset('storage/' . $delivery->order->proof_photo) }}" style="max-width:300px;">
+                                            </div>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach

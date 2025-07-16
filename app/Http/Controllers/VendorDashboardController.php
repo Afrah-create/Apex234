@@ -206,7 +206,7 @@ class VendorDashboardController extends Controller
             // Low stock products
             $lowStockProducts = \App\Models\Inventory::with('yogurtProduct')
                 ->where('quantity_available', '<=', 5)
-                ->whereHas('yogurtProduct', function($q) { $q->where('status', 'active'); })
+                ->whereHas('yogurtProduct', function($q) use ($vendor) { $q->where('status', 'active')->where('vendor_id', $vendor->id); })
                 ->get()
                 ->map(function($inv) {
                     return [
