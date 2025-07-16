@@ -21,10 +21,69 @@ class OrderProcessingService
      */
     public function processCustomerOrder(Order $order)
     {
+        if ($order->order_type === 'bulk') {
+            DB::beginTransaction();
+            try {
+                $orderItems = $order->orderItems()->with('yogurtProduct')->get();
+                $partiallyFulfilled = [];
+                $anyPartial = false;
+                foreach ($orderItems as $item) {
+                    $product = $item->yogurtProduct;
+                    if (!$product) continue;
+                    $distributionCenterId = $order->distribution_center_id;
+                    $vendorId = $product->vendor_id;
+                    $inventory = \App\Models\Inventory::where('yogurt_product_id', $product->id)
+                        ->where('vendor_id', $vendorId)
+                        ->when($distributionCenterId, function($query) use ($distributionCenterId) {
+                            return $query->where('distribution_center_id', $distributionCenterId);
+                        })
+                        ->orderByDesc('quantity_available')
+                        ->first();
+                    $available = $inventory ? $inventory->quantity_available : 0;
+                    $toFulfill = min($item->quantity, $available);
+                    if ($toFulfill < $item->quantity) {
+                        $anyPartial = true;
+                        $partiallyFulfilled[] = [
+                            'product_name' => $product->product_name,
+                            'requested' => $item->quantity,
+                            'fulfilled' => $toFulfill
+                        ];
+                    }
+                    // Update order item to actual fulfilled quantity
+                    $item->fulfilled_quantity = $toFulfill;
+                    $item->save();
+                    // Deduct inventory
+                    if ($inventory) {
+                        $inventory->quantity_available = max(0, $inventory->quantity_available - $toFulfill);
+                        $inventory->save();
+                    }
+                }
+                $order->update([
+                    'order_status' => 'confirmed',
+                    'notes' => $order->notes . ($anyPartial ? ' [Partially fulfilled: some items were only partially fulfilled due to limited inventory]' : ' [Auto-confirmed by system]')
+                ]);
+                if (!$order->distribution_center_id) {
+                    $distributionCenter = $this->assignDistributionCenter($order);
+                    $order->update(['distribution_center_id' => $distributionCenter->id]);
+                }
+                $this->sendOrderConfirmation($order, $partiallyFulfilled);
+                DB::commit();
+                Log::info('Customer bulk order processed with partial fulfillment', ['order_id' => $order->id]);
+                return true;
+            } catch (\Exception $e) {
+                DB::rollBack();
+                Log::error('Bulk order processing failed', [
+                    'order_id' => $order->id,
+                    'error' => $e->getMessage()
+                ]);
+                return false;
+            }
+        }
+
         // If bulk order, require admin approval before processing
         if ($order->order_type === 'bulk') {
             $order->update([
-                'order_status' => 'pending_admin_approval',
+                'order_status' => 'pending',
                 'notes' => $order->notes . ' [Pending admin approval for bulk order]'
             ]);
             Log::info('Bulk order requires admin approval', ['order_id' => $order->id]);
@@ -336,16 +395,16 @@ class OrderProcessingService
     /**
      * Send order confirmation
      */
-    private function sendOrderConfirmation(Order $order)
+    private function sendOrderConfirmation(Order $order, $partiallyFulfilled = [])
     {
         try {
             $user = $order->customer;
             $orderItems = $order->orderItems()->with('yogurtProduct')->get();
-            
             Mail::send('emails.order-confirmation', [
                 'order' => $order,
                 'user' => $user,
-                'orderItems' => $orderItems
+                'orderItems' => $orderItems,
+                'partiallyFulfilled' => $partiallyFulfilled
             ], function ($message) use ($user, $order) {
                 $message->to($user->email, $user->name)
                         ->subject('Order Confirmed - ' . $order->order_number);

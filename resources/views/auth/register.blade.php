@@ -1,115 +1,195 @@
-<x-guest-layout>
-    <form method="POST" action="{{ route('register') }}">
-        
-        <div class="heading">
-            <h1 class="header text-center", style="font-weight: bold">Create An Account</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Register - Caramel Supply Chain Management</title>
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
+    <style>
+        body {
+            background: #f7f8fa;
+        }
+        .auth-container, .login-container, .register-container {
+            max-width: 420px;
+            margin: 48px auto;
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 6px 32px rgba(0,0,0,0.10);
+            padding: 2.5rem 2rem 2rem 2rem;
+        }
+        .auth-header, .login-header, .register-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .auth-logo, .login-logo, .register-logo {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            margin-bottom: 0.75rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+        }
+        .auth-title, .login-title, .register-title {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 0.2rem;
+            text-align: center;
+        }
+        .auth-subtitle, .login-subtitle, .register-subtitle {
+            font-size: 1.05rem;
+            color: #4CAF50;
+            text-align: center;
+            margin-bottom: 0.7rem;
+        }
+        form {
+            margin-top: 0;
+        }
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+        .form-group label {
+            font-weight: 500;
+            margin-bottom: 0.4rem;
+            display: block;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 0.7rem 0.9rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            margin-top: 0.2rem;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+        .status-message, .error-message {
+            margin-bottom: 1rem;
+            font-size: 0.98rem;
+        }
+        .status-message {
+            color: #2563eb;
+        }
+        .error-message {
+            color: #e53e3e;
+        }
+        .action-btn, .auth-login-form button, .auth-login-form .x-primary-button {
+            width: 100%;
+            background: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.85rem 0;
+            font-size: 1.08rem;
+            font-weight: 600;
+            margin-top: 1.2rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .action-btn:hover, .auth-login-form button:hover, .auth-login-form .x-primary-button:hover {
+            background: #388e3c;
+        }
+        .link {
+            color: #2563eb;
+            text-decoration: underline;
+            font-size: 0.98rem;
+        }
+        @media (max-width: 600px) {
+            .auth-container, .login-container, .register-container {
+                padding: 1.2rem 0.5rem 1.5rem 0.5rem;
+                max-width: 98vw;
+            }
+            .auth-title, .login-title, .register-title {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body style="background: #fff;">
+    <div class="register-container">
+        <div class="register-header">
+            <img src="{{ asset('/images/apex-logo.png') }}" alt="Caramel Yoghurt Logo" class="register-logo">
+            <div class="register-title">Caramel Supply Chain Management</div>
+            <div class="register-subtitle">Create your account</div>
         </div>
-        @csrf
-
-        <!-- Name -->
-        <div>
-            <x-input-label for="name" :value="__('Name')" />
-            <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
-            <x-input-error :messages="$errors->get('name')" class="mt-2" />
-        </div>
-
-        <!-- Email Address -->
-        <div class="mt-4">
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
-        </div>
-
-        <!-- Role Selection -->
-        <div class="mt-4">
-            <x-input-label for="role" :value="__('Register as')" />
-            <select id="role" name="role" class="block mt-1 w-full" required>
-                <option value="retailer" {{ old('role') == 'retailer' ? 'selected' : '' }}>Retailer</option>
-                <option value="supplier" {{ old('role') == 'supplier' ? 'selected' : '' }}>Supplier</option>
-                <option value="vendor" {{ old('role') == 'vendor' ? 'selected' : '' }}>Vendor</option>
-                <option value="customer" {{ old('role') == 'customer' ? 'selected' : '' }}>Customer</option>
-            </select>
-            <x-input-error :messages="$errors->get('role')" class="mt-2" />
-        </div>
-
-        <!-- Vendor-specific fields (initially hidden) -->
-        <div id="vendor-fields" class="mt-4" style="display: none;">
-            <div class="mt-4">
-                <x-input-label for="business_name" :value="__('Business Name')" />
-                <x-text-input id="business_name" class="block mt-1 w-full" type="text" name="business_name" :value="old('business_name')" />
-                <x-input-error :messages="$errors->get('business_name')" class="mt-2" />
+        <form method="POST" action="{{ route('register') }}">
+            @csrf
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input id="name" class="form-group input" type="text" name="name" value="{{ old('name') }}" required autofocus autocomplete="name" />
+                <x-input-error :messages="$errors->get('name')" class="error-message" />
             </div>
-
-            <div class="mt-4">
-                <x-input-label for="business_address" :value="__('Business Address')" />
-                <textarea id="business_address" name="business_address" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" rows="3">{{ old('business_address') }}</textarea>
-                <x-input-error :messages="$errors->get('business_address')" class="mt-2" />
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input id="email" class="form-group input" type="email" name="email" value="{{ old('email') }}" required autocomplete="username" />
+                <x-input-error :messages="$errors->get('email')" class="error-message" />
             </div>
-
-            <div class="mt-4">
-                <x-input-label for="phone_number" :value="__('Phone Number')" />
-                <x-text-input id="phone_number" class="block mt-1 w-full" type="text" name="phone_number" :value="old('phone_number')" />
-                <x-input-error :messages="$errors->get('phone_number')" class="mt-2" />
+            <div class="form-group">
+                <label for="role">Register as</label>
+                <select id="role" name="role" class="form-group input" required>
+                    <option value="retailer" {{ old('role') == 'retailer' ? 'selected' : '' }}>Retailer</option>
+                    <option value="supplier" {{ old('role') == 'supplier' ? 'selected' : '' }}>Supplier</option>
+                    <option value="vendor" {{ old('role') == 'vendor' ? 'selected' : '' }}>Vendor</option>
+                    <option value="customer" {{ old('role') == 'customer' ? 'selected' : '' }}>Customer</option>
+                </select>
+                <x-input-error :messages="$errors->get('role')" class="error-message" />
             </div>
-
-            <div class="mt-4">
-                <x-input-label for="tax_id" :value="__('Tax ID (Optional)')" />
-                <x-text-input id="tax_id" class="block mt-1 w-full" type="text" name="tax_id" :value="old('tax_id')" />
-                <x-input-error :messages="$errors->get('tax_id')" class="mt-2" />
+            <div id="vendor-fields" style="display: none;">
+                <div class="form-group">
+                    <label for="business_name">Business Name</label>
+                    <input id="business_name" class="form-group input" type="text" name="business_name" value="{{ old('business_name') }}" />
+                    <x-input-error :messages="$errors->get('business_name')" class="error-message" />
+                </div>
+                <div class="form-group">
+                    <label for="business_address">Business Address</label>
+                    <textarea id="business_address" name="business_address" class="form-group input" rows="3">{{ old('business_address') }}</textarea>
+                    <x-input-error :messages="$errors->get('business_address')" class="error-message" />
+                </div>
+                <div class="form-group">
+                    <label for="phone_number">Phone Number</label>
+                    <input id="phone_number" class="form-group input" type="text" name="phone_number" value="{{ old('phone_number') }}" />
+                    <x-input-error :messages="$errors->get('phone_number')" class="error-message" />
+                </div>
+                <div class="form-group">
+                    <label for="tax_id">Tax ID (Optional)</label>
+                    <input id="tax_id" class="form-group input" type="text" name="tax_id" value="{{ old('tax_id') }}" />
+                    <x-input-error :messages="$errors->get('tax_id')" class="error-message" />
+                </div>
+                <div class="form-group">
+                    <label for="business_license">Business License (Optional)</label>
+                    <input id="business_license" class="form-group input" type="text" name="business_license" value="{{ old('business_license') }}" />
+                    <x-input-error :messages="$errors->get('business_license')" class="error-message" />
+                </div>
+                <div class="form-group">
+                    <label for="description">Business Description (Optional)</label>
+                    <textarea id="description" name="description" class="form-group input" rows="3">{{ old('description') }}</textarea>
+                    <x-input-error :messages="$errors->get('description')" class="error-message" />
+                </div>
             </div>
-
-            <div class="mt-4">
-                <x-input-label for="business_license" :value="__('Business License (Optional)')" />
-                <x-text-input id="business_license" class="block mt-1 w-full" type="text" name="business_license" :value="old('business_license')" />
-                <x-input-error :messages="$errors->get('business_license')" class="mt-2" />
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input id="password" class="form-group input" type="password" name="password" required autocomplete="new-password" />
+                <x-input-error :messages="$errors->get('password')" class="error-message" />
             </div>
-
-            <div class="mt-4">
-                <x-input-label for="description" :value="__('Business Description (Optional)')" />
-                <textarea id="description" name="description" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" rows="3">{{ old('description') }}</textarea>
-                <x-input-error :messages="$errors->get('description')" class="mt-2" />
+            <div class="form-group">
+                <label for="password_confirmation">Confirm Password</label>
+                <input id="password_confirmation" class="form-group input" type="password" name="password_confirmation" required autocomplete="new-password" />
+                <x-input-error :messages="$errors->get('password_confirmation')" class="error-message" />
             </div>
-        </div>
-
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
-
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="new-password" />
-
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-        </div>
-
-        <!-- Confirm Password -->
-        <div class="mt-4">
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
-
-            <x-text-input id="password_confirmation" class="block mt-1 w-full"
-                            type="password"
-                            name="password_confirmation" required autocomplete="new-password" />
-
-            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
-        </div>
-
-        <div class="flex items-center justify-end mt-4">
-            <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login') }}">
-                {{ __('Already registered?') }}
-            </a>
-
-            <x-primary-button class="ms-4">
-                {{ __('Register') }}
-            </x-primary-button>
-        </div>
-    </form>
-
+            <div class="form-group" style="display: flex; justify-content: flex-end; align-items: center; gap: 1rem; margin-top: 1.5rem;">
+                <a href="{{ route('login') }}" class="link">Already registered?</a>
+                <button type="submit" class="action-btn">Register</button>
+            </div>
+        </form>
+    </div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const roleSelect = document.getElementById('role');
             const vendorFields = document.getElementById('vendor-fields');
-            
             function toggleVendorFields() {
                 if (roleSelect.value === 'vendor') {
                     vendorFields.style.display = 'block';
@@ -117,13 +197,11 @@
                     vendorFields.style.display = 'none';
                 }
             }
-            
             // Initial check
             toggleVendorFields();
-            
             // Listen for changes
             roleSelect.addEventListener('change', toggleVendorFields);
         });
     </script>
-    
-</x-guest-layout>
+</body>
+</html>

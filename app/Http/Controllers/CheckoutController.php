@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use App\Services\BatchProductionService;
 
 class CheckoutController extends Controller
 {
@@ -123,6 +124,39 @@ class CheckoutController extends Controller
         if (!$distributionCenterId) {
             return back()->with('error', 'Unfortunately, we are unable to fulfill your order at this time because no distribution center currently has enough stock for all the items in your cart. Please adjust your cart or try again later. For assistance, contact customer support.');
         }
+
+        // --- Automatic Batch Production for Insufficient Inventory ---
+        // REMOVE the following block:
+        // $batchService = new BatchProductionService();
+        // foreach ($cartItems as $item) {
+        //     $product = $item->product;
+        //     $vendorId = $product->vendor_id;
+        //     $inventory = \App\Models\Inventory::where('distribution_center_id', $distributionCenterId)
+        //         ->where('yogurt_product_id', $product->id)
+        //         ->where('vendor_id', $vendorId)
+        //         ->first();
+        //     $available = $inventory ? $inventory->quantity_available : 0;
+        //     if ($available < $item->quantity) {
+        //         // Calculate shortfall and attempt to produce batch
+        //         $shortfall = $item->quantity - $available;
+        //         $unitsPerBatch = 10; // Should match BatchProductionService
+        //         $batchesNeeded = (int) ceil($shortfall / $unitsPerBatch);
+        //         $result = $batchService->produceBatch($vendorId, $product->id, $batchesNeeded);
+        //         if (!$result['success']) {
+        //             return back()->with('error', 'Order failed: ' . $result['message']);
+        //         }
+        //         // Re-fetch inventory after production
+        //         $inventory = \App\Models\Inventory::where('distribution_center_id', $distributionCenterId)
+        //             ->where('yogurt_product_id', $product->id)
+        //             ->where('vendor_id', $vendorId)
+        //             ->first();
+        //         $available = $inventory ? $inventory->quantity_available : 0;
+        //         if ($available < $item->quantity) {
+        //             return back()->with('error', 'Order failed: Unable to produce enough stock for ' . $product->product_name);
+        //         }
+        //     }
+        // }
+        // --- End Automatic Batch Production ---
 
         DB::beginTransaction();
         try {
@@ -400,11 +434,11 @@ class CheckoutController extends Controller
                     $allAvailable = false;
                     break;
                 }
-                // Check inventory for this product at this center
-                $inventory = \App\Models\Inventory::where('distribution_center_id', $center->id)
+                // Check total inventory for this product at this center (sum across all records)
+                $totalAvailable = \App\Models\Inventory::where('distribution_center_id', $center->id)
                     ->where('yogurt_product_id', $product->id)
-                    ->first();
-                if (!$inventory || $inventory->quantity_available < $item->quantity) {
+                    ->sum('quantity_available');
+                if ($totalAvailable < $item->quantity) {
                     $allAvailable = false;
                     break;
                 }

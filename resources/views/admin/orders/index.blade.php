@@ -237,7 +237,6 @@
               <option value="confirmed">Confirmed</option>
               <option value="delivered">Delivered</option>
               <option value="cancelled">Cancelled</option>
-              <option value="pending_admin_approval">Pending Admin Approval</option>
             </select>
           </div>
           <div class="form-group mb-2">
@@ -299,51 +298,79 @@
             loadingState.classList.add('hidden');
             emptyState.classList.add('hidden');
 
-            tbody.innerHTML = filteredData.map(order => `
-                <tr class="hover:bg-gray-50">
-                    <td class="px-4 py-4 whitespace-nowrap text-sm">
-                        <input type="checkbox" class="order-checkbox" value="${order.id}" onchange="updateBulkActionsBar()">
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        #${order.order_number}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${order.order_type || ''}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${order.customer_name || ''}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${order.retailer_name || ''}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${order.order_date ? new Date(order.order_date).toLocaleDateString() : ''}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${order.delivery_address || ''}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${order.total_amount ? parseFloat(order.total_amount).toLocaleString() + ' UGX' : ''}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.order_status)}">
-                            ${order.order_status ? order.order_status.charAt(0).toUpperCase() + order.order_status.slice(1) : ''}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getPaymentStatusColor(order.payment_status)}">
-                            ${order.payment_status ? order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1) : ''}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div class="flex space-x-2">
-                            <button onclick="viewOrder(${order.id})" class="text-blue-600 hover:text-blue-900">View</button>
-                            <button onclick="openStatusModal(${order.id}, '${order.order_status}')" class="text-purple-600 hover:text-purple-900">Status</button>
-                            <button onclick="deleteOrder(${order.id})" class="text-red-600 hover:text-red-900">Delete</button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
+            // Sort orders by date/time descending
+            const sorted = [...filteredData].sort((a, b) => new Date(b.order_date) - new Date(a.order_date));
+
+            // Group orders by date
+            const groups = {};
+            const today = new Date();
+            const yesterday = new Date();
+            yesterday.setDate(today.getDate() - 1);
+            function formatDate(dateStr) {
+                const d = new Date(dateStr);
+                if (d.toDateString() === today.toDateString()) return 'Today';
+                if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
+                return d.toLocaleDateString();
+            }
+            sorted.forEach(order => {
+                const group = formatDate(order.order_date);
+                if (!groups[group]) groups[group] = [];
+                groups[group].push(order);
+            });
+
+            // Render grouped orders
+            let html = '';
+            Object.keys(groups).forEach(group => {
+                html += `<tr><td colspan="11" style="background:#f3f4f6; font-weight:600; color:#2563eb; padding:12px 0 6px 16px; font-size:1.08rem;">${group}</td></tr>`;
+                groups[group].forEach(order => {
+                    html += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-4 whitespace-nowrap text-sm">
+                            <input type="checkbox" class="order-checkbox" value="${order.id}" onchange="updateBulkActionsBar()">
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            #${order.order_number}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${order.order_type || ''}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${order.customer_name || ''}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${order.retailer_name || ''}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${order.order_date ? new Date(order.order_date).toLocaleDateString() : ''}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${order.delivery_address || ''}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${order.total_amount ? parseFloat(order.total_amount).toLocaleString() + ' UGX' : ''}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.order_status)}">
+                                ${order.order_status ? order.order_status.charAt(0).toUpperCase() + order.order_status.slice(1) : ''}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getPaymentStatusColor(order.payment_status)}">
+                                ${order.payment_status ? order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1) : ''}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex space-x-2">
+                                <button onclick="viewOrder(${order.id})" class="text-blue-600 hover:text-blue-900">View</button>
+                                <button onclick="openStatusModal(${order.id}, '${order.order_status}')" class="text-purple-600 hover:text-purple-900">Status</button>
+                                <button onclick="deleteOrder(${order.id})" class="text-red-600 hover:text-red-900">Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                    `;
+                });
+            });
+            tbody.innerHTML = html;
         }
 
         // Get status color
@@ -354,8 +381,7 @@
                 'processing': 'bg-purple-100 text-purple-800',
                 'shipped': 'bg-indigo-100 text-indigo-800',
                 'delivered': 'bg-green-100 text-green-800',
-                'cancelled': 'bg-red-100 text-red-800',
-                'pending_admin_approval': 'bg-orange-100 text-orange-800'
+                'cancelled': 'bg-red-100 text-red-800'
             };
             return colors[status] || 'bg-gray-100 text-gray-800';
         }
@@ -378,14 +404,21 @@
             const paymentFilter = document.getElementById('payment-filter').value;
 
             filteredData = ordersData.filter(order => {
-                const matchesSearch = order.order_number.toLowerCase().includes(searchTerm) ||
-                                    order.retailer_name.toLowerCase().includes(searchTerm);
+                // Combine all relevant fields into a single string for searching
+                const combined = [
+                    order.order_number,
+                    order.customer_name,
+                    order.retailer_name,
+                    order.order_date ? new Date(order.order_date).toLocaleDateString() : '',
+                    order.order_status,
+                    order.payment_status,
+                    order.delivery_address
+                ].join(' ').toLowerCase();
+                const matchesSearch = combined.includes(searchTerm);
                 const matchesStatus = !statusFilter || order.order_status === statusFilter;
                 const matchesPayment = !paymentFilter || order.payment_status === paymentFilter;
-
                 return matchesSearch && matchesStatus && matchesPayment;
             });
-
             renderOrdersTable();
         }
 
