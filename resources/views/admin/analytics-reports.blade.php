@@ -7,7 +7,7 @@
     </div>
     <!-- Demand Forecasting Chart -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 class="text-xl font-semibold text-gray-900 mb-6">Demand Forecasting</h2>
+        <h2 class="text-xl font-semibold text-gray-900 mb-6">Demand Forecast</h2>
         <div class="relative" style="height: 300px;">
             <canvas id="demandForecastChart"></canvas>
         </div>

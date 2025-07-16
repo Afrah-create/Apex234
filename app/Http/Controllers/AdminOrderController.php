@@ -130,6 +130,31 @@ class AdminOrderController extends Controller
         return redirect()->route('admin.orders.index')->with('success', 'Payment status updated successfully.');
     }
 
+    /**
+     * Bulk update order status and/or payment status for selected orders
+     */
+    public function bulkUpdate(Request $request)
+    {
+        $data = $request->validate([
+            'order_ids' => 'required|array',
+            'order_ids.*' => 'integer|exists:orders,id',
+            'order_status' => 'nullable|in:pending,confirmed,processing,shipped,delivered,cancelled',
+            'payment_status' => 'nullable|in:pending,paid,failed,refunded',
+        ]);
+        $update = [];
+        if ($data['order_status']) {
+            $update['order_status'] = $data['order_status'];
+        }
+        if ($data['payment_status']) {
+            $update['payment_status'] = $data['payment_status'];
+        }
+        if (empty($update)) {
+            return response()->json(['success' => false, 'message' => 'No fields to update.'], 400);
+        }
+        $count = Order::whereIn('id', $data['order_ids'])->update($update);
+        return response()->json(['success' => true, 'updated' => $count]);
+    }
+
     // Archive a raw material order (admin)
     public function archiveRawMaterialOrder($id)
     {

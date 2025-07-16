@@ -506,14 +506,14 @@ async function cancelOrder(orderId) {
 async function loadProductOrders() {
     try {
         const res = await fetch('/api/vendor/product-orders');
-        const orders = await res.json();
+        let orders = await res.json();
+        // Sort orders by date descending (most recent first)
+        orders.sort((a, b) => (b.date > a.date ? 1 : b.date < a.date ? -1 : 0));
         const tbody = document.getElementById('vendor-product-orders-list');
-        
         if (orders.length === 0) {
             tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-500">No product orders found</td></tr>';
             return;
         }
-        
         tbody.innerHTML = '';
         orders.forEach(order => {
             order.items.forEach(item => {
@@ -521,7 +521,7 @@ async function loadProductOrders() {
                 tr.className = 'border-b hover:bg-gray-50';
                 tr.innerHTML = `
                     <td class="px-4 py-3">${order.date}</td>
-                    <td class="px-4 py-3">${order.retailer}</td>
+                    <td class="px-4 py-3">${order.retailer || order.order_source}</td>
                     <td class="px-4 py-3">${item.product}</td>
                     <td class="px-4 py-3">${item.quantity}</td>
                     <td class="px-4 py-3">

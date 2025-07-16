@@ -156,6 +156,8 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::get('/api/orders-data', [AdminOrderController::class, 'getOrdersData'])->name('api.orders-data');
     Route::get('/api/order-statistics', [AdminOrderController::class, 'getOrderStatistics'])->name('api.order-statistics');
     Route::patch('/{order}/status', [App\Http\Controllers\AdminOrderController::class, 'updateStatus'])->name('admin.orders.updateStatus');
+    // Bulk update route
+    Route::post('/bulk-update', [AdminOrderController::class, 'bulkUpdate'])->name('bulk-update');
 });
 
 // Admin order payment status update

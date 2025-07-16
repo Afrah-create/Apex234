@@ -69,6 +69,11 @@ class AdminDistributionCenterController extends Controller
         $center = DistributionCenter::create($validated);
         if ($request->has('vendors')) {
             $center->vendors()->sync($request->vendors);
+            // Update all inventory for these vendors to this center
+            foreach ($request->vendors as $vendorId) {
+                \App\Models\Inventory::where('vendor_id', $vendorId)
+                    ->update(['distribution_center_id' => $center->id]);
+            }
         }
         return redirect()->route('admin.distribution-centers.index')->with('success', 'Distribution center created!');
     }
@@ -139,6 +144,11 @@ class AdminDistributionCenterController extends Controller
         $center->update($validated);
         if ($request->has('vendors')) {
             $center->vendors()->sync($request->vendors);
+            // Update all inventory for these vendors to this center
+            foreach ($request->vendors as $vendorId) {
+                \App\Models\Inventory::where('vendor_id', $vendorId)
+                    ->update(['distribution_center_id' => $center->id]);
+            }
         }
         return redirect()->route('admin.distribution-centers.index')->with('success', 'Distribution center updated!');
     }

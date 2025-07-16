@@ -21,10 +21,12 @@
 
     <!-- Inventory Summary Stats -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-8 flex flex-wrap gap-6 items-center justify-between">
-        <div>
-            <span class="block text-xs text-gray-500">Total Products</span>
-            <span id="totalProducts" class="text-lg font-bold text-gray-900">-</span>
-        </div>
+        <a href="{{ route('admin.products.index') }}" class="block group focus:outline-none">
+            <div class="cursor-pointer transition transform hover:scale-105 active:scale-100">
+                <span class="block text-xs text-gray-500">Total Products</span>
+                <span id="totalProducts" class="text-lg font-bold text-gray-900 group-hover:text-blue-700 underline">-</span>
+            </div>
+        </a>
         <div>
             <span class="block text-xs text-gray-500">Available</span>
             <span id="totalAvailable" class="text-lg font-bold text-green-700">-</span>
