@@ -511,5 +511,7 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::delete('/{id}', [\App\Http\Controllers\AdminDistributionCenterController::class, 'destroy'])->name('destroy');
 });
 
+Route::middleware(['auth', 'verified'])->get('/vendor/my-reports', [\App\Http\Controllers\VendorDashboardController::class, 'myReports'])->name('vendor.my-reports');
+Route::middleware(['auth', 'verified'])->get('/vendor/reports', [\App\Http\Controllers\VendorDashboardController::class, 'reportsPage'])->name('vendor.reports');
 Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])
     ->get('/admin/distribution-centers/{id}/vendor-inventory-stats', [\App\Http\Controllers\AdminDistributionCenterController::class, 'vendorInventoryStats']);

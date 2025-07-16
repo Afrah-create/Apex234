@@ -244,4 +244,27 @@ class VendorDashboardController extends Controller
         session(['inventory_low_max' => $request->low_max]);
         return back()->with('range_success', 'Inventory status ranges updated!');
     }
+
+    public function myReports(Request $request)
+    {
+        $user = $request->user();
+        $role = $user->getPrimaryRoleName();
+        $userId = $user->id;
+        $email = $user->email;
+
+        $reports = \App\Models\ReportLog::whereHas('scheduledReport', function($q) use ($role, $userId) {
+                $q->where('stakeholder_type', $role)
+                  ->where('stakeholder_id', $userId);
+            })
+            ->orWhereJsonContains('recipients', $email)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json(['data' => $reports]);
+    }
+
+    public function reportsPage()
+    {
+        return view('vendor.my-reports');
+    }
 } 
