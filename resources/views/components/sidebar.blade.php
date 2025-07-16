@@ -105,13 +105,13 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"/></svg>
                     Track Deliveries
                 </a>
-                <a href="#" class="sidebar-link flex items-center gap-2 px-4 py-2 rounded-lg transition hover:bg-blue-800">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"/></svg>
-                    Quality Checks
+                <a href="{{ route('supplier.reports') }}" class="sidebar-link flex items-center gap-2 px-4 py-2 rounded-lg transition hover:bg-blue-800">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg>
+                    My Reports
                 </a>
                 <a href="#" class="sidebar-link flex items-center gap-2 px-4 py-2 rounded-lg transition hover:bg-blue-800">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg>
-                    Analytics & Reports
+                    Analytics
                 </a>
                
             @endif
