@@ -217,8 +217,7 @@ class VendorDashboardController extends Controller
                     ];
                 });
             // Low stock raw materials
-            $lowStockMaterials = \App\Models\RawMaterial::where('vendor_id', $vendor->id)
-                ->where('status', 'available')
+            $lowStockMaterials = \App\Models\RawMaterial::where('status', 'available')
                 ->where('quantity', '<=', 5)
                 ->get()
                 ->map(function($rm) {
@@ -229,7 +228,7 @@ class VendorDashboardController extends Controller
                         'unit' => $rm->unit_of_measure,
                     ];
                 });
-            $lowStockNotifications = $lowStockProducts->merge($lowStockMaterials);
+            $lowStockNotifications = collect($lowStockProducts)->merge(collect($lowStockMaterials));
         }
         return view('dashboard-vendor', compact('vendor', 'employees', 'lowStockNotifications'));
     }
