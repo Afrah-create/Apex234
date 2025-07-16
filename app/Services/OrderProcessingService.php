@@ -9,7 +9,6 @@ use App\Models\User;
 use App\Models\Retailer;
 use App\Models\DistributionCenter;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\OrderStatusUpdate;
@@ -68,26 +67,16 @@ class OrderProcessingService
                 }
                 $this->sendOrderConfirmation($order, $partiallyFulfilled);
                 DB::commit();
-                Log::info('Customer bulk order processed with partial fulfillment', ['order_id' => $order->id]);
+                \Illuminate\Support\Facades\Log::info('Customer bulk order processed with partial fulfillment', ['order_id' => $order->id]);
                 return true;
             } catch (\Exception $e) {
                 DB::rollBack();
-                Log::error('Bulk order processing failed', [
+                \Illuminate\Support\Facades\Log::error('Bulk order processing failed', [
                     'order_id' => $order->id,
                     'error' => $e->getMessage()
                 ]);
                 return false;
             }
-        }
-
-        // If bulk order, require admin approval before processing
-        if ($order->order_type === 'bulk') {
-            $order->update([
-                'order_status' => 'pending',
-                'notes' => $order->notes . ' [Pending admin approval for bulk order]'
-            ]);
-            Log::info('Bulk order requires admin approval', ['order_id' => $order->id]);
-            return false;
         }
 
         DB::beginTransaction();
@@ -124,12 +113,12 @@ class OrderProcessingService
             $this->sendOrderConfirmation($order);
 
             DB::commit();
-            Log::info('Customer order processed successfully', ['order_id' => $order->id]);
+            \Illuminate\Support\Facades\Log::info('Customer order processed successfully', ['order_id' => $order->id]);
             return true;
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Order processing failed', [
+            \Illuminate\Support\Facades\Log::error('Order processing failed', [
                 'order_id' => $order->id,
                 'error' => $e->getMessage()
             ]);
@@ -170,12 +159,12 @@ class OrderProcessingService
             $this->sendRetailerOrderConfirmation($order);
 
             DB::commit();
-            Log::info('Retailer order processed successfully', ['order_id' => $order->id]);
+            \Illuminate\Support\Facades\Log::info('Retailer order processed successfully', ['order_id' => $order->id]);
             return true;
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Retailer order processing failed', [
+            \Illuminate\Support\Facades\Log::error('Retailer order processing failed', [
                 'order_id' => $order->id,
                 'error' => $e->getMessage()
             ]);
@@ -232,7 +221,7 @@ class OrderProcessingService
             $this->sendStatusUpdateNotification($order, $oldStatus, $newStatus);
 
             DB::commit();
-            Log::info('Order status updated', [
+            \Illuminate\Support\Facades\Log::info('Order status updated', [
                 'order_id' => $order->id,
                 'old_status' => $oldStatus,
                 'new_status' => $newStatus
@@ -242,7 +231,7 @@ class OrderProcessingService
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Order status update failed', [
+            \Illuminate\Support\Facades\Log::error('Order status update failed', [
                 'order_id' => $order->id,
                 'new_status' => $newStatus,
                 'error' => $e->getMessage()
@@ -301,7 +290,7 @@ class OrderProcessingService
                 $inventory->quantity_available = max(0, $inventory->quantity_available - $item->quantity);
                 $inventory->save();
             } else {
-                \Log::warning('No inventory record found for deduction', [
+                \Illuminate\Support\Facades\Log::warning('No inventory record found for deduction', [
                     'product_id' => $product->id,
                     'vendor_id' => $vendorId,
                     'distribution_center_id' => $distributionCenterId,
@@ -410,7 +399,7 @@ class OrderProcessingService
                         ->subject('Order Confirmed - ' . $order->order_number);
             });
         } catch (\Exception $e) {
-            Log::error('Failed to send order confirmation', [
+            \Illuminate\Support\Facades\Log::error('Failed to send order confirmation', [
                 'order_id' => $order->id,
                 'error' => $e->getMessage()
             ]);
@@ -437,7 +426,7 @@ class OrderProcessingService
                 });
             }
         } catch (\Exception $e) {
-            Log::error('Failed to send retailer order confirmation', [
+            \Illuminate\Support\Facades\Log::error('Failed to send retailer order confirmation', [
                 'order_id' => $order->id,
                 'error' => $e->getMessage()
             ]);
@@ -460,7 +449,7 @@ class OrderProcessingService
                 $order->retailer->user->notify(new OrderStatusUpdate($order, $oldStatus, $newStatus));
             }
         } catch (\Exception $e) {
-            Log::error('Failed to send status update notification', [
+            \Illuminate\Support\Facades\Log::error('Failed to send status update notification', [
                 'order_id' => $order->id,
                 'error' => $e->getMessage()
             ]);
@@ -485,7 +474,7 @@ class OrderProcessingService
                 });
             }
         } catch (\Exception $e) {
-            Log::error('Failed to send order cancellation notification', [
+            \Illuminate\Support\Facades\Log::error('Failed to send order cancellation notification', [
                 'order_id' => $order->id,
                 'error' => $e->getMessage()
             ]);
@@ -510,7 +499,7 @@ class OrderProcessingService
                 });
             }
         } catch (\Exception $e) {
-            Log::error('Failed to send retailer order pending notification', [
+            \Illuminate\Support\Facades\Log::error('Failed to send retailer order pending notification', [
                 'order_id' => $order->id,
                 'error' => $e->getMessage()
             ]);

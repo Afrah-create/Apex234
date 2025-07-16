@@ -47,7 +47,7 @@ class CustomerOrderController extends Controller
             'order_type' => 'customer',
             'order_number' => 'ORD' . now()->format('YmdHis') . strtoupper(uniqid()),
             'order_date' => now(),
-            'order_status' => 'pending',
+            'order_status' => 'confirmed',
             'delivery_address' => $validated['delivery_address'],
             'delivery_contact' => $validated['delivery_contact'],
             'delivery_phone' => $validated['delivery_phone'],

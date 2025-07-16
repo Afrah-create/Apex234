@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('yogurt_product_id')->constrained()->onDelete('cascade');
             $table->foreignId('quality_check_id')->nullable()->constrained()->onDelete('set null');
             $table->integer('quantity');
+            $table->integer('fulfilled_quantity')->default(0); // Track how much of the item has been fulfilled
             $table->decimal('unit_price', 10, 2);
             $table->decimal('total_price', 12, 2);
             $table->decimal('discount_percentage', 5, 2)->default(0);

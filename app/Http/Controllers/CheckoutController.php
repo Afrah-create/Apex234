@@ -190,7 +190,7 @@ class CheckoutController extends Controller
 
             // Determine order type dynamically
             $totalQuantity = $cartItems->sum('quantity');
-            if ($totalQuantity >= 10) {
+            if ($totalQuantity > 10) {
                 $orderType = 'bulk';
             } elseif ($totalQuantity < 2) {
                 $orderType = 'rush';
@@ -204,7 +204,7 @@ class CheckoutController extends Controller
                 'order_type' => $orderType,
                 'order_number' => 'CUST-' . now()->format('YmdHis') . strtoupper(uniqid()),
                 'order_date' => now(),
-                'order_status' => 'pending',
+                'order_status' => 'confirmed',
                 'subtotal' => $total,
                 'tax_amount' => $taxAmount,
                 'shipping_cost' => $shippingCost,
@@ -282,7 +282,7 @@ class CheckoutController extends Controller
                 }
                 fclose($file);
             } catch (\Exception $e) {
-                \Log::error('Failed to append order to CSV', [
+                \Illuminate\Support\Facades\Log::error('Failed to append order to CSV', [
                     'order_id' => $order->id,
                     'error' => $e->getMessage()
                 ]);
@@ -291,7 +291,7 @@ class CheckoutController extends Controller
 
             DB::commit();
 
-            Log::info('Customer order created successfully', [
+            \Illuminate\Support\Facades\Log::info('Customer order created successfully', [
                 'order_id' => $order->id,
                 'order_number' => $order->order_number,
                 'user_id' => Auth::id(),
@@ -303,7 +303,7 @@ class CheckoutController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Order creation failed', [
+            \Illuminate\Support\Facades\Log::error('Order creation failed', [
                 'user_id' => Auth::id(),
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
