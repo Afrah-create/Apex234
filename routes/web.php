@@ -378,9 +378,7 @@ Route::middleware(['auth', 'verified'])->get('/vendor/deliveries', [\App\Http\Co
 Route::middleware(['auth'])->get('/api/cart', [\App\Http\Controllers\CartController::class, 'getCart']);
 Route::middleware(['auth'])->post('/api/cart', [\App\Http\Controllers\CartController::class, 'saveCart']);
 
-Route::get('/help', function () {
-    return view('help.index');
-})->name('help.index');
+Route::view('/help', 'help.index')->name('help');
 
 Route::middleware(['auth'])->get('/api/notifications/unread', function() {
     $user = auth()->user();
