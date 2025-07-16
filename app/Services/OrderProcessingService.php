@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\OrderStatusUpdate;
+use App\Models\Driver;
 
 class OrderProcessingService
 {
@@ -41,6 +42,9 @@ class OrderProcessingService
                 'order_status' => 'confirmed',
                 'notes' => $order->notes . ' [Auto-confirmed by system]'
             ]);
+
+            // Assign a random driver after confirmation
+            $this->assignRandomDriver($order);
 
             // Reserve inventory
             $this->reserveInventory($order);
@@ -239,6 +243,27 @@ class OrderProcessingService
         }
 
         return $distributionCenter;
+    }
+
+    /**
+     * Assign a random available driver to the order
+     */
+    private function assignRandomDriver(Order $order)
+    {
+        $drivers = Driver::all();
+        if ($drivers->isEmpty()) {
+            // No drivers available
+            return false;
+        }
+        $drivers = $drivers->shuffle();
+        foreach ($drivers as $driver) {
+            // If you add a status or max deliveries check, do it here
+            $order->driver_id = $driver->id;
+            $order->order_status = 'out_for_delivery';
+            $order->save();
+            return true;
+        }
+        return false;
     }
 
     /**

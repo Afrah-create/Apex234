@@ -378,7 +378,7 @@ Route::middleware(['auth', 'verified'])->get('/vendor/deliveries', [\App\Http\Co
 Route::middleware(['auth'])->get('/api/cart', [\App\Http\Controllers\CartController::class, 'getCart']);
 Route::middleware(['auth'])->post('/api/cart', [\App\Http\Controllers\CartController::class, 'saveCart']);
 
-Route::get('/help', [\App\Http\Controllers\HelpController::class, 'index'])->name('help');
+Route::get('/help', [\App\Http\Controllers\HelpController::class, 'index'])->name('help.index');
 
 require __DIR__.'/auth.php';
 
@@ -504,4 +504,11 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::get('/{id}/edit', [\App\Http\Controllers\AdminDistributionCenterController::class, 'edit'])->name('edit');
     Route::put('/{id}', [\App\Http\Controllers\AdminDistributionCenterController::class, 'update'])->name('update');
     Route::delete('/{id}', [\App\Http\Controllers\AdminDistributionCenterController::class, 'destroy'])->name('destroy');
+});
+
+Route::post('/driver/orders/{order}/proof', [\App\Http\Controllers\DriverOrderController::class, 'uploadProof'])->name('driver.orders.proof');
+Route::post('/vendor/orders/{order}/assign-driver', [\App\Http\Controllers\VendorOrderController::class, 'assignDriver'])->name('vendor.orders.assignDriver');
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/vendor/assign-driver', [\App\Http\Controllers\VendorOrderController::class, 'showAssignDriverForm'])->name('vendor.assign-driver');
 });

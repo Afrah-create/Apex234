@@ -35,7 +35,7 @@ class Vendor extends Model
 
     public function yogurtProducts()
     {
-        return $this->hasMany(YogurtProduct::class);
+        return $this->hasMany(\App\Models\YogurtProduct::class, 'vendor_id');
     }
 
     public function orders()

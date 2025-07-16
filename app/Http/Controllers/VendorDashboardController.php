@@ -16,8 +16,8 @@ class VendorDashboardController extends Controller
     // Inventory summary for vendor
     public function inventorySummary(): JsonResponse
     {
-        $vendorId = Auth::id();
-        $productIds = YogurtProduct::where('status', 'active')->pluck('id');
+        $vendor = Auth::user()->vendor;
+        $productIds = YogurtProduct::where('vendor_id', $vendor->id)->where('status', 'active')->pluck('id');
         $summary = [
             'total_products' => $productIds->count(),
             'total_available' => Inventory::whereIn('yogurt_product_id', $productIds)->sum('quantity_available'),
@@ -33,8 +33,8 @@ class VendorDashboardController extends Controller
     // Inventory chart data for vendor
     public function inventoryChart(): JsonResponse
     {
-        $vendorId = Auth::id();
-        $products = YogurtProduct::where('status', 'active')->get();
+        $vendor = Auth::user()->vendor;
+        $products = YogurtProduct::where('vendor_id', $vendor->id)->where('status', 'active')->get();
         $inventoryData = Inventory::whereIn('yogurt_product_id', $products->pluck('id'))
             ->join('yogurt_products', 'inventories.yogurt_product_id', '=', 'yogurt_products.id')
             ->select(
@@ -85,8 +85,11 @@ class VendorDashboardController extends Controller
     // Order status summary for vendor
     public function orderStatus(): JsonResponse
     {
-        $vendorId = Auth::id();
-        $orders = Order::select('order_status', DB::raw('COUNT(*) as count'))
+        $vendor = Auth::user()->vendor;
+        $productIds = YogurtProduct::where('vendor_id', $vendor->id)->pluck('id');
+        $orderIds = \App\Models\OrderItem::whereIn('yogurt_product_id', $productIds)->pluck('order_id')->unique();
+        $orders = Order::whereIn('id', $orderIds)
+            ->select('order_status', DB::raw('COUNT(*) as count'))
             ->groupBy('order_status')
             ->get();
         $statuses = [
@@ -104,19 +107,17 @@ class VendorDashboardController extends Controller
     // Raw material statistics for vendor (all materials)
     public function rawMaterialStats(): JsonResponse
     {
-        $vendorId = auth()->id();
         $materialTypes = ['milk', 'sugar', 'fruit'];
         $result = [];
         foreach ($materialTypes as $type) {
             $stats = DB::table('raw_materials')
                 ->where('material_type', $type)
-                ->where('vendor_id', $vendorId)
-            ->select(
+                ->select(
                     DB::raw('SUM(available) as available'),
                     DB::raw('SUM(in_use) as in_use'),
                     DB::raw('SUM(expired) as expired'),
                     DB::raw('SUM(disposed) as disposed')
-            )->first();
+                )->first();
             $result[ucfirst($type)] = [
                 'available' => (int)($stats->available ?? 0),
                 'in_use' => (int)($stats->in_use ?? 0),
@@ -130,11 +131,12 @@ class VendorDashboardController extends Controller
     // Production summary for vendor
     public function productionSummary(): JsonResponse
     {
-        $vendorId = Auth::id();
-        $batchesProduced = DB::table('inventories')->count();
-        $unitsProduced = DB::table('inventories')->sum('quantity_available');
-        $unitsSold = DB::table('inventories')->sum('quantity_reserved');
-        $unitsInInventory = DB::table('inventories')->sum('quantity_available');
+        $vendor = Auth::user()->vendor;
+        $productIds = YogurtProduct::where('vendor_id', $vendor->id)->pluck('id');
+        $batchesProduced = Inventory::whereIn('yogurt_product_id', $productIds)->count();
+        $unitsProduced = Inventory::whereIn('yogurt_product_id', $productIds)->sum('quantity_available');
+        $unitsSold = Inventory::whereIn('yogurt_product_id', $productIds)->sum('quantity_reserved');
+        $unitsInInventory = Inventory::whereIn('yogurt_product_id', $productIds)->sum('quantity_available');
         return response()->json([
             'batches_produced' => $batchesProduced,
             'units_produced' => $unitsProduced,
@@ -165,7 +167,7 @@ class VendorDashboardController extends Controller
             // Low stock products
             $lowStockProducts = \App\Models\Inventory::with('yogurtProduct')
                 ->where('quantity_available', '<=', 5)
-                ->whereHas('yogurtProduct', function($q) { $q->where('status', 'active'); })
+                ->whereHas('yogurtProduct', function($q) use ($vendor) { $q->where('status', 'active')->where('vendor_id', $vendor->id); })
                 ->get()
                 ->map(function($inv) {
                     return [
@@ -176,8 +178,7 @@ class VendorDashboardController extends Controller
                     ];
                 });
             // Low stock raw materials
-            $lowStockMaterials = \App\Models\RawMaterial::where('vendor_id', $vendor->id)
-                ->where('status', 'available')
+            $lowStockMaterials = \App\Models\RawMaterial::where('status', 'available')
                 ->where('quantity', '<=', 5)
                 ->get()
                 ->map(function($rm) {
@@ -188,7 +189,7 @@ class VendorDashboardController extends Controller
                         'unit' => $rm->unit_of_measure,
                     ];
                 });
-            $lowStockNotifications = $lowStockProducts->merge($lowStockMaterials);
+            $lowStockNotifications = collect($lowStockProducts)->merge(collect($lowStockMaterials));
         }
         return view('dashboard-vendor', compact('vendor', 'employees', 'lowStockNotifications'));
     }

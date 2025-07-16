@@ -21,13 +21,15 @@ class VendorProductController extends Controller
     // List vendor's products
     public function index(): JsonResponse
     {
-        $products = YogurtProduct::where('status', '!=', 'deleted')->get();
+        $vendor = Auth::user()->vendor;
+        $products = \App\Models\YogurtProduct::where('vendor_id', $vendor->id)->where('status', '!=', 'deleted')->get();
         return response()->json($products);
     }
 
     // Add a new product
     public function store(Request $request): JsonResponse
     {
+        $vendor = Auth::user()->vendor;
         $request->validate([
             'name' => 'required|string',
             'type' => 'required|string',
@@ -52,6 +54,7 @@ class VendorProductController extends Controller
             'image_path' => $imagePath,
             'production_facility_id' => 1, // Placeholder, adjust as needed
             'product_code' => uniqid('YOG-'),
+            'vendor_id' => $vendor->id,
         ]);
         // Create inventory record for the new product
         Inventory::create([
@@ -79,7 +82,8 @@ class VendorProductController extends Controller
     // Edit a product
     public function update(Request $request, $id): JsonResponse
     {
-        $product = YogurtProduct::findOrFail($id);
+        $vendor = Auth::user()->vendor;
+        $product = YogurtProduct::where('vendor_id', $vendor->id)->findOrFail($id);
         $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'required|string|max:255',

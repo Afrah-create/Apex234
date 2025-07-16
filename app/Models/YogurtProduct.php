@@ -35,4 +35,9 @@ class YogurtProduct extends Model
     {
         return $this->inventories()->sum('quantity_available');
     }
+
+    public function vendor()
+    {
+        return $this->belongsTo(\App\Models\Vendor::class);
+    }
 } 

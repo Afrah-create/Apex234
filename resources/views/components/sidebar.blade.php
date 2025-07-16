@@ -70,6 +70,10 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg>
                     View Transactions
                 </a>
+                <a href="{{ route('vendor.assign-driver') }}" class="sidebar-link flex items-center gap-2 px-4 py-2 rounded-lg transition hover:bg-indigo-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zm6 14a6 6 0 00-12 0h12z"/></svg>
+                    Assign Drivers to Orders
+                </a>
                
             @elseif($role === 'retailer')
                 <a href="{{ route('dashboard.retailer') }}" class="sidebar-link flex items-center gap-2 px-4 py-2 rounded-lg transition hover:bg-blue-800">
