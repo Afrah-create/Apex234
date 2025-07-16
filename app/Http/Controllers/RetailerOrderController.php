@@ -14,16 +14,24 @@ class RetailerOrderController extends Controller
 {
     public function store(Request $request)
     {
-        $request->validate([
-            'cart' => 'required|array|min:1',
-            'delivery_address' => 'required|string',
-            'delivery_contact' => 'required|string',
-            'delivery_phone' => 'required|string',
-        ]);
+        // Debug: log incoming request
+        \Log::info('RetailerOrderController@store - incoming request', $request->all());
+        try {
+            $request->validate([
+                'cart' => 'required|array|min:1',
+                'delivery_address' => 'required|string',
+                'delivery_contact' => 'required|string',
+                'delivery_phone' => 'required|string',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('RetailerOrderController@store - validation failed', $e->errors());
+            return response()->json(['success' => false, 'message' => 'Validation failed', 'errors' => $e->errors()], 422);
+        }
 
         $user = Auth::user();
         $retailer = Retailer::where('user_id', $user->id)->first();
         if (!$retailer) {
+            \Log::error('RetailerOrderController@store - retailer not found', ['user_id' => $user->id]);
             return response()->json(['success' => false, 'message' => 'Retailer not found.'], 422);
         }
 
@@ -58,7 +66,10 @@ class RetailerOrderController extends Controller
 
             foreach ($request->cart as $item) {
                 $product = YogurtProduct::find($item['id']);
-                if (!$product) continue;
+                if (!$product) {
+                    \Log::error('RetailerOrderController@store - product not found', ['product_id' => $item['id']]);
+                    continue;
+                }
                 OrderItem::create([
                     'order_id' => $order->id,
                     'yogurt_product_id' => $product->id,
@@ -76,9 +87,11 @@ class RetailerOrderController extends Controller
             }
 
             DB::commit();
+            \Log::info('RetailerOrderController@store - order created', ['order_id' => $order->id]);
             return response()->json(['success' => true, 'order_id' => $order->id]);
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('RetailerOrderController@store - exception', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             return response()->json(['success' => false, 'message' => 'Order failed: ' . $e->getMessage()], 500);
         }
     }

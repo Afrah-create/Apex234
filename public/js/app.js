@@ -224,13 +224,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     alert('Your cart is empty!');
                     return;
                 }
-                // Send order to backend (no delivery details needed)
+                // Prepare payload with only required fields for each cart item
+                const payloadCart = cart.map(item => ({
+                    id: item.id,
+                    price: item.price,
+                    quantity: item.quantity
+                }));
+                // Debug: log outgoing payload
+                console.log('Placing order with payload:', payloadCart);
                 try {
                     const csrfToken = document.querySelector('meta[name="csrf-token"]');
                     if (!csrfToken) {
                         throw new Error('CSRF token not found');
                     }
-                    
+                    const delivery_address = "Default Address";
+                    const delivery_contact = "Default Contact";
+                    const delivery_phone = "0000000000";
+
                     const res = await fetch('/retailer/orders', {
                         method: 'POST',
                         headers: {
@@ -238,7 +248,10 @@ document.addEventListener('DOMContentLoaded', function() {
                             'X-CSRF-TOKEN': csrfToken.getAttribute('content')
                         },
                         body: JSON.stringify({
-                            cart: cart
+                            cart: payloadCart,
+                            delivery_address: delivery_address,
+                            delivery_contact: delivery_contact,
+                            delivery_phone: delivery_phone
                         })
                     });
                     const data = await res.json();
@@ -253,11 +266,16 @@ document.addEventListener('DOMContentLoaded', function() {
                             setTimeout(() => cartSidebar.style.display = 'none', 300);
                         }
                         saveCartToServer(); // Save after clear
+                        setTimeout(() => {
+                            window.location.href = '/retailer/orders/history';
+                        }, 1200);
                     } else {
                         showNotification(data.message || 'Order failed.', 'error');
+                        console.error('Order error:', data);
                     }
                 } catch (e) {
-                    alert('Order failed. Please try again.');
+                    showNotification('Order failed. Please try again.', 'error');
+                    console.error('Order exception:', e);
                 }
             });
         }

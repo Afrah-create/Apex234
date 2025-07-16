@@ -66,4 +66,8 @@
         </div>
     </main>
     <div id="retailer-toast" style="display:none;"></div>
-@endsection 
+@endsection
+
+@push('scripts')
+<script src="{{ asset('js/app.js') }}"></script>
+@endpush 
