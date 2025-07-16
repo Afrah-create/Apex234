@@ -243,6 +243,99 @@
                 </div>
             @endif
 
+            @if(session('show_removed_dialog'))
+                <div id="removedItemsModal" class="modal-overlay">
+                    <div class="modal-content">
+                        <h2>Some items were removed from your cart</h2>
+                        <p>The following products are currently out of stock and have been removed from your cart:</p>
+                        <ul>
+                            @foreach(session('removed_items', []) as $removed)
+                                <li>{{ $removed }}</li>
+                            @endforeach
+                        </ul>
+                        <p>Would you like to proceed with the remaining available items?</p>
+                        <form action="{{ route('checkout.store') }}" method="POST">
+                            @csrf
+                            <input type="hidden" name="confirm_removed" value="1">
+                            <input type="hidden" name="delivery_address" value="{{ old('delivery_address') }}">
+                            <input type="hidden" name="delivery_contact" value="{{ old('delivery_contact') }}">
+                            <input type="hidden" name="delivery_phone" value="{{ old('delivery_phone') }}">
+                            <input type="hidden" name="payment_method" value="{{ old('payment_method') }}">
+                            <input type="hidden" name="requested_delivery_date" value="{{ old('requested_delivery_date') }}">
+                            <input type="hidden" name="special_instructions" value="{{ old('special_instructions') }}">
+                            <button type="submit" class="modal-confirm-btn">Yes, Place Order</button>
+                            <a href="{{ route('cart.index') }}" class="modal-cancel-btn">No, Return to Cart</a>
+                        </form>
+                    </div>
+                </div>
+                <style>
+                .modal-overlay {
+                    position: fixed;
+                    top: 0; left: 0; right: 0; bottom: 0;
+                    background: rgba(0,0,0,0.35);
+                    z-index: 1000;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .modal-content {
+                    background: #fff;
+                    border-radius: 12px;
+                    box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+                    padding: 32px 28px;
+                    max-width: 400px;
+                    width: 100%;
+                    text-align: center;
+                }
+                .modal-content h2 {
+                    font-size: 1.3rem;
+                    font-weight: bold;
+                    margin-bottom: 12px;
+                    color: #c33;
+                }
+                .modal-content ul {
+                    text-align: left;
+                    margin: 12px 0 18px 0;
+                    padding-left: 18px;
+                }
+                .modal-content li {
+                    color: #222;
+                    margin-bottom: 4px;
+                }
+                .modal-confirm-btn {
+                    background: #28a745;
+                    color: #fff;
+                    border: none;
+                    border-radius: 8px;
+                    padding: 12px 24px;
+                    font-size: 1rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                    margin-right: 12px;
+                    transition: background 0.2s;
+                }
+                .modal-confirm-btn:hover {
+                    background: #218838;
+                }
+                .modal-cancel-btn {
+                    background: #fff;
+                    color: #c33;
+                    border: 1px solid #c33;
+                    border-radius: 8px;
+                    padding: 12px 24px;
+                    font-size: 1rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                    text-decoration: none;
+                    transition: background 0.2s, color 0.2s;
+                }
+                .modal-cancel-btn:hover {
+                    background: #fee;
+                    color: #a00;
+                }
+                </style>
+            @endif
+
             <form action="{{ route('checkout.store') }}" method="POST">
                 @csrf
                 
@@ -269,21 +362,6 @@
                     <input type="text" id="delivery_phone" name="delivery_phone" class="form-input" 
                            value="{{ old('delivery_phone', Auth::user()->phone ?? '') }}" required>
                     @error('delivery_phone')
-                        <div style="color:#c33; font-size:0.9rem; margin-top:4px;">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div class="form-group">
-                    <label for="distribution_center_id" class="form-label">Distribution Center *</label>
-                    <select id="distribution_center_id" name="distribution_center_id" class="form-input" required>
-                        <option value="">Select Distribution Center</option>
-                        @foreach($distributionCenters as $center)
-                            <option value="{{ $center->id }}" {{ old('distribution_center_id') == $center->id ? 'selected' : '' }}>
-                                {{ $center->center_name }} - {{ $center->location }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('distribution_center_id')
                         <div style="color:#c33; font-size:0.9rem; margin-top:4px;">{{ $message }}</div>
                     @enderror
                 </div>

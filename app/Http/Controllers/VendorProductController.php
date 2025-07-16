@@ -22,7 +22,16 @@ class VendorProductController extends Controller
     public function index(): JsonResponse
     {
         $vendor = Auth::user()->vendor;
+<<<<<<< HEAD
         $products = \App\Models\YogurtProduct::where('vendor_id', $vendor->id)->where('status', '!=', 'deleted')->get();
+=======
+        if (!$vendor) {
+            return response()->json([]);
+        }
+        $products = YogurtProduct::where('vendor_id', $vendor->id)
+            ->where('status', '!=', 'deleted')
+            ->get();
+>>>>>>> b3d5b65b79d7cdae13e09e94d0ae82735a492ac2
         return response()->json($products);
     }
 

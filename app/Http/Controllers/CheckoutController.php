@@ -66,7 +66,6 @@ class CheckoutController extends Controller
             'delivery_address' => 'required|string|max:255',
             'delivery_contact' => 'required|string|max:255',
             'delivery_phone' => 'required|string|max:20',
-            'distribution_center_id' => 'required|exists:distribution_centers,id',
             'payment_method' => 'required|in:cash,mobile_money,bank_transfer',
             'requested_delivery_date' => 'required|date|after:today',
         ]);
@@ -80,6 +79,49 @@ class CheckoutController extends Controller
         
         if ($cartItems->isEmpty()) {
             return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
+        }
+
+        // Auto-select distribution center based on product availability
+        $distributionCenters = \App\Models\DistributionCenter::where('status', 'operational')->get();
+        $availableItems = collect();
+        $unavailableItems = collect();
+        foreach ($cartItems as $item) {
+            $found = false;
+            foreach ($distributionCenters as $center) {
+                $inventory = \App\Models\Inventory::where('distribution_center_id', $center->id)
+                    ->where('yogurt_product_id', $item->product->id)
+                    ->first();
+                if ($inventory && $inventory->quantity_available >= $item->quantity) {
+                    $found = true;
+                    break;
+                }
+            }
+            if ($found) {
+                $availableItems->push($item);
+            } else {
+                $unavailableItems->push($item);
+            }
+        }
+        if ($unavailableItems->count() > 0 && !$request->has('confirm_removed')) {
+            // Remove unavailable items from cart
+            foreach ($unavailableItems as $item) {
+                $item->delete();
+            }
+            // Store removed items in session for dialog
+            session(['removed_items' => $unavailableItems->map(function($item) {
+                return $item->product->product_name ?? 'Product';
+            })->toArray()]);
+            return redirect()->back()->withInput()->with('show_removed_dialog', true);
+        }
+        // Use only available items for the rest of the checkout
+        $cartItems = $availableItems;
+        if ($cartItems->isEmpty()) {
+            return redirect()->route('cart.index')->with('error', 'All items in your cart are out of stock.');
+        }
+        // Auto-select distribution center for available items
+        $distributionCenterId = $this->selectDistributionCenterForCart($cartItems);
+        if (!$distributionCenterId) {
+            return back()->with('error', 'Unfortunately, we are unable to fulfill your order at this time because no distribution center currently has enough stock for all the items in your cart. Please adjust your cart or try again later. For assistance, contact customer support.');
         }
 
         DB::beginTransaction();
@@ -107,15 +149,25 @@ class CheckoutController extends Controller
             }
 
             // Calculate additional costs
-            $shippingCost = $this->calculateShippingCost($request->delivery_address, $request->distribution_center_id);
+            $shippingCost = $this->calculateShippingCost($request->delivery_address, $distributionCenterId);
             $taxAmount = $this->calculateTax($total);
             $discountAmount = $this->calculateDiscount($total, Auth::user());
             $finalTotal = $total + $shippingCost + $taxAmount - $discountAmount;
 
+            // Determine order type dynamically
+            $totalQuantity = $cartItems->sum('quantity');
+            if ($totalQuantity >= 10) {
+                $orderType = 'bulk';
+            } elseif ($totalQuantity < 2) {
+                $orderType = 'rush';
+            } else {
+                $orderType = 'regular';
+            }
+
             // Create order
             $order = Order::create([
                 'user_id' => Auth::id(),
-                'order_type' => 'customer',
+                'order_type' => $orderType,
                 'order_number' => 'CUST-' . now()->format('YmdHis') . strtoupper(uniqid()),
                 'order_date' => now(),
                 'order_status' => 'pending',
@@ -132,7 +184,7 @@ class CheckoutController extends Controller
                 'special_instructions' => $request->special_instructions,
                 'notes' => 'Customer order placed via checkout',
                 'retailer_id' => null, // Customer orders don't have retailer
-                'distribution_center_id' => $request->distribution_center_id,
+                'distribution_center_id' => $distributionCenterId,
                 'requested_delivery_date' => $request->requested_delivery_date,
             ]);
 
@@ -325,5 +377,35 @@ class CheckoutController extends Controller
                 'error' => $e->getMessage()
             ]);
         }
+    }
+
+    /**
+     * Select a distribution center with sufficient stock for all products in the cart
+     */
+    private function selectDistributionCenterForCart($cartItems)
+    {
+        $distributionCenters = \App\Models\DistributionCenter::where('status', 'operational')->get();
+        foreach ($distributionCenters as $center) {
+            $allAvailable = true;
+            foreach ($cartItems as $item) {
+                $product = $item->product;
+                if (!$product) {
+                    $allAvailable = false;
+                    break;
+                }
+                // Check inventory for this product at this center
+                $inventory = \App\Models\Inventory::where('distribution_center_id', $center->id)
+                    ->where('yogurt_product_id', $product->id)
+                    ->first();
+                if (!$inventory || $inventory->quantity_available < $item->quantity) {
+                    $allAvailable = false;
+                    break;
+                }
+            }
+            if ($allAvailable) {
+                return $center->id;
+            }
+        }
+        return null; // No center found
     }
 } 

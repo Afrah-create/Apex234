@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DistributionCenter;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AdminDistributionCenterController extends Controller
 {
@@ -21,7 +22,10 @@ class AdminDistributionCenterController extends Controller
      */
     public function create()
     {
-        return view('admin.distribution-centers.create');
+        // Only vendors not assigned to any distribution center
+        $assignedVendorIds = DB::table('distribution_center_vendor')->pluck('vendor_id')->toArray();
+        $vendors = \App\Models\Vendor::whereNotIn('id', $assignedVendorIds)->get();
+        return view('admin.distribution-centers.create', compact('vendors'));
     }
 
     /**
@@ -55,7 +59,17 @@ class AdminDistributionCenterController extends Controller
         ]);
         $validated['facilities'] = $request->facilities ? json_encode(explode(',', $request->facilities)) : null;
         $validated['certifications'] = $request->certifications ? json_encode(explode(',', $request->certifications)) : null;
-        DistributionCenter::create($validated);
+        $vendorIds = $request->vendors ?? [];
+        $alreadyAssigned = DB::table('distribution_center_vendor')
+            ->whereIn('vendor_id', $vendorIds)
+            ->exists();
+        if ($alreadyAssigned) {
+            return back()->withErrors(['One or more selected vendors are already assigned to another distribution center.']);
+        }
+        $center = DistributionCenter::create($validated);
+        if ($request->has('vendors')) {
+            $center->vendors()->sync($request->vendors);
+        }
         return redirect()->route('admin.distribution-centers.index')->with('success', 'Distribution center created!');
     }
 
@@ -73,7 +87,13 @@ class AdminDistributionCenterController extends Controller
     public function edit($id)
     {
         $center = DistributionCenter::findOrFail($id);
-        return view('admin.distribution-centers.edit', compact('center'));
+        // Vendors not assigned to any center, or already assigned to this center
+        $assignedVendorIds = DB::table('distribution_center_vendor')
+            ->where('distribution_center_id', '!=', $center->id)
+            ->pluck('vendor_id')
+            ->toArray();
+        $vendors = \App\Models\Vendor::whereNotIn('id', $assignedVendorIds)->get();
+        return view('admin.distribution-centers.edit', compact('center', 'vendors'));
     }
 
     /**
@@ -108,7 +128,18 @@ class AdminDistributionCenterController extends Controller
         ]);
         $validated['facilities'] = $request->facilities ? json_encode(explode(',', $request->facilities)) : null;
         $validated['certifications'] = $request->certifications ? json_encode(explode(',', $request->certifications)) : null;
+        $vendorIds = $request->vendors ?? [];
+        $alreadyAssigned = DB::table('distribution_center_vendor')
+            ->whereIn('vendor_id', $vendorIds)
+            ->where('distribution_center_id', '!=', $center->id)
+            ->exists();
+        if ($alreadyAssigned) {
+            return back()->withErrors(['One or more selected vendors are already assigned to another distribution center.']);
+        }
         $center->update($validated);
+        if ($request->has('vendors')) {
+            $center->vendors()->sync($request->vendors);
+        }
         return redirect()->route('admin.distribution-centers.index')->with('success', 'Distribution center updated!');
     }
 
@@ -120,5 +151,48 @@ class AdminDistributionCenterController extends Controller
         $center = DistributionCenter::findOrFail($id);
         $center->delete();
         return redirect()->route('admin.distribution-centers.index')->with('success', 'Distribution center deleted!');
+    }
+
+    /**
+     * Get inventory statistics for all vendors at a distribution center.
+     */
+    public function vendorInventoryStats($id)
+    {
+        $center = \App\Models\DistributionCenter::findOrFail($id);
+        $vendors = $center->vendors;
+        $vendorStatsArr = [];
+        foreach ($vendors as $vendor) {
+            // Get all inventory records for this vendor at this center, for products produced by this vendor
+            $inventories = \App\Models\Inventory::where('distribution_center_id', $center->id)
+                ->where('vendor_id', $vendor->id)
+                ->get();
+            $productStats = [];
+            foreach ($inventories as $inv) {
+                $product = $inv->yogurtProduct;
+                // Only include if the product belongs to this vendor
+                if ($product && $product->vendor_id == $vendor->id) {
+                    $productStats[] = [
+                        'product_id' => $product->id,
+                        'product_name' => $product->product_name,
+                        'available' => (float) $inv->quantity_available,
+                        'reserved' => (float) $inv->quantity_reserved,
+                        'damaged' => (float) $inv->quantity_damaged,
+                        'expired' => (float) $inv->quantity_expired,
+                    ];
+                }
+            }
+            $vendorStatsArr[] = [
+                'vendor_id' => $vendor->id,
+                'vendor_name' => $vendor->business_name,
+                'products' => $productStats,
+            ];
+        }
+        return response()->json([
+            'distribution_center' => [
+                'id' => $center->id,
+                'center_name' => $center->center_name,
+            ],
+            'vendors' => $vendorStatsArr
+        ]);
     }
 }

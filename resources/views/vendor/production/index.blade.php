@@ -7,7 +7,7 @@
         @csrf
         <div class="mb-4">
             <label class="block font-semibold mb-1">Product</label>
-            <select name="product_id" class="border rounded w-full p-2" required>
+            <select name="product_id" id="product_id" class="border rounded w-full p-2" required>
                 <option value="">Select Product</option>
                 @foreach($products as $product)
                     <option value="{{ $product->id }}">{{ $product->product_name ?? $product->name }}</option>
@@ -18,58 +18,49 @@
             @endif
         </div>
         <div class="mb-4">
-            <label class="block font-semibold mb-1">Quantity Produced</label>
-            <input type="number" name="quantity_produced" class="border rounded w-full p-2" min="1" required>
+            <label class="block font-semibold mb-1">Number of Batches</label>
+            <input type="number" name="batches" id="batches" class="border rounded w-full p-2" min="1" required>
         </div>
-        <div class="mb-4">
-            <label class="block font-semibold mb-1">Raw Materials Used</label>
-            <div id="raw-materials-list">
-                @forelse($rawMaterials as $rm)
-                    <div class="flex items-center mb-2">
-                        <input type="checkbox" id="rm-{{ $rm->id }}" name="raw_materials[{{ $rm->id }}][id]" value="{{ $rm->id }}" class="mr-2" onchange="toggleQtyInput({{ $rm->id }})">
-                        <span class="mr-2">{{ $rm->material_type }} ({{ $rm->quantity }} {{ $rm->unit_of_measure }})</span>
-                        <input type="number" name="raw_materials[{{ $rm->id }}][quantity]" id="qty-{{ $rm->id }}" min="1" max="{{ $rm->quantity }}" class="border rounded w-24 p-1" placeholder="Qty" disabled>
-                    </div>
-                @empty
-                    <div class="text-red-600">No raw materials available. Please add raw materials.</div>
-                @endforelse
-            </div>
+        <div id="raw-materials-required" class="mb-4 hidden bg-gray-50 border border-gray-200 rounded p-3">
+            <h2 class="font-semibold mb-2">Total Raw Materials Required</h2>
+            <ul id="raw-materials-list" class="list-disc pl-5"></ul>
         </div>
-        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Record Batch</button>
+        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Produce</button>
     </form>
     <script>
-        function toggleQtyInput(id) {
-            const checkbox = document.getElementById('rm-' + id);
-            const qtyInput = document.getElementById('qty-' + id);
-            qtyInput.disabled = !checkbox.checked;
-            if (!checkbox.checked) qtyInput.value = '';
-        }
+        document.addEventListener('DOMContentLoaded', function() {
+            // Pass raw material requirements for each product to JS
+            const productRequirements = @json($products->mapWithKeys(function($product) {
+                return [$product->id => $product->rawMaterialRequirements()];
+            }));
+            // Map material type to unit
+            const materialUnits = { milk: 'liters', sugar: 'kg', fruit: 'kg' };
+            const productSelect = document.getElementById('product_id');
+            const batchesInput = document.getElementById('batches');
+            const materialsSection = document.getElementById('raw-materials-required');
+            const materialsList = document.getElementById('raw-materials-list');
+            function updateMaterials() {
+                const productId = productSelect.value;
+                const batches = parseInt(batchesInput.value) || 0;
+                if (!productId || !productRequirements[productId] || !batches) {
+                    materialsSection.classList.add('hidden');
+                    materialsList.innerHTML = '';
+                    return;
+                }
+                const reqs = productRequirements[productId];
+                materialsList.innerHTML = '';
+                Object.entries(reqs).forEach(([type, perBatch]) => {
+                    const total = perBatch * batches;
+                    const unit = materialUnits[type] || '';
+                    const li = document.createElement('li');
+                    li.textContent = `${type.charAt(0).toUpperCase() + type.slice(1)}: ${total} ${unit}`;
+                    materialsList.appendChild(li);
+                });
+                materialsSection.classList.remove('hidden');
+            }
+            productSelect.addEventListener('change', updateMaterials);
+            batchesInput.addEventListener('input', updateMaterials);
+        });
     </script>
-    <table class="min-w-full bg-white">
-        <thead>
-            <tr>
-                <th class="py-2">Batch Code</th>
-                <th class="py-2">Product</th>
-                <th class="py-2">Quantity Produced</th>
-                <th class="py-2">Raw Materials Used</th>
-                <th class="py-2">Date</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($batches as $batch)
-            <tr>
-                <td class="py-2">{{ $batch->batch_code }}</td>
-                <td class="py-2">{{ $batch->product->product_name ?? $batch->product->name }}</td>
-                <td class="py-2">{{ $batch->quantity_produced }}</td>
-                <td class="py-2">
-                    @foreach($batch->rawMaterials as $rm)
-                        {{ $rm->material_type }}: {{ $rm->pivot->quantity_used }} {{ $rm->unit_of_measure }}<br>
-                    @endforeach
-                </td>
-                <td class="py-2">{{ $batch->created_at->format('Y-m-d H:i') }}</td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
 </div>
 @endsection 

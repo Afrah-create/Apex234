@@ -39,6 +39,7 @@ Route::get('/test-mail', function () {
     }
 });
 
+// Main dashboard route
 Route::get('/dashboard', function () {
     $user = Auth::user();
     if ($user instanceof User) {
@@ -119,7 +120,7 @@ Route::middleware(['auth'])->group(function () {
         ->only(['index', 'show', 'store']);
 });
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -147,7 +148,6 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
 Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/orders')->name('admin.orders.')->group(function () {
     Route::get('/', [AdminOrderController::class, 'index'])->name('index');
     Route::get('/{id}', [AdminOrderController::class, 'show'])->name('show');
-    Route::get('/{id}/edit', [AdminOrderController::class, 'edit'])->name('edit');
     Route::put('/{id}', [AdminOrderController::class, 'update'])->name('update');
     Route::delete('/{id}', [AdminOrderController::class, 'destroy'])->name('destroy');
     Route::patch('/{id}/status', [AdminOrderController::class, 'updateStatus'])->name('update-status');
@@ -155,6 +155,7 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     // API routes for data
     Route::get('/api/orders-data', [AdminOrderController::class, 'getOrdersData'])->name('api.orders-data');
     Route::get('/api/order-statistics', [AdminOrderController::class, 'getOrderStatistics'])->name('api.order-statistics');
+    Route::patch('/{order}/status', [App\Http\Controllers\AdminOrderController::class, 'updateStatus'])->name('admin.orders.updateStatus');
 });
 
 // Admin inventory analytics
@@ -225,8 +226,8 @@ Route::middleware(['auth', 'verified'])->prefix('vendor')->name('vendor.')->grou
     Route::get('/manage-products', function () {
         return view('vendor.manage-products');
     })->name('manage-products');
+    Route::post('/reserve-batch/{id}', [\App\Http\Controllers\VendorProductionController::class, 'reserveBatch'])->name('reserve-batch');
     Route::get('/products/{id}/edit', [\App\Http\Controllers\VendorProductController::class, 'show'])->name('products.edit');
-    Route::get('/raw-materials/{id}/edit', [\App\Http\Controllers\VendorInventoryController::class, 'showRawMaterial'])->name('raw-materials.edit');
 });
 
 // Password reset by token (code) form
@@ -378,7 +379,14 @@ Route::middleware(['auth', 'verified'])->get('/vendor/deliveries', [\App\Http\Co
 Route::middleware(['auth'])->get('/api/cart', [\App\Http\Controllers\CartController::class, 'getCart']);
 Route::middleware(['auth'])->post('/api/cart', [\App\Http\Controllers\CartController::class, 'saveCart']);
 
+<<<<<<< HEAD
 Route::get('/help', [\App\Http\Controllers\HelpController::class, 'index'])->name('help.index');
+=======
+// Prefer the new closure-based /help route
+Route::get('/help', function () {
+    return view('help.index');
+})->name('help.index');
+>>>>>>> b3d5b65b79d7cdae13e09e94d0ae82735a492ac2
 
 require __DIR__.'/auth.php';
 
@@ -476,8 +484,9 @@ Route::middleware(['auth'])->group(function () {
 // Vendor inventory status ranges
 Route::middleware(['auth', 'verified'])->post('/vendor/inventory-status-ranges', [\App\Http\Controllers\VendorDashboardController::class, 'saveInventoryStatusRanges'])->name('vendor.inventory-status-ranges');
 
+Route::get('/retailer/orders/history', [App\Http\Controllers\RetailerOrderHistoryController::class, 'index'])->name('retailer.orders.history');
+Route::get('/retailer/offers', [App\Http\Controllers\RetailerOffersController::class, 'index'])->name('retailer.offers');
 Route::middleware(['auth', 'verified'])->get('/vendor/production', [\App\Http\Controllers\VendorProductionController::class, 'index'])->name('vendor.production.index');
-Route::middleware(['auth', 'verified'])->post('/vendor/production', [\App\Http\Controllers\VendorProductionController::class, 'store'])->name('vendor.production.store');
 
 Route::middleware(['auth'])->get('/chat', [\App\Http\Controllers\ChatController::class, 'index'])->name('chat');
 Route::middleware(['auth'])->get('/chat/recipients', [\App\Http\Controllers\ChatController::class, 'getRecipients']);
@@ -506,9 +515,19 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::delete('/{id}', [\App\Http\Controllers\AdminDistributionCenterController::class, 'destroy'])->name('destroy');
 });
 
+<<<<<<< HEAD
 Route::post('/driver/orders/{order}/proof', [\App\Http\Controllers\DriverOrderController::class, 'uploadProof'])->name('driver.orders.proof');
 Route::post('/vendor/orders/{order}/assign-driver', [\App\Http\Controllers\VendorOrderController::class, 'assignDriver'])->name('vendor.orders.assignDriver');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/vendor/assign-driver', [\App\Http\Controllers\VendorOrderController::class, 'showAssignDriverForm'])->name('vendor.assign-driver');
 });
+=======
+Route::middleware(['auth', 'verified'])->get('/vendor/my-reports', [\App\Http\Controllers\VendorDashboardController::class, 'myReports'])->name('vendor.my-reports');
+Route::middleware(['auth', 'verified'])->get('/vendor/reports', [\App\Http\Controllers\VendorDashboardController::class, 'reportsPage'])->name('vendor.reports');
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])
+    ->get('/admin/distribution-centers/{id}/vendor-inventory-stats', [\App\Http\Controllers\AdminDistributionCenterController::class, 'vendorInventoryStats']);
+
+Route::middleware(['auth', 'verified'])->get('/supplier/reports', [\App\Http\Controllers\SupplierDashboardController::class, 'reportsPage'])->name('supplier.reports');
+Route::middleware(['auth', 'verified'])->get('/supplier/my-reports', [\App\Http\Controllers\SupplierDashboardController::class, 'myReports'])->name('supplier.my-reports');
+>>>>>>> b3d5b65b79d7cdae13e09e94d0ae82735a492ac2

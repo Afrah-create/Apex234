@@ -22,6 +22,16 @@ class OrderProcessingService
      */
     public function processCustomerOrder(Order $order)
     {
+        // If bulk order, require admin approval before processing
+        if ($order->order_type === 'bulk') {
+            $order->update([
+                'order_status' => 'pending_admin_approval',
+                'notes' => $order->notes . ' [Pending admin approval for bulk order]'
+            ]);
+            Log::info('Bulk order requires admin approval', ['order_id' => $order->id]);
+            return false;
+        }
+
         DB::beginTransaction();
         try {
             // Validate inventory availability
@@ -220,11 +230,29 @@ class OrderProcessingService
     private function reserveInventory(Order $order)
     {
         $orderItems = $order->orderItems()->with('yogurtProduct')->get();
-        
+        $distributionCenterId = $order->distribution_center_id;
         foreach ($orderItems as $item) {
             $product = $item->yogurtProduct;
-            $product->stock = max(0, $product->stock - $item->quantity);
-            $product->save();
+            $vendorId = $product->vendor_id; // Use the product's vendor
+            // Deduct from inventory by vendor and distribution center
+            $inventory = \App\Models\Inventory::where('yogurt_product_id', $product->id)
+                ->where('vendor_id', $vendorId)
+                ->when($distributionCenterId, function($query) use ($distributionCenterId) {
+                    return $query->where('distribution_center_id', $distributionCenterId);
+                })
+                ->orderByDesc('quantity_available')
+                ->first();
+            if ($inventory) {
+                $inventory->quantity_available = max(0, $inventory->quantity_available - $item->quantity);
+                $inventory->save();
+            } else {
+                \Log::warning('No inventory record found for deduction', [
+                    'product_id' => $product->id,
+                    'vendor_id' => $vendorId,
+                    'distribution_center_id' => $distributionCenterId,
+                    'order_id' => $order->id,
+                ]);
+            }
         }
     }
 
