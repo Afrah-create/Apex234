@@ -519,3 +519,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 Route::middleware(['auth', 'verified'])->get('/vendor/reports', [\App\Http\Controllers\VendorDashboardController::class, 'reportsPage'])->name('vendor.reports');
+
+// Supplier reports page (web)
+Route::middleware(['auth', 'verified'])->get('/supplier/reports', [\App\Http\Controllers\SupplierDashboardController::class, 'reportsPage'])->name('supplier.reports');
+
+// Supplier reports API (for AJAX/fetching report data)
+Route::middleware(['auth', 'verified'])->get('/supplier/my-reports', [\App\Http\Controllers\SupplierDashboardController::class, 'myReports'])->name('supplier.my-reports');
