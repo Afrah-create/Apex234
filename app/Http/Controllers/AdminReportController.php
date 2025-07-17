@@ -436,12 +436,12 @@ class AdminReportController extends Controller
                     $vendor = \App\Models\User::where('id', $user->id)->where('role', 'vendor')->first();
                     if ($vendor) {
                         $user->role_metrics = [
-                            'total_products' => YogurtProduct::where('vendor_id', $vendor->id)->count(),
-                            'active_products' => YogurtProduct::where('vendor_id', $vendor->id)->where('is_active', true)->count(),
+                            'total_products' => YogurtProduct::count(),
+                            'active_products' => YogurtProduct::where('is_active', true)->count(),
                             'total_inventory' => Inventory::whereHas('yogurtProduct', function($q) use ($vendor) {
                                 $q->where('vendor_id', $vendor->id);
                             })->sum('quantity_available'),
-                            'last_activity' => YogurtProduct::where('vendor_id', $vendor->id)->max('updated_at'),
+                            'last_activity' => YogurtProduct::max('updated_at'),
                             'role_type' => 'Vendor'
                         ];
                     } else {

@@ -6,12 +6,18 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up(): void
+    public function up()
     {
-        Schema::table('yogurt_products', function (Blueprint $table) {
-            $table->integer('stock')->default(0)->after('status');
-            $table->string('image_path')->nullable()->after('stock');
-        });
+        if (!Schema::hasColumn('yogurt_products', 'stock')) {
+            Schema::table('yogurt_products', function (Blueprint $table) {
+                $table->integer('stock')->default(0)->after('status');
+            });
+        }
+        if (!Schema::hasColumn('yogurt_products', 'image_path')) {
+            Schema::table('yogurt_products', function (Blueprint $table) {
+                $table->string('image_path')->nullable()->after('stock');
+            });
+        }
     }
 
     public function down(): void

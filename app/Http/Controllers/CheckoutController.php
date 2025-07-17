@@ -125,39 +125,6 @@ class CheckoutController extends Controller
             return back()->with('error', 'Unfortunately, we are unable to fulfill your order at this time because no distribution center currently has enough stock for all the items in your cart. Please adjust your cart or try again later. For assistance, contact customer support.');
         }
 
-        // --- Automatic Batch Production for Insufficient Inventory ---
-        // REMOVE the following block:
-        // $batchService = new BatchProductionService();
-        // foreach ($cartItems as $item) {
-        //     $product = $item->product;
-        //     $vendorId = $product->vendor_id;
-        //     $inventory = \App\Models\Inventory::where('distribution_center_id', $distributionCenterId)
-        //         ->where('yogurt_product_id', $product->id)
-        //         ->where('vendor_id', $vendorId)
-        //         ->first();
-        //     $available = $inventory ? $inventory->quantity_available : 0;
-        //     if ($available < $item->quantity) {
-        //         // Calculate shortfall and attempt to produce batch
-        //         $shortfall = $item->quantity - $available;
-        //         $unitsPerBatch = 10; // Should match BatchProductionService
-        //         $batchesNeeded = (int) ceil($shortfall / $unitsPerBatch);
-        //         $result = $batchService->produceBatch($vendorId, $product->id, $batchesNeeded);
-        //         if (!$result['success']) {
-        //             return back()->with('error', 'Order failed: ' . $result['message']);
-        //         }
-        //         // Re-fetch inventory after production
-        //         $inventory = \App\Models\Inventory::where('distribution_center_id', $distributionCenterId)
-        //             ->where('yogurt_product_id', $product->id)
-        //             ->where('vendor_id', $vendorId)
-        //             ->first();
-        //         $available = $inventory ? $inventory->quantity_available : 0;
-        //         if ($available < $item->quantity) {
-        //             return back()->with('error', 'Order failed: Unable to produce enough stock for ' . $product->product_name);
-        //         }
-        //     }
-        // }
-        // --- End Automatic Batch Production ---
-
         DB::beginTransaction();
         try {
             // Final inventory validation
@@ -240,10 +207,7 @@ class CheckoutController extends Controller
                     'item_status' => 'pending',
                     'notes' => null,
                 ]);
-
-                // Reserve inventory (deduct from available stock)
-                $product->stock = max(0, $product->stock - $cartItem->quantity);
-                $product->save();
+                // Removed direct deduction from $product->stock here
             }
 
             // Clear cart
@@ -290,6 +254,29 @@ class CheckoutController extends Controller
             // --- End CSV append ---
 
             DB::commit();
+
+            // --- Automatic Vendor Assignment ---
+            $order->refresh();
+            $orderItems = $order->orderItems()->with('yogurtProduct')->get();
+            $eligibleVendors = \App\Models\Vendor::where('status', 'approved')->get()->filter(function($vendor) use ($orderItems) {
+                foreach ($orderItems as $item) {
+                    $product = $item->yogurtProduct;
+                    if (!$product || $product->vendor_id != $vendor->id || $product->stock < $item->quantity) {
+                        return false;
+                    }
+                }
+                return true;
+            });
+            if ($eligibleVendors->isNotEmpty()) {
+                $selectedVendor = $eligibleVendors->random();
+                $order->vendor_id = $selectedVendor->id;
+                $order->save();
+                // Notify the vendor
+                $selectedVendor->notify(new \App\Notifications\VendorAssignedOrderNotification($order));
+            } else {
+                // Optionally: handle no eligible vendor (e.g., notify admin, mark as unassigned, etc.)
+            }
+            // --- End Automatic Vendor Assignment ---
 
             \Illuminate\Support\Facades\Log::info('Customer order created successfully', [
                 'order_id' => $order->id,

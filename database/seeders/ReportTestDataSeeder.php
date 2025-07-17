@@ -143,46 +143,14 @@ class ReportTestDataSeeder extends Seeder
 
     private function createSampleInventory()
     {
-        $products = YogurtProduct::all();
-        $distributionCenters = DistributionCenter::all();
-        
-        if ($products->isEmpty() || $distributionCenters->isEmpty()) {
-            $this->command->warn('No products or distribution centers found. Skipping inventory creation.');
+        // Do not seed inventory records for vendors by default
+        // If you want to seed inventory for a specific test vendor, uncomment and set vendor_id explicitly
+        // $testVendor = Vendor::first();
+        // if ($testVendor) {
+        //     // ... create inventory records with 'vendor_id' => $testVendor->id ...
+        // }
+        // Otherwise, skip seeding inventory
             return;
-        }
-
-        // Create multiple inventory records for each product
-        foreach ($products as $product) {
-            for ($i = 0; $i < 3; $i++) { // Create 3 inventory records per product
-                $distributionCenter = $distributionCenters->random();
-                $quantityAvailable = rand(50, 500);
-                $quantityReserved = rand(0, 50);
-                $quantityDamaged = rand(0, 10);
-                $quantityExpired = rand(0, 5);
-                $unitCost = $product->cost_price ?? 1000;
-                $totalValue = ($quantityAvailable + $quantityReserved) * $unitCost;
-                
-                Inventory::create([
-                    'yogurt_product_id' => $product->id,
-                    'distribution_center_id' => $distributionCenter->id,
-                    'batch_number' => 'BATCH' . date('Ymd') . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT),
-                    'quantity_available' => $quantityAvailable,
-                    'quantity_reserved' => $quantityReserved,
-                    'quantity_damaged' => $quantityDamaged,
-                    'quantity_expired' => $quantityExpired,
-                    'production_date' => Carbon::now()->subDays(rand(1, 30)),
-                    'expiry_date' => Carbon::now()->addDays(rand(30, 90)),
-                    'storage_temperature' => rand(-5, 8),
-                    'storage_location' => $this->getRandomStorageLocation(),
-                    'shelf_location' => 'Shelf ' . rand(1, 10) . '-' . rand(1, 5),
-                    'inventory_status' => $this->getRandomInventoryStatus(),
-                    'unit_cost' => $unitCost,
-                    'total_value' => $totalValue,
-                    'last_updated' => Carbon::now()->subDays(rand(0, 30)),
-                    'notes' => 'Sample inventory data for testing reports'
-                ]);
-            }
-        }
     }
 
     private function createSampleQualityChecks()

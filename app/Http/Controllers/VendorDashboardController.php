@@ -17,29 +17,36 @@ class VendorDashboardController extends Controller
     public function inventorySummary(): JsonResponse
     {
         $vendor = Auth::user()->vendor;
-        if (!$vendor) {
+        $vendorId = $vendor ? $vendor->id : null;
+
+        // Product inventory summary for this vendor only
+        $productSummary = \App\Models\Inventory::with(['yogurtProduct'])
+            ->where('vendor_id', $vendorId)
+            ->selectRaw('
+                SUM(quantity_available) as total_available,
+                SUM(quantity_reserved) as total_reserved,
+                SUM(quantity_damaged) as total_damaged,
+                SUM(quantity_expired) as total_expired,
+                SUM(total_value) as total_value,
+                COUNT(*) as total_batches
+            ')
+            ->first();
+
+        // Raw materials summary for this vendor only
+        $rawMaterialSummary = \DB::table('raw_materials')
+            ->selectRaw('
+                SUM(CASE WHEN status = "delivered" THEN quantity ELSE 0 END) as delivered_quantity,
+                SUM(total_cost) as total_cost,
+                COUNT(*) as total_materials
+            ')
+            ->where('vendor_id', $vendorId)
+            ->where('status', 'delivered')
+            ->first();
+
             return response()->json([
-                'total_products' => 0,
-                'total_available' => 0,
-                'total_reserved' => 0,
-                'total_damaged' => 0,
-                'total_expired' => 0,
-                'low_stock_items' => 0,
-                'out_of_stock_items' => 0,
-            ]);
-        }
-        $inventoryQuery = \App\Models\Inventory::where('vendor_id', $vendor->id);
-        $productIds = $inventoryQuery->pluck('yogurt_product_id')->unique();
-        $summary = [
-            'total_products' => $productIds->count(),
-            'total_available' => $inventoryQuery->sum('quantity_available'),
-            'total_reserved' => $inventoryQuery->sum('quantity_reserved'),
-            'total_damaged' => $inventoryQuery->sum('quantity_damaged'),
-            'total_expired' => $inventoryQuery->sum('quantity_expired'),
-            'low_stock_items' => $inventoryQuery->where('inventory_status', 'low_stock')->count(),
-            'out_of_stock_items' => $inventoryQuery->where('inventory_status', 'out_of_stock')->count(),
-        ];
-        return response()->json($summary);
+            'product_summary' => $productSummary,
+            'raw_material_summary' => $rawMaterialSummary
+        ]);
     }
 
     // Inventory chart data for vendor
@@ -111,7 +118,7 @@ class VendorDashboardController extends Controller
                 'delivered' => 0,
             ]);
         }
-        $productIds = YogurtProduct::where('vendor_id', $vendor->id)->pluck('id');
+        $productIds = YogurtProduct::pluck('id');
         $orders = \App\Models\Order::whereHas('orderItems.yogurtProduct', function($q) use ($vendor) {
                 $q->where('vendor_id', $vendor->id);
             })
@@ -206,7 +213,7 @@ class VendorDashboardController extends Controller
             // Low stock products
             $lowStockProducts = \App\Models\Inventory::with('yogurtProduct')
                 ->where('quantity_available', '<=', 5)
-                ->whereHas('yogurtProduct', function($q) { $q->where('status', 'active'); })
+                ->whereHas('yogurtProduct', function($q) use ($vendor) { $q->where('status', 'active')->where('vendor_id', $vendor->id); })
                 ->get()
                 ->map(function($inv) {
                     return [
@@ -217,8 +224,7 @@ class VendorDashboardController extends Controller
                     ];
                 });
             // Low stock raw materials
-            $lowStockMaterials = \App\Models\RawMaterial::where('vendor_id', $vendor->id)
-                ->where('status', 'available')
+            $lowStockMaterials = \App\Models\RawMaterial::where('status', 'available')
                 ->where('quantity', '<=', 5)
                 ->get()
                 ->map(function($rm) {
@@ -229,7 +235,7 @@ class VendorDashboardController extends Controller
                         'unit' => $rm->unit_of_measure,
                     ];
                 });
-            $lowStockNotifications = $lowStockProducts->merge($lowStockMaterials);
+            $lowStockNotifications = collect($lowStockProducts)->merge(collect($lowStockMaterials));
         }
         return view('dashboard-vendor', compact('vendor', 'employees', 'lowStockNotifications'));
     }
@@ -243,5 +249,28 @@ class VendorDashboardController extends Controller
         session(['inventory_warning_max' => $request->warning_max]);
         session(['inventory_low_max' => $request->low_max]);
         return back()->with('range_success', 'Inventory status ranges updated!');
+    }
+
+    public function myReports(Request $request)
+    {
+        $user = $request->user();
+        $role = $user->getPrimaryRoleName();
+        $userId = $user->id;
+        $email = $user->email;
+
+        $reports = \App\Models\ReportLog::whereHas('scheduledReport', function($q) use ($role, $userId) {
+                $q->where('stakeholder_type', $role)
+                  ->where('stakeholder_id', $userId);
+            })
+            ->orWhereJsonContains('recipients', $email)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json(['data' => $reports]);
+    }
+
+    public function reportsPage()
+    {
+        return view('vendor.my-reports');
     }
 } 

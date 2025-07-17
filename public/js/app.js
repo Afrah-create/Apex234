@@ -77,13 +77,16 @@ function updateCartSidebar() {
     let total = 0;
     cart.forEach(item => {
         const div = document.createElement('div');
-        div.className = 'flex justify-between items-center mb-2';
+        div.className = 'flex justify-between items-center mb-3 p-2 rounded-lg bg-gray-50 shadow-sm';
         div.innerHTML = `
-            <div>
-                <span class='font-bold'>${item.name}</span> x <span>${item.quantity}</span>
+            <div class='flex items-center gap-2'>
+                <span class='font-bold text-lg text-blue-700'>${item.name}</span>
+                <span class='inline-block bg-green-600 text-white text-xs font-bold rounded-full px-3 py-1 ml-1 shadow'>x${item.quantity}</span>
             </div>
-            <div>UGX ${(item.price * item.quantity).toLocaleString(undefined, {minimumFractionDigits:2})}</div>
-            <button class='ml-2 text-red-600 font-bold remove-cart-item-btn' data-id='${item.id}'>&times;</button>
+            <div class='text-right'>
+                <div class='text-blue-700 font-bold'>UGX ${(item.price * item.quantity).toLocaleString(undefined, {minimumFractionDigits:2})}</div>
+                <button class='ml-2 text-red-600 font-bold remove-cart-item-btn' data-id='${item.id}' title='Remove'>&times;</button>
+            </div>
         `;
         cartItemsList.appendChild(div);
         total += item.price * item.quantity;
@@ -150,25 +153,29 @@ document.addEventListener('DOMContentLoaded', function() {
             btn.addEventListener('click', function() {
                 const card = this.closest('.product-card');
                 if (!card) return;
-                
                 const id = parseInt(card.getAttribute('data-product-id'));
                 const nameElement = card.querySelector('.font-bold.text-lg');
                 const priceElement = card.querySelector('.text-blue-600.font-bold');
-                
+                const qtyInput = card.querySelector('.quantity-input');
+                let quantity = 1;
+                if (qtyInput) {
+                    quantity = parseInt(qtyInput.value) || 1;
+                    if (quantity < 1) quantity = 1;
+                }
                 if (!nameElement || !priceElement) return;
-                
                 const name = nameElement.textContent;
                 const price = parseFloat(priceElement.textContent.replace('UGX','').replace(/,/g,''));
                 let item = cart.find(i => i.id === id);
                 if (item) {
-                    item.quantity += 1;
+                    item.quantity += quantity;
                 } else {
-                    cart.push({id, name, price, quantity: 1});
+                    cart.push({id, name, price, quantity});
                 }
                 updateCartCount();
                 updateCartSidebar();
                 saveCartToServer(); // Save after add
                 showNotification('Added to cart!');
+                if (qtyInput) qtyInput.value = 1;
             });
         });
 

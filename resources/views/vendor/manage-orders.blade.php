@@ -119,14 +119,14 @@
 
     <!-- Product Orders from Retailers -->
     <div>
-        <h2 class="text-xl font-semibold mb-4 text-blue-800">Product Orders from Retailers</h2>
+        <h2 class="text-xl font-semibold mb-4 text-blue-800">Product Orders</h2>
         <div class="bg-white rounded-lg shadow-md overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-4 py-3 text-left font-semibold">Date</th>
-                            <th class="px-4 py-3 text-left font-semibold">Retailer</th>
+                            <th class="px-4 py-3 text-left font-semibold">Order Source</th>
                             <th class="px-4 py-3 text-left font-semibold">Product</th>
                             <th class="px-4 py-3 text-left font-semibold">Quantity</th>
                             <th class="px-4 py-3 text-left font-semibold">Status</th>
@@ -507,8 +507,8 @@ async function loadProductOrders() {
     try {
         const res = await fetch('/api/vendor/product-orders');
         let orders = await res.json();
-        // Sort orders by date descending (most recent first)
-        orders.sort((a, b) => (b.date > a.date ? 1 : b.date < a.date ? -1 : 0));
+        // Robust sort by date descending (most recent first)
+        orders.sort((a, b) => new Date(b.date) - new Date(a.date));
         const tbody = document.getElementById('vendor-product-orders-list');
         if (orders.length === 0) {
             tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-500">No product orders found</td></tr>';
@@ -519,9 +519,16 @@ async function loadProductOrders() {
             order.items.forEach(item => {
                 const tr = document.createElement('tr');
                 tr.className = 'border-b hover:bg-gray-50';
+                // Badge for order source
+                let sourceBadge = '';
+                if (order.order_source === 'Retailer') {
+                    sourceBadge = `<span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mr-1">Retailer</span> ${order.retailer ? order.retailer : ''}`;
+                } else {
+                    sourceBadge = `<span class="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Customer</span>`;
+                }
                 tr.innerHTML = `
                     <td class="px-4 py-3">${order.date}</td>
-                    <td class="px-4 py-3">${order.retailer || order.order_source}</td>
+                    <td class="px-4 py-3">${sourceBadge}</td>
                     <td class="px-4 py-3">${item.product}</td>
                     <td class="px-4 py-3">${item.quantity}</td>
                     <td class="px-4 py-3">

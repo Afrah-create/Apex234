@@ -3,8 +3,10 @@
 @section('content')
 <div class="container">
     <h1>Vendor Dashboard</h1>
-    <div class="mb-4">
+    <div class="mb-4 flex flex-wrap gap-2">
         <a href="{{ route('vendor.production.index') }}" class="bg-blue-600 text-white px-4 py-2 rounded">Production</a>
+        <a href="{{ route('vendor.reports') }}" class="bg-blue-600 text-white px-4 py-2 rounded">Reports</a>
+        <a href="{{ route('vendor.assign-driver') }}" class="bg-blue-600 text-white px-4 py-2 rounded">Assign Drivers</a>
     </div>
     <div>
         <img src="" alt="Vendor Image" style="max-width:200px;">
@@ -48,6 +50,10 @@
         if (event.persisted) {
             window.location.reload();
         }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // The My Reports table and script are removed as per the edit hint.
     });
 </script>
 @endsection 

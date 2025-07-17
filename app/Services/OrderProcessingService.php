@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\OrderStatusUpdate;
+use App\Models\Driver;
 
 class OrderProcessingService
 {
@@ -99,6 +100,9 @@ class OrderProcessingService
                 'order_status' => 'confirmed',
                 'notes' => $order->notes . ' [Auto-confirmed by system]'
             ]);
+
+            // Assign a random driver after confirmation
+            $this->assignRandomDriver($order);
 
             // Reserve inventory
             $this->reserveInventory($order);
@@ -246,7 +250,7 @@ class OrderProcessingService
     private function validateInventory(Order $order)
     {
         $orderItems = $order->orderItems()->with('yogurtProduct')->get();
-        
+        $distributionCenterId = $order->distribution_center_id;
         foreach ($orderItems as $item) {
             $product = $item->yogurtProduct;
             if (!$product) {
@@ -255,16 +259,18 @@ class OrderProcessingService
                     'message' => "Product not found for item {$item->id}"
                 ];
             }
-
-            $availableStock = $product->stock ?? 0;
+            $vendorId = $product->vendor_id;
+            $availableStock = \App\Models\Inventory::where('yogurt_product_id', $product->id)
+                ->where('vendor_id', $vendorId)
+                ->where('distribution_center_id', $distributionCenterId)
+                ->sum('quantity_available');
             if ($availableStock < $item->quantity) {
                 return [
                     'success' => false,
-                    'message' => "Insufficient stock for {$product->product_name}. Available: {$availableStock}, Requested: {$item->quantity}"
+                    'message' => "Insufficient stock for {$product->product_name} at the selected distribution center. Available: {$availableStock}, Requested: {$item->quantity}"
                 ];
             }
         }
-
         return ['success' => true];
     }
 
@@ -278,25 +284,45 @@ class OrderProcessingService
         foreach ($orderItems as $item) {
             $product = $item->yogurtProduct;
             $vendorId = $product->vendor_id; // Use the product's vendor
-            // Deduct from inventory by vendor and distribution center
-            $inventory = \App\Models\Inventory::where('yogurt_product_id', $product->id)
+            $quantityToDeduct = $item->quantity;
+            // Get all inventory records for this product and vendor, order does not matter
+            $inventories = \App\Models\Inventory::where('yogurt_product_id', $product->id)
                 ->where('vendor_id', $vendorId)
                 ->when($distributionCenterId, function($query) use ($distributionCenterId) {
                     return $query->where('distribution_center_id', $distributionCenterId);
                 })
-                ->orderByDesc('quantity_available')
-                ->first();
-            if ($inventory) {
-                $inventory->quantity_available = max(0, $inventory->quantity_available - $item->quantity);
+                ->where('quantity_available', '>', 0)
+                ->get();
+
+            // LOGGING: Trace deduction attempt
+            \Illuminate\Support\Facades\Log::info('Reserving inventory for order', [
+                'order_id' => $order->id,
+                'order_item_id' => $item->id,
+                'product_id' => $product ? $product->id : null,
+                'product_name' => $product ? $product->product_name : null,
+                'vendor_id' => $vendorId,
+                'quantity_to_deduct' => $quantityToDeduct,
+                'found_inventories' => $inventories->pluck('id')->toArray(),
+                'distribution_center_id' => $distributionCenterId,
+            ]);
+
+            foreach ($inventories as $inventory) {
+                if ($quantityToDeduct <= 0) break;
+                $deduct = min($inventory->quantity_available, $quantityToDeduct);
+                $inventory->quantity_available -= $deduct;
                 $inventory->save();
-            } else {
-                \Illuminate\Support\Facades\Log::warning('No inventory record found for deduction', [
-                    'product_id' => $product->id,
-                    'vendor_id' => $vendorId,
-                    'distribution_center_id' => $distributionCenterId,
-                    'order_id' => $order->id,
+                $quantityToDeduct -= $deduct;
+                // LOGGING: Each deduction
+                \Illuminate\Support\Facades\Log::info('Inventory deduction', [
+                    'inventory_id' => $inventory->id,
+                    'deducted' => $deduct,
+                    'remaining_in_inventory' => $inventory->quantity_available,
+                    'quantity_left_to_deduct' => $quantityToDeduct
                 ]);
             }
+            // Sync product stock with sum of all available inventory
+            $product->stock = $product->inventories()->sum('quantity_available');
+            $product->save();
         }
     }
 
@@ -305,16 +331,58 @@ class OrderProcessingService
      */
     private function assignDistributionCenter(Order $order)
     {
-        // Simple logic - can be enhanced with real distance calculation
-        $distributionCenter = DistributionCenter::where('status', 'operational')
-            ->orderBy('id')
-            ->first();
+        // Get all operational distribution centers
+        $distributionCenters = \App\Models\DistributionCenter::where('status', 'operational')->get();
+        $orderItems = $order->orderItems()->with('yogurtProduct')->get();
 
-        if (!$distributionCenter) {
-            throw new \Exception('No operational distribution center available');
+        $bestCenter = null;
+        foreach ($distributionCenters as $center) {
+            $canFulfill = true;
+            foreach ($orderItems as $item) {
+                $product = $item->yogurtProduct;
+                $vendorId = $product->vendor_id;
+                $totalAvailable = \App\Models\Inventory::where('yogurt_product_id', $product->id)
+                    ->where('vendor_id', $vendorId)
+                    ->where('distribution_center_id', $center->id)
+                    ->where('quantity_available', '>', 0)
+                    ->sum('quantity_available');
+                if ($totalAvailable < $item->quantity) {
+                    $canFulfill = false;
+                    break;
+                }
+            }
+            if ($canFulfill) {
+                $bestCenter = $center;
+                break; // Pick the first center that can fulfill all items
+            }
         }
 
-        return $distributionCenter;
+        if (!$bestCenter) {
+            throw new \Exception('No distribution center can fully fulfill this order.');
+        }
+
+        return $bestCenter;
+    }
+
+    /**
+     * Assign a random available driver to the order
+     */
+    private function assignRandomDriver(Order $order)
+    {
+        $drivers = Driver::all();
+        if ($drivers->isEmpty()) {
+            // No drivers available
+            return false;
+        }
+        $drivers = $drivers->shuffle();
+        foreach ($drivers as $driver) {
+            // If you add a status or max deliveries check, do it here
+            $order->driver_id = $driver->id;
+            $order->order_status = 'out_for_delivery';
+            $order->save();
+            return true;
+        }
+        return false;
     }
 
     /**

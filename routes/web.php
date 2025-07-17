@@ -151,7 +151,6 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::put('/{id}', [AdminOrderController::class, 'update'])->name('update');
     Route::delete('/{id}', [AdminOrderController::class, 'destroy'])->name('destroy');
     Route::patch('/{id}/status', [AdminOrderController::class, 'updateStatus'])->name('update-status');
-    
     // API routes for data
     Route::get('/api/orders-data', [AdminOrderController::class, 'getOrdersData'])->name('api.orders-data');
     Route::get('/api/order-statistics', [AdminOrderController::class, 'getOrderStatistics'])->name('api.order-statistics');
@@ -233,7 +232,7 @@ Route::middleware(['auth', 'verified'])->prefix('vendor')->name('vendor.')->grou
         return view('vendor.manage-products');
     })->name('manage-products');
     Route::post('/reserve-batch/{id}', [\App\Http\Controllers\VendorProductionController::class, 'reserveBatch'])->name('reserve-batch');
-    Route::get('/products/{id}/edit', [\App\Http\Controllers\VendorProductController::class, 'show'])->name('products.edit');
+    Route::get('/products/{id}/edit', [\App\Http\Controllers\VendorProductController::class, 'edit'])->name('products.edit');
 });
 
 // Password reset by token (code) form
@@ -486,8 +485,9 @@ Route::middleware(['auth'])->group(function () {
 // Vendor inventory status ranges
 Route::middleware(['auth', 'verified'])->post('/vendor/inventory-status-ranges', [\App\Http\Controllers\VendorDashboardController::class, 'saveInventoryStatusRanges'])->name('vendor.inventory-status-ranges');
 
+Route::get('/retailer/orders/history', [App\Http\Controllers\RetailerOrderHistoryController::class, 'index'])->name('retailer.orders.history');
+Route::get('/retailer/offers', [App\Http\Controllers\RetailerOffersController::class, 'index'])->name('retailer.offers');
 Route::middleware(['auth', 'verified'])->get('/vendor/production', [\App\Http\Controllers\VendorProductionController::class, 'index'])->name('vendor.production.index');
-Route::middleware(['auth', 'verified'])->post('/vendor/production', [\App\Http\Controllers\VendorProductionController::class, 'store'])->name('vendor.production.store');
 
 Route::middleware(['auth'])->get('/chat', [\App\Http\Controllers\ChatController::class, 'index'])->name('chat');
 Route::middleware(['auth'])->get('/chat/recipients', [\App\Http\Controllers\ChatController::class, 'getRecipients']);
@@ -522,3 +522,13 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
 // Add this route for flat inventory stats by product (not grouped by vendor)
 Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])
     ->get('/admin/distribution-centers/{id}/inventory-stats', [\App\Http\Controllers\AdminDistributionCenterController::class, 'inventoryStats']);
+
+Route::post('/driver/orders/{order}/proof', [\App\Http\Controllers\DriverOrderController::class, 'uploadProof'])->name('driver.orders.proof');
+Route::post('/vendor/orders/{order}/assign-driver', [\App\Http\Controllers\VendorOrderController::class, 'assignDriver'])->name('vendor.orders.assignDriver');
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/vendor/assign-driver', [\App\Http\Controllers\VendorOrderController::class, 'showAssignDriverForm'])->name('vendor.assign-driver');
+});
+
+Route::middleware(['auth', 'verified'])->get('/vendor/reports', [\App\Http\Controllers\VendorDashboardController::class, 'reportsPage'])->name('vendor.reports');
+Route::middleware(['auth', 'verified'])->get('/supplier/reports', [\App\Http\Controllers\SupplierDashboardController::class, 'myReports'])->name('supplier.reports');

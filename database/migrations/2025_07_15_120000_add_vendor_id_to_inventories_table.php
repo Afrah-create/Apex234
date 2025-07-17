@@ -10,11 +10,11 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::table('inventories', function (Blueprint $table) {
-            $table->unsignedBigInteger('vendor_id')->nullable()->after('id');
-            // Uncomment the next line to enforce referential integrity
-            // $table->foreign('vendor_id')->references('id')->on('vendors')->onDelete('cascade');
-        });
+        if (!Schema::hasColumn('inventories', 'vendor_id')) {
+            Schema::table('inventories', function (Blueprint $table) {
+                $table->unsignedBigInteger('vendor_id')->nullable()->after('id');
+            });
+        }
     }
 
     /**

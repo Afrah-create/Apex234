@@ -80,6 +80,29 @@ class CustomerOrderController extends Controller
         $order->total_amount = $total;
         $order->save();
 
+        // --- Automatic Vendor Assignment ---
+        $order->refresh();
+        $orderItems = $order->orderItems()->with('yogurtProduct')->get();
+        $eligibleVendors = \App\Models\Vendor::where('status', 'approved')->get()->filter(function($vendor) use ($orderItems) {
+            foreach ($orderItems as $item) {
+                $product = $item->yogurtProduct;
+                if (!$product || $product->vendor_id != $vendor->id || $product->stock < $item->quantity) {
+                    return false;
+                }
+            }
+            return true;
+        });
+        if ($eligibleVendors->isNotEmpty()) {
+            $selectedVendor = $eligibleVendors->random();
+            $order->vendor_id = $selectedVendor->id;
+            $order->save();
+            // Notify the vendor
+            $selectedVendor->notify(new \App\Notifications\VendorAssignedOrderNotification($order));
+        } else {
+            // Optionally: handle no eligible vendor (e.g., notify admin, mark as unassigned, etc.)
+        }
+        // --- End Automatic Vendor Assignment ---
+
         // Process the order (deduct inventory, confirm, assign distribution center)
         $this->orderProcessingService->processCustomerOrder($order);
 
