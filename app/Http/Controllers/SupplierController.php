@@ -404,11 +404,95 @@ class SupplierController extends Controller
             }
         }
 
+        // --- RECENT ACTIVITY AGGREGATION ---
+        $recentActivities = collect();
+
+        // 1. Recent Supplies (RawMaterial creation)
+        $dairyFarm = \App\Models\DairyFarm::where('supplier_id', $supplier->id)->first();
+        if ($dairyFarm) {
+            $supplies = \App\Models\RawMaterial::where('dairy_farm_id', $dairyFarm->id)
+                ->orderByDesc('created_at')
+                ->limit(10)
+                ->get()
+                ->map(function($supply) {
+                    return [
+                        'date' => $supply->created_at,
+                        'type' => 'Supply',
+                        'material' => $supply->material_name ?? ucfirst($supply->material_type),
+                        'quantity' => $supply->quantity . ($supply->unit_of_measure ? $supply->unit_of_measure : ''),
+                        'status' => ucfirst($supply->status),
+                        'notes' => $supply->quality_notes ?? null,
+                    ];
+                });
+            $recentActivities = $recentActivities->concat($supplies);
+        }
+
+        // 2. Recent Orders (RawMaterialOrder)
+        $orders = \App\Models\RawMaterialOrder::where('supplier_id', $supplier->id)
+            ->orderByDesc('created_at')
+            ->limit(10)
+            ->get()
+            ->map(function($order) {
+                return [
+                    'date' => $order->created_at,
+                    'type' => 'Order',
+                    'material' => $order->material_name ?? ucfirst($order->material_type),
+                    'quantity' => $order->quantity . ($order->unit_of_measure ? $order->unit_of_measure : ''),
+                    'status' => ucfirst($order->status),
+                    'notes' => $order->notes ?? null,
+                ];
+            });
+        $recentActivities = $recentActivities->concat($orders);
+
+        // 3. Recent Deliveries (Delivery)
+        $orderIds = \App\Models\RawMaterialOrder::where('supplier_id', $supplier->id)->pluck('id');
+        if ($orderIds->count() > 0) {
+            $deliveries = \App\Models\Delivery::whereIn('order_id', $orderIds)
+                ->orderByDesc('created_at')
+                ->limit(10)
+                ->get()
+                ->map(function($delivery) {
+                    return [
+                        'date' => $delivery->created_at,
+                        'type' => 'Delivery',
+                        'material' => $delivery->material ?? 'N/A',
+                        'quantity' => $delivery->quantity ?? '',
+                        'status' => ucfirst($delivery->delivery_status ?? $delivery->status ?? 'Scheduled'),
+                        'notes' => $delivery->recipient_name ? ('To: ' . $delivery->recipient_name) : null,
+                    ];
+                });
+            $recentActivities = $recentActivities->concat($deliveries);
+        }
+
+        // 4. Inventory Events (Expired, Disposed, etc.)
+        if ($dairyFarm) {
+            $inventoryEvents = \App\Models\RawMaterial::where('dairy_farm_id', $dairyFarm->id)
+                ->whereIn('status', ['expired', 'disposed'])
+                ->orderByDesc('updated_at')
+                ->limit(10)
+                ->get()
+                ->map(function($item) {
+                    return [
+                        'date' => $item->updated_at,
+                        'type' => 'Inventory',
+                        'material' => $item->material_name ?? ucfirst($item->material_type),
+                        'quantity' => $item->quantity . ($item->unit_of_measure ? $item->unit_of_measure : ''),
+                        'status' => ucfirst($item->status),
+                        'notes' => $item->quality_notes ?? 'Batch event',
+                    ];
+                });
+            $recentActivities = $recentActivities->concat($inventoryEvents);
+        }
+
+        // Sort all activities by date descending, take top 10
+        $recentActivities = $recentActivities->sortByDesc('date')->take(10)->values();
+
         return view('dashboard-supplier', compact(
             'totalSupplied',
             'pendingDeliveries',
             'deliveredBatches',
-            'inventorySummary'
+            'inventorySummary',
+            'recentActivities'
         ));
     }
 

@@ -131,7 +131,10 @@
             });
         });
     }
-    document.addEventListener('DOMContentLoaded', loadSupplyHistory);
+    document.addEventListener('DOMContentLoaded', function() {
+        loadSupplyHistory();
+        setInterval(loadSupplyHistory, 10000); // Poll every 10 seconds
+    });
     window.addEventListener('pageshow', function(event) {
         if (event.persisted) {
             window.location.reload();

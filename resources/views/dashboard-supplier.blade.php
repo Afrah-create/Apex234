@@ -44,30 +44,37 @@
             <thead>
                 <tr>
                     <th class="px-4 py-2 text-left">Date</th>
+                    <th class="px-4 py-2 text-left">Activity Type</th>
                     <th class="px-4 py-2 text-left">Material</th>
                     <th class="px-4 py-2 text-left">Quantity</th>
                     <th class="px-4 py-2 text-left">Status</th>
+                    <th class="px-4 py-2 text-left">Notes</th>
                 </tr>
             </thead>
             <tbody>
+            @forelse($recentActivities as $activity)
                 <tr>
-                    <td class="px-4 py-2">2024-06-27</td>
-                    <td class="px-4 py-2">Milk</td>
-                    <td class="px-4 py-2">100L</td>
-                    <td class="px-4 py-2"><span class="text-green-600 font-semibold">Delivered</span></td>
+                    <td class="px-4 py-2">{{ $activity['date'] ? \Carbon\Carbon::parse($activity['date'])->format('Y-m-d') : '-' }}</td>
+                    <td class="px-4 py-2">{{ $activity['type'] }}</td>
+                    <td class="px-4 py-2">{{ $activity['material'] }}</td>
+                    <td class="px-4 py-2">{{ $activity['quantity'] }}</td>
+                    <td class="px-4 py-2">
+                        @php
+                            $status = strtolower($activity['status']);
+                            $color = 'text-gray-600';
+                            if ($status === 'delivered' || $status === 'available') $color = 'text-green-600 font-semibold';
+                            elseif ($status === 'pending' || $status === 'processing' || $status === 'scheduled') $color = 'text-yellow-600 font-semibold';
+                            elseif ($status === 'expired' || $status === 'disposed' || $status === 'cancelled') $color = 'text-red-600 font-semibold';
+                        @endphp
+                        <span class="{{ $color }}">{{ $activity['status'] }}</span>
+                    </td>
+                    <td class="px-4 py-2">{{ $activity['notes'] ?? '' }}</td>
                 </tr>
+            @empty
                 <tr>
-                    <td class="px-4 py-2">2024-06-26</td>
-                    <td class="px-4 py-2">Sugar</td>
-                    <td class="px-4 py-2">20kg</td>
-                    <td class="px-4 py-2"><span class="text-yellow-600 font-semibold">Pending</span></td>
+                    <td colspan="6" class="text-center py-2 text-gray-400">No recent activity found.</td>
                 </tr>
-                <tr>
-                    <td class="px-4 py-2">2024-06-25</td>
-                    <td class="px-4 py-2">Fruits</td>
-                    <td class="px-4 py-2">15kg</td>
-                    <td class="px-4 py-2"><span class="text-green-600 font-semibold">Delivered</span></td>
-                </tr>
+            @endforelse
             </tbody>
         </table>
     </div>
