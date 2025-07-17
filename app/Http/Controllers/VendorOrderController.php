@@ -139,6 +139,11 @@ class VendorOrderController extends Controller
             'expected_delivery_date' => $request->expected_delivery_date,
         ]);
 
+        // Notify supplier's user
+        if ($supplier->user) {
+            $supplier->user->notify(new \App\Notifications\RawMaterialOrderPlacedNotification($order, $vendor));
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Order placed successfully! Supplier has been notified.',
@@ -253,15 +258,29 @@ class VendorOrderController extends Controller
     // List product orders from retailers
     public function listProductOrders(): JsonResponse
     {
-        $orders = Order::with(['retailer.user', 'orderItems', 'orderItems.yogurtProduct'])
+        $vendor = \Illuminate\Support\Facades\Auth::user()->vendor;
+        if (!$vendor) {
+            return response()->json([]);
+        }
+        // Get all yogurt product IDs for which this vendor has inventory
+        $vendorProductIds = \App\Models\Inventory::where('vendor_id', $vendor->id)
+            ->pluck('yogurt_product_id')
+            ->unique()
+            ->toArray();
+        // Get all orders (not raw material) that have at least one order item for these products
+        $orders = \App\Models\Order::with(['retailer.user', 'orderItems.yogurtProduct'])
             ->where('order_type', '!=', 'raw_material')
+            ->whereHas('orderItems', function($q) use ($vendorProductIds) {
+                $q->whereIn('yogurt_product_id', $vendorProductIds);
+            })
             ->orderByDesc('created_at')
             ->get()
             ->map(function($order) {
                 return [
                     'id' => $order->id,
                     'date' => $order->order_date,
-                    'retailer' => $order->retailer->user->name ?? 'Retailer',
+                    'order_source' => $order->order_type === 'customer' ? 'Customer' : 'Retailer',
+                    'retailer' => $order->retailer && $order->retailer->user ? $order->retailer->user->name : null,
                     'items' => $order->orderItems->map(function($item) {
                         return [
                             'product' => $item->yogurtProduct->product_name ?? '',
@@ -301,7 +320,28 @@ class VendorOrderController extends Controller
         $order->order_status = 'confirmed';
         $order->save();
 
-        // Optionally, deduct stock here
+        // Deduct inventory for each item (FIFO by expiry_date)
+        foreach ($order->orderItems as $item) {
+            $product = $item->yogurtProduct;
+            $quantityToDeduct = $item->quantity;
+            $vendorId = $product->vendor_id;
+            // Get all inventory records for this product and vendor, ordered by soonest expiry
+            $inventories = \App\Models\Inventory::where('yogurt_product_id', $product->id)
+                ->where('vendor_id', $vendorId)
+                ->where('quantity_available', '>', 0)
+                ->orderBy('expiry_date')
+                ->get();
+            foreach ($inventories as $inventory) {
+                if ($quantityToDeduct <= 0) break;
+                $deduct = min($inventory->quantity_available, $quantityToDeduct);
+                $inventory->quantity_available -= $deduct;
+                $inventory->save();
+                $quantityToDeduct -= $deduct;
+            }
+            // Sync product stock with sum of all available inventory
+            $product->stock = $product->inventories()->sum('quantity_available');
+            $product->save();
+        }
 
         return response()->json(['success' => true]);
     }

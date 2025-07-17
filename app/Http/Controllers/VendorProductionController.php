@@ -91,27 +91,30 @@ class VendorProductionController extends Controller
                 $batch->rawMaterials()->attach($material->id, ['quantity_used' => $qty]);
             }
 
-            // Add to inventory
-            \App\Models\Inventory::create([
-                'yogurt_product_id' => $product->id,
-                'vendor_id' => $vendor->id, // Set vendor_id for inventory
-                'distribution_center_id' => \App\Models\DistributionCenter::first()->id,
-                'batch_number' => $batch->batch_code,
-                'quantity_available' => $totalUnits,
-                'quantity_reserved' => 0,
-                'quantity_damaged' => 0,
-                'quantity_expired' => 0,
-                'production_date' => now()->toDateString(),
-                'expiry_date' => now()->addDays(7)->toDateString(),
-                'storage_temperature' => 4.0,
-                'storage_location' => 'refrigerator',
-                'shelf_location' => null,
-                'inventory_status' => 'available',
-                'unit_cost' => $product->production_cost ?? 0,
-                'total_value' => ($product->production_cost ?? 0) * $totalUnits,
-                'last_updated' => now()->toDateString(),
-                'notes' => 'Batch created from production',
-            ]);
+            // Add to inventory for all assigned distribution centers
+            $assignedCenters = $vendor->distributionCenters; // Eloquent relationship
+            foreach ($assignedCenters as $center) {
+                \App\Models\Inventory::create([
+                    'yogurt_product_id' => $product->id,
+                    'vendor_id' => $vendor->id, // Set vendor_id for inventory
+                    'distribution_center_id' => $center->id,
+                    'batch_number' => $batch->batch_code,
+                    'quantity_available' => $totalUnits,
+                    'quantity_reserved' => 0,
+                    'quantity_damaged' => 0,
+                    'quantity_expired' => 0,
+                    'production_date' => now()->toDateString(),
+                    'expiry_date' => now()->addDays(7)->toDateString(),
+                    'storage_temperature' => 4.0,
+                    'storage_location' => 'refrigerator',
+                    'shelf_location' => null,
+                    'inventory_status' => 'available',
+                    'unit_cost' => $product->production_cost ?? 0,
+                    'total_value' => ($product->production_cost ?? 0) * $totalUnits,
+                    'last_updated' => now()->toDateString(),
+                    'notes' => 'Batch created from production',
+                ]);
+            }
         });
 
         return redirect()->route('vendor.production.index')->with('success', 'Production batch recorded successfully!');

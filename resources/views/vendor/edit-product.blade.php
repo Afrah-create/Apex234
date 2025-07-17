@@ -15,15 +15,15 @@
         <input type="hidden" id="product-id" value="{{ $product->id }}">
         <div class="mb-4">
             <label class="block font-bold mb-1 text-sm">Product Name</label>
-            <input type="text" name="name" class="w-full p-2 rounded border text-sm" value="{{ $product->product_name }}" required>
+            <input type="text" name="product_name" class="w-full p-2 rounded border text-sm bg-gray-100" value="{{ $product->product_name }}" readonly>
         </div>
         <div class="mb-4">
             <label class="block font-bold mb-1 text-sm">Product Type</label>
-            <input type="text" name="type" class="w-full p-2 rounded border text-sm" value="{{ $product->product_type }}" required>
+            <input type="text" name="product_type" class="w-full p-2 rounded border text-sm bg-gray-100" value="{{ $product->product_type }}" readonly>
         </div>
         <div class="mb-4">
             <label class="block font-bold mb-1 text-sm">Selling Price (UGX)</label>
-            <input type="number" name="price" id="price" class="w-full p-2 rounded border text-sm" value="{{ $product->selling_price }}" min="0" step="0.01" required>
+            <input type="number" name="selling_price" id="price" class="w-full p-2 rounded border text-sm bg-gray-100" value="{{ $product->selling_price }}" readonly>
         </div>
         <div class="mb-4">
             <label class="block font-bold mb-1 text-sm">Stock (Total)</label>
@@ -68,29 +68,8 @@
             </div>
         </div>
         
-        <div class="mb-4">
-            <label class="block font-bold mb-1 text-sm">Total Value (UGX)</label>
-            <input type="number" name="total_value" id="total_value" class="w-full p-2 rounded border text-sm bg-gray-100" value="{{ $product->stock * $product->selling_price }}" readonly>
-        </div>
-        <div class="mb-4">
-            <label class="block font-bold mb-1 text-sm">Image</label>
-            <input type="file" name="image" class="w-full p-2 rounded border text-sm">
-            @if($product->image_path)
-                <img src="{{ asset('storage/' . $product->image_path) }}" alt="Product Image" class="mt-2 h-24">
-            @endif
-        </div>
-        <div class="mb-4">
-            <label class="block font-bold mb-1 text-sm">Inventory Status</label>
-            <select name="inventory_status" id="inventory_status" class="w-full p-2 rounded border text-sm">
-                <option value="available" {{ ($inventory->inventory_status ?? 'available') == 'available' ? 'selected' : '' }}>✅ Available</option>
-                <option value="low_stock" {{ ($inventory->inventory_status ?? '') == 'low_stock' ? 'selected' : '' }}>⚠️ Low Stock</option>
-                <option value="out_of_stock" {{ ($inventory->inventory_status ?? '') == 'out_of_stock' ? 'selected' : '' }}>❌ Out of Stock</option>
-                <option value="expired" {{ ($inventory->inventory_status ?? '') == 'expired' ? 'selected' : '' }}>⏰ Expired</option>
-                <option value="damaged" {{ ($inventory->inventory_status ?? '') == 'damaged' ? 'selected' : '' }}>💥 Damaged</option>
-            </select>
-        </div>
-        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg w-full text-base">Update Product</button>
-        <div id="edit-product-success" class="mt-4 text-green-600 font-bold hidden text-sm">Product updated successfully!</div>
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg w-full text-base">Update Inventory</button>
+        <div id="edit-product-success" class="mt-4 text-green-600 font-bold hidden text-sm">Inventory updated successfully!</div>
         <div id="edit-product-error" class="mt-4 text-red-600 font-bold hidden text-sm"></div>
     </form>
 </main>
@@ -120,23 +99,25 @@ document.getElementById('edit-product-form').addEventListener('submit', function
         return;
     }
     e.preventDefault();
-    const form = e.target;
-    const id = document.getElementById('product-id').value;
-    const formData = new FormData(form);
-    fetch(`/api/vendor/products/${id}`, {
-        method: 'POST',
+    const id = {{ $product->currentInventory->id ?? 'null' }};
+    const data = {
+        quantity_reserved: document.getElementById('quantity_reserved').value,
+        quantity_damaged: document.getElementById('quantity_damaged').value
+    };
+    fetch(`/api/vendor/inventory/products/${id}`, {
+        method: 'PUT',
         headers: {
+            'Content-Type': 'application/json',
             'X-CSRF-TOKEN': '{{ csrf_token() }}',
             'Accept': 'application/json'
         },
-        body: formData
+        body: JSON.stringify(data)
     })
     .then(res => res.json())
     .then(data => {
         if (data.success) {
             document.getElementById('edit-product-success').classList.remove('hidden');
             document.getElementById('edit-product-error').classList.add('hidden');
-            // Redirect back to inventory page after 2 seconds
             setTimeout(() => {
                 window.location.href = '{{ route("vendor.manage-products") }}';
             }, 2000);

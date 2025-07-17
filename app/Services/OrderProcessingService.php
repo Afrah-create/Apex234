@@ -9,7 +9,6 @@ use App\Models\User;
 use App\Models\Retailer;
 use App\Models\DistributionCenter;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\OrderStatusUpdate;
@@ -22,14 +21,63 @@ class OrderProcessingService
      */
     public function processCustomerOrder(Order $order)
     {
-        // If bulk order, require admin approval before processing
         if ($order->order_type === 'bulk') {
-            $order->update([
-                'order_status' => 'pending_admin_approval',
-                'notes' => $order->notes . ' [Pending admin approval for bulk order]'
-            ]);
-            Log::info('Bulk order requires admin approval', ['order_id' => $order->id]);
-            return false;
+            DB::beginTransaction();
+            try {
+                $orderItems = $order->orderItems()->with('yogurtProduct')->get();
+                $partiallyFulfilled = [];
+                $anyPartial = false;
+                foreach ($orderItems as $item) {
+                    $product = $item->yogurtProduct;
+                    if (!$product) continue;
+                    $distributionCenterId = $order->distribution_center_id;
+                    $vendorId = $product->vendor_id;
+                    $inventory = \App\Models\Inventory::where('yogurt_product_id', $product->id)
+                        ->where('vendor_id', $vendorId)
+                        ->when($distributionCenterId, function($query) use ($distributionCenterId) {
+                            return $query->where('distribution_center_id', $distributionCenterId);
+                        })
+                        ->orderByDesc('quantity_available')
+                        ->first();
+                    $available = $inventory ? $inventory->quantity_available : 0;
+                    $toFulfill = min($item->quantity, $available);
+                    if ($toFulfill < $item->quantity) {
+                        $anyPartial = true;
+                        $partiallyFulfilled[] = [
+                            'product_name' => $product->product_name,
+                            'requested' => $item->quantity,
+                            'fulfilled' => $toFulfill
+                        ];
+                    }
+                    // Update order item to actual fulfilled quantity
+                    $item->fulfilled_quantity = $toFulfill;
+                    $item->save();
+                    // Deduct inventory
+                    if ($inventory) {
+                        $inventory->quantity_available = max(0, $inventory->quantity_available - $toFulfill);
+                        $inventory->save();
+                    }
+                }
+                $order->update([
+                    'order_status' => 'confirmed',
+                    'notes' => $order->notes . ($anyPartial ? ' [Partially fulfilled: some items were only partially fulfilled due to limited inventory]' : ' [Auto-confirmed by system]')
+                ]);
+                if (!$order->distribution_center_id) {
+                    $distributionCenter = $this->assignDistributionCenter($order);
+                    $order->update(['distribution_center_id' => $distributionCenter->id]);
+                }
+                $this->sendOrderConfirmation($order, $partiallyFulfilled);
+                DB::commit();
+                \Illuminate\Support\Facades\Log::info('Customer bulk order processed with partial fulfillment', ['order_id' => $order->id]);
+                return true;
+            } catch (\Exception $e) {
+                DB::rollBack();
+                \Illuminate\Support\Facades\Log::error('Bulk order processing failed', [
+                    'order_id' => $order->id,
+                    'error' => $e->getMessage()
+                ]);
+                return false;
+            }
         }
 
         DB::beginTransaction();
@@ -69,12 +117,12 @@ class OrderProcessingService
             $this->sendOrderConfirmation($order);
 
             DB::commit();
-            Log::info('Customer order processed successfully', ['order_id' => $order->id]);
+            \Illuminate\Support\Facades\Log::info('Customer order processed successfully', ['order_id' => $order->id]);
             return true;
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Order processing failed', [
+            \Illuminate\Support\Facades\Log::error('Order processing failed', [
                 'order_id' => $order->id,
                 'error' => $e->getMessage()
             ]);
@@ -115,12 +163,12 @@ class OrderProcessingService
             $this->sendRetailerOrderConfirmation($order);
 
             DB::commit();
-            Log::info('Retailer order processed successfully', ['order_id' => $order->id]);
+            \Illuminate\Support\Facades\Log::info('Retailer order processed successfully', ['order_id' => $order->id]);
             return true;
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Retailer order processing failed', [
+            \Illuminate\Support\Facades\Log::error('Retailer order processing failed', [
                 'order_id' => $order->id,
                 'error' => $e->getMessage()
             ]);
@@ -177,7 +225,7 @@ class OrderProcessingService
             $this->sendStatusUpdateNotification($order, $oldStatus, $newStatus);
 
             DB::commit();
-            Log::info('Order status updated', [
+            \Illuminate\Support\Facades\Log::info('Order status updated', [
                 'order_id' => $order->id,
                 'old_status' => $oldStatus,
                 'new_status' => $newStatus
@@ -187,7 +235,7 @@ class OrderProcessingService
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Order status update failed', [
+            \Illuminate\Support\Facades\Log::error('Order status update failed', [
                 'order_id' => $order->id,
                 'new_status' => $newStatus,
                 'error' => $e->getMessage()
@@ -202,7 +250,7 @@ class OrderProcessingService
     private function validateInventory(Order $order)
     {
         $orderItems = $order->orderItems()->with('yogurtProduct')->get();
-        
+        $distributionCenterId = $order->distribution_center_id;
         foreach ($orderItems as $item) {
             $product = $item->yogurtProduct;
             if (!$product) {
@@ -211,16 +259,18 @@ class OrderProcessingService
                     'message' => "Product not found for item {$item->id}"
                 ];
             }
-
-            $availableStock = $product->stock ?? 0;
+            $vendorId = $product->vendor_id;
+            $availableStock = \App\Models\Inventory::where('yogurt_product_id', $product->id)
+                ->where('vendor_id', $vendorId)
+                ->where('distribution_center_id', $distributionCenterId)
+                ->sum('quantity_available');
             if ($availableStock < $item->quantity) {
                 return [
                     'success' => false,
-                    'message' => "Insufficient stock for {$product->product_name}. Available: {$availableStock}, Requested: {$item->quantity}"
+                    'message' => "Insufficient stock for {$product->product_name} at the selected distribution center. Available: {$availableStock}, Requested: {$item->quantity}"
                 ];
             }
         }
-
         return ['success' => true];
     }
 
@@ -234,25 +284,45 @@ class OrderProcessingService
         foreach ($orderItems as $item) {
             $product = $item->yogurtProduct;
             $vendorId = $product->vendor_id; // Use the product's vendor
-            // Deduct from inventory by vendor and distribution center
-            $inventory = \App\Models\Inventory::where('yogurt_product_id', $product->id)
+            $quantityToDeduct = $item->quantity;
+            // Get all inventory records for this product and vendor, order does not matter
+            $inventories = \App\Models\Inventory::where('yogurt_product_id', $product->id)
                 ->where('vendor_id', $vendorId)
                 ->when($distributionCenterId, function($query) use ($distributionCenterId) {
                     return $query->where('distribution_center_id', $distributionCenterId);
                 })
-                ->orderByDesc('quantity_available')
-                ->first();
-            if ($inventory) {
-                $inventory->quantity_available = max(0, $inventory->quantity_available - $item->quantity);
+                ->where('quantity_available', '>', 0)
+                ->get();
+
+            // LOGGING: Trace deduction attempt
+            \Illuminate\Support\Facades\Log::info('Reserving inventory for order', [
+                'order_id' => $order->id,
+                'order_item_id' => $item->id,
+                'product_id' => $product ? $product->id : null,
+                'product_name' => $product ? $product->product_name : null,
+                'vendor_id' => $vendorId,
+                'quantity_to_deduct' => $quantityToDeduct,
+                'found_inventories' => $inventories->pluck('id')->toArray(),
+                'distribution_center_id' => $distributionCenterId,
+            ]);
+
+            foreach ($inventories as $inventory) {
+                if ($quantityToDeduct <= 0) break;
+                $deduct = min($inventory->quantity_available, $quantityToDeduct);
+                $inventory->quantity_available -= $deduct;
                 $inventory->save();
-            } else {
-                \Log::warning('No inventory record found for deduction', [
-                    'product_id' => $product->id,
-                    'vendor_id' => $vendorId,
-                    'distribution_center_id' => $distributionCenterId,
-                    'order_id' => $order->id,
+                $quantityToDeduct -= $deduct;
+                // LOGGING: Each deduction
+                \Illuminate\Support\Facades\Log::info('Inventory deduction', [
+                    'inventory_id' => $inventory->id,
+                    'deducted' => $deduct,
+                    'remaining_in_inventory' => $inventory->quantity_available,
+                    'quantity_left_to_deduct' => $quantityToDeduct
                 ]);
             }
+            // Sync product stock with sum of all available inventory
+            $product->stock = $product->inventories()->sum('quantity_available');
+            $product->save();
         }
     }
 
@@ -261,16 +331,37 @@ class OrderProcessingService
      */
     private function assignDistributionCenter(Order $order)
     {
-        // Simple logic - can be enhanced with real distance calculation
-        $distributionCenter = DistributionCenter::where('status', 'operational')
-            ->orderBy('id')
-            ->first();
+        // Get all operational distribution centers
+        $distributionCenters = \App\Models\DistributionCenter::where('status', 'operational')->get();
+        $orderItems = $order->orderItems()->with('yogurtProduct')->get();
 
-        if (!$distributionCenter) {
-            throw new \Exception('No operational distribution center available');
+        $bestCenter = null;
+        foreach ($distributionCenters as $center) {
+            $canFulfill = true;
+            foreach ($orderItems as $item) {
+                $product = $item->yogurtProduct;
+                $vendorId = $product->vendor_id;
+                $totalAvailable = \App\Models\Inventory::where('yogurt_product_id', $product->id)
+                    ->where('vendor_id', $vendorId)
+                    ->where('distribution_center_id', $center->id)
+                    ->where('quantity_available', '>', 0)
+                    ->sum('quantity_available');
+                if ($totalAvailable < $item->quantity) {
+                    $canFulfill = false;
+                    break;
+                }
+            }
+            if ($canFulfill) {
+                $bestCenter = $center;
+                break; // Pick the first center that can fulfill all items
+            }
         }
 
-        return $distributionCenter;
+        if (!$bestCenter) {
+            throw new \Exception('No distribution center can fully fulfill this order.');
+        }
+
+        return $bestCenter;
     }
 
     /**
@@ -361,22 +452,22 @@ class OrderProcessingService
     /**
      * Send order confirmation
      */
-    private function sendOrderConfirmation(Order $order)
+    private function sendOrderConfirmation(Order $order, $partiallyFulfilled = [])
     {
         try {
             $user = $order->customer;
             $orderItems = $order->orderItems()->with('yogurtProduct')->get();
-            
             Mail::send('emails.order-confirmation', [
                 'order' => $order,
                 'user' => $user,
-                'orderItems' => $orderItems
+                'orderItems' => $orderItems,
+                'partiallyFulfilled' => $partiallyFulfilled
             ], function ($message) use ($user, $order) {
                 $message->to($user->email, $user->name)
                         ->subject('Order Confirmed - ' . $order->order_number);
             });
         } catch (\Exception $e) {
-            Log::error('Failed to send order confirmation', [
+            \Illuminate\Support\Facades\Log::error('Failed to send order confirmation', [
                 'order_id' => $order->id,
                 'error' => $e->getMessage()
             ]);
@@ -403,7 +494,7 @@ class OrderProcessingService
                 });
             }
         } catch (\Exception $e) {
-            Log::error('Failed to send retailer order confirmation', [
+            \Illuminate\Support\Facades\Log::error('Failed to send retailer order confirmation', [
                 'order_id' => $order->id,
                 'error' => $e->getMessage()
             ]);
@@ -426,7 +517,7 @@ class OrderProcessingService
                 $order->retailer->user->notify(new OrderStatusUpdate($order, $oldStatus, $newStatus));
             }
         } catch (\Exception $e) {
-            Log::error('Failed to send status update notification', [
+            \Illuminate\Support\Facades\Log::error('Failed to send status update notification', [
                 'order_id' => $order->id,
                 'error' => $e->getMessage()
             ]);
@@ -451,7 +542,7 @@ class OrderProcessingService
                 });
             }
         } catch (\Exception $e) {
-            Log::error('Failed to send order cancellation notification', [
+            \Illuminate\Support\Facades\Log::error('Failed to send order cancellation notification', [
                 'order_id' => $order->id,
                 'error' => $e->getMessage()
             ]);
@@ -476,7 +567,7 @@ class OrderProcessingService
                 });
             }
         } catch (\Exception $e) {
-            Log::error('Failed to send retailer order pending notification', [
+            \Illuminate\Support\Facades\Log::error('Failed to send retailer order pending notification', [
                 'order_id' => $order->id,
                 'error' => $e->getMessage()
             ]);

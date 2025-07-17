@@ -237,7 +237,6 @@
               <option value="confirmed">Confirmed</option>
               <option value="delivered">Delivered</option>
               <option value="cancelled">Cancelled</option>
-              <option value="pending_admin_approval">Pending Admin Approval</option>
             </select>
           </div>
           <div class="form-group mb-2">
@@ -251,6 +250,44 @@
         </form>
       </div>
     </div>
+
+    <!-- Bulk Update Modal -->
+    <div id="bulkUpdateModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:1000; align-items:center; justify-content:center;">
+      <div style="background:#fff; padding:32px 24px; border-radius:8px; min-width:320px; max-width:90vw; box-shadow:0 2px 16px rgba(0,0,0,0.2); position:relative;">
+        <h3 style="margin-bottom:18px; font-size:1.2em; color:#1a237e;">Bulk Update Orders</h3>
+        <form id="bulkUpdateForm">
+          <div style="margin-bottom:14px;">
+            <label for="bulk-order-status" style="font-weight:500;">Order Status:</label>
+            <select id="bulk-order-status" name="order_status" style="width:100%; padding:6px; margin-top:4px;">
+              <option value="">-- No Change --</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="processing">Processing</option>
+              <option value="delivered">Delivered</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+          <div style="margin-bottom:18px;">
+            <label for="bulk-payment-status" style="font-weight:500;">Payment Status:</label>
+            <select id="bulk-payment-status" name="payment_status" style="width:100%; padding:6px; margin-top:4px;">
+              <option value="">-- No Change --</option>
+              <option value="pending">Pending</option>
+              <option value="paid">Paid</option>
+              <option value="failed">Failed</option>
+            </select>
+          </div>
+          <div style="display:flex; justify-content:flex-end; gap:10px;">
+            <button type="button" id="bulkUpdateCancelBtn" style="background:#eee; color:#333; border:none; padding:7px 18px; border-radius:4px; cursor:pointer;">Cancel</button>
+            <button type="submit" style="background:#1976d2; color:#fff; border:none; padding:7px 18px; border-radius:4px; cursor:pointer;">Update</button>
+          </div>
+        </form>
+        <button id="bulkUpdateCloseBtn" style="position:absolute; top:10px; right:14px; background:none; border:none; font-size:1.3em; color:#888; cursor:pointer;">&times;</button>
+      </div>
+    </div>
+
+    <style>
+      /* Modal scroll lock */
+      body.bulk-modal-open { overflow: hidden; }
+    </style>
 
     <script>
         let ordersData = [];
@@ -299,51 +336,79 @@
             loadingState.classList.add('hidden');
             emptyState.classList.add('hidden');
 
-            tbody.innerHTML = filteredData.map(order => `
-                <tr class="hover:bg-gray-50">
-                    <td class="px-4 py-4 whitespace-nowrap text-sm">
-                        <input type="checkbox" class="order-checkbox" value="${order.id}" onchange="updateBulkActionsBar()">
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        #${order.order_number}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${order.order_type || ''}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${order.customer_name || ''}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${order.retailer_name || ''}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${order.order_date ? new Date(order.order_date).toLocaleDateString() : ''}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${order.delivery_address || ''}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${order.total_amount ? parseFloat(order.total_amount).toLocaleString() + ' UGX' : ''}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.order_status)}">
-                            ${order.order_status ? order.order_status.charAt(0).toUpperCase() + order.order_status.slice(1) : ''}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getPaymentStatusColor(order.payment_status)}">
-                            ${order.payment_status ? order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1) : ''}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div class="flex space-x-2">
-                            <button onclick="viewOrder(${order.id})" class="text-blue-600 hover:text-blue-900">View</button>
-                            <button onclick="openStatusModal(${order.id}, '${order.order_status}')" class="text-purple-600 hover:text-purple-900">Status</button>
-                            <button onclick="deleteOrder(${order.id})" class="text-red-600 hover:text-red-900">Delete</button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
+            // Sort orders by date/time descending
+            const sorted = [...filteredData].sort((a, b) => new Date(b.order_date) - new Date(a.order_date));
+
+            // Group orders by date
+            const groups = {};
+            const today = new Date();
+            const yesterday = new Date();
+            yesterday.setDate(today.getDate() - 1);
+            function formatDate(dateStr) {
+                const d = new Date(dateStr);
+                if (d.toDateString() === today.toDateString()) return 'Today';
+                if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
+                return d.toLocaleDateString();
+            }
+            sorted.forEach(order => {
+                const group = formatDate(order.order_date);
+                if (!groups[group]) groups[group] = [];
+                groups[group].push(order);
+            });
+
+            // Render grouped orders
+            let html = '';
+            Object.keys(groups).forEach(group => {
+                html += `<tr><td colspan="11" style="background:#f3f4f6; font-weight:600; color:#2563eb; padding:12px 0 6px 16px; font-size:1.08rem;">${group}</td></tr>`;
+                groups[group].forEach(order => {
+                    html += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-4 whitespace-nowrap text-sm">
+                            <input type="checkbox" class="order-checkbox" value="${order.id}" onchange="updateBulkActionsBar()">
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            #${order.order_number}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${order.order_type || ''}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${order.customer_name || ''}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${order.retailer_name || ''}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${order.order_date ? new Date(order.order_date).toLocaleDateString() : ''}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${order.delivery_address || ''}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${order.total_amount ? parseFloat(order.total_amount).toLocaleString() + ' UGX' : ''}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.order_status)}">
+                                ${order.order_status ? order.order_status.charAt(0).toUpperCase() + order.order_status.slice(1) : ''}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getPaymentStatusColor(order.payment_status)}">
+                                ${order.payment_status ? order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1) : ''}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex space-x-2">
+                                <button onclick="viewOrder(${order.id})" class="text-blue-600 hover:text-blue-900">View</button>
+                                <button onclick="openStatusModal(${order.id}, '${order.order_status}')" class="text-purple-600 hover:text-purple-900">Status</button>
+                                <button onclick="deleteOrder(${order.id})" class="text-red-600 hover:text-red-900">Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                    `;
+                });
+            });
+            tbody.innerHTML = html;
         }
 
         // Get status color
@@ -354,8 +419,7 @@
                 'processing': 'bg-purple-100 text-purple-800',
                 'shipped': 'bg-indigo-100 text-indigo-800',
                 'delivered': 'bg-green-100 text-green-800',
-                'cancelled': 'bg-red-100 text-red-800',
-                'pending_admin_approval': 'bg-orange-100 text-orange-800'
+                'cancelled': 'bg-red-100 text-red-800'
             };
             return colors[status] || 'bg-gray-100 text-gray-800';
         }
@@ -378,14 +442,21 @@
             const paymentFilter = document.getElementById('payment-filter').value;
 
             filteredData = ordersData.filter(order => {
-                const matchesSearch = order.order_number.toLowerCase().includes(searchTerm) ||
-                                    order.retailer_name.toLowerCase().includes(searchTerm);
+                // Combine all relevant fields into a single string for searching
+                const combined = [
+                    order.order_number,
+                    order.customer_name,
+                    order.retailer_name,
+                    order.order_date ? new Date(order.order_date).toLocaleDateString() : '',
+                    order.order_status,
+                    order.payment_status,
+                    order.delivery_address
+                ].join(' ').toLowerCase();
+                const matchesSearch = combined.includes(searchTerm);
                 const matchesStatus = !statusFilter || order.order_status === statusFilter;
                 const matchesPayment = !paymentFilter || order.payment_status === paymentFilter;
-
                 return matchesSearch && matchesStatus && matchesPayment;
             });
-
             renderOrdersTable();
         }
 
@@ -635,7 +706,8 @@
             document.getElementById('bulk-actions-bar').style.display = checked.length > 0 ? 'flex' : 'none';
         }
         function getSelectedOrderIds() {
-            return Array.from(document.querySelectorAll('.order-checkbox:checked')).map(cb => cb.value);
+            const checkboxes = document.querySelectorAll('.order-checkbox:checked');
+            return Array.from(checkboxes).map(cb => cb.value);
         }
         async function bulkDeleteOrders() {
             const ids = getSelectedOrderIds();
@@ -650,11 +722,61 @@
             showBulkActionMessage('Selected orders deleted successfully', 'success');
         }
         function bulkEditStatus() {
-            const ids = getSelectedOrderIds();
-            if (!ids.length) return;
-            showBulkActionMessage('Bulk status edit for order IDs: ' + ids.join(', '), 'info');
-            // You can implement a modal to select new status and send a bulk update request
+            const selectedIds = getSelectedOrderIds();
+            if (selectedIds.length === 0) {
+                alert('Please select at least one order to update.');
+                return;
+            }
+            document.getElementById('bulkUpdateModal').style.display = 'flex';
+            document.body.classList.add('bulk-modal-open');
         }
+
+        // Modal close/cancel handlers
+        function closeBulkUpdateModal() {
+            document.getElementById('bulkUpdateModal').style.display = 'none';
+            document.body.classList.remove('bulk-modal-open');
+            document.getElementById('bulkUpdateForm').reset();
+        }
+        document.getElementById('bulkUpdateCloseBtn').onclick = closeBulkUpdateModal;
+        document.getElementById('bulkUpdateCancelBtn').onclick = closeBulkUpdateModal;
+
+        // Bulk update form submit
+         document.getElementById('bulkUpdateForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const selectedIds = getSelectedOrderIds();
+            if (selectedIds.length === 0) {
+                alert('No orders selected.');
+                return;
+            }
+            const order_status = document.getElementById('bulk-order-status').value;
+            const payment_status = document.getElementById('bulk-payment-status').value;
+            if (!order_status && !payment_status) {
+                alert('Please select at least one field to update.');
+                return;
+            }
+            try {
+                const res = await fetch('/admin/orders/bulk-update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        order_ids: selectedIds,
+                        order_status,
+                        payment_status
+                    })
+                });
+                if (res.ok) {
+                    closeBulkUpdateModal();
+                    location.reload();
+                } else {
+                    alert('Bulk update failed.');
+                }
+            } catch (err) {
+                alert('Bulk update error: ' + err.message);
+            }
+        };
 
         // Event listeners
         document.addEventListener('DOMContentLoaded', function() {

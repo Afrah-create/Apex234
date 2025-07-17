@@ -3,6 +3,8 @@
 @section('content')
 <div class="max-w-3xl mx-auto py-12 px-4">
     <h1 class="text-3xl font-bold mb-6 text-blue-800">Help & Support - Frequently Asked Questions</h1>
+    <h2 class="text-2xl font-bold mb-4">Help & Support</h2>
+    <p>If you need assistance, please contact support or check the documentation.</p>
     <div class="space-y-6">
         <div>
             <h2 class="text-xl font-semibold text-gray-800">How do I reset my password?</h2>

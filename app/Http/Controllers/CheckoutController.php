@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use App\Services\BatchProductionService;
 
 class CheckoutController extends Controller
 {
@@ -156,7 +157,7 @@ class CheckoutController extends Controller
 
             // Determine order type dynamically
             $totalQuantity = $cartItems->sum('quantity');
-            if ($totalQuantity >= 10) {
+            if ($totalQuantity > 10) {
                 $orderType = 'bulk';
             } elseif ($totalQuantity < 2) {
                 $orderType = 'rush';
@@ -170,7 +171,7 @@ class CheckoutController extends Controller
                 'order_type' => $orderType,
                 'order_number' => 'CUST-' . now()->format('YmdHis') . strtoupper(uniqid()),
                 'order_date' => now(),
-                'order_status' => 'pending',
+                'order_status' => 'confirmed',
                 'subtotal' => $total,
                 'tax_amount' => $taxAmount,
                 'shipping_cost' => $shippingCost,
@@ -206,10 +207,7 @@ class CheckoutController extends Controller
                     'item_status' => 'pending',
                     'notes' => null,
                 ]);
-
-                // Reserve inventory (deduct from available stock)
-                $product->stock = max(0, $product->stock - $cartItem->quantity);
-                $product->save();
+                // Removed direct deduction from $product->stock here
             }
 
             // Clear cart
@@ -224,6 +222,36 @@ class CheckoutController extends Controller
             // Process the order automatically
             $orderProcessingService = new OrderProcessingService();
             $orderProcessingService->processCustomerOrder($order);
+
+            // --- Append new order data to CSV ---
+            try {
+                $csvPath = storage_path('app/orders_export.csv');
+                $isNewFile = !file_exists($csvPath);
+                $file = fopen($csvPath, 'a');
+                if ($isNewFile) {
+                    // Write header
+                    fputcsv($file, ['Order ID', 'Order Date', 'Product ID', 'Product Name', 'Quantity', 'Unit Price', 'Total Price']);
+                }
+                foreach ($cartItems as $cartItem) {
+                    $product = $cartItem->product;
+                    fputcsv($file, [
+                        $order->id,
+                        $order->created_at,
+                        $cartItem->product_id,
+                        $product->product_name ?? '',
+                        $cartItem->quantity,
+                        $product->selling_price,
+                        $cartItem->quantity * $product->selling_price,
+                    ]);
+                }
+                fclose($file);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to append order to CSV', [
+                    'order_id' => $order->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+            // --- End CSV append ---
 
             DB::commit();
 
@@ -250,7 +278,7 @@ class CheckoutController extends Controller
             }
             // --- End Automatic Vendor Assignment ---
 
-            Log::info('Customer order created successfully', [
+            \Illuminate\Support\Facades\Log::info('Customer order created successfully', [
                 'order_id' => $order->id,
                 'order_number' => $order->order_number,
                 'user_id' => Auth::id(),
@@ -262,7 +290,7 @@ class CheckoutController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Order creation failed', [
+            \Illuminate\Support\Facades\Log::error('Order creation failed', [
                 'user_id' => Auth::id(),
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
@@ -393,11 +421,11 @@ class CheckoutController extends Controller
                     $allAvailable = false;
                     break;
                 }
-                // Check inventory for this product at this center
-                $inventory = \App\Models\Inventory::where('distribution_center_id', $center->id)
+                // Check total inventory for this product at this center (sum across all records)
+                $totalAvailable = \App\Models\Inventory::where('distribution_center_id', $center->id)
                     ->where('yogurt_product_id', $product->id)
-                    ->first();
-                if (!$inventory || $inventory->quantity_available < $item->quantity) {
+                    ->sum('quantity_available');
+                if ($totalAvailable < $item->quantity) {
                     $allAvailable = false;
                     break;
                 }

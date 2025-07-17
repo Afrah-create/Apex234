@@ -94,6 +94,20 @@
             @endif
         </div>
         
+        @if(!empty($partiallyFulfilled))
+        <div class="order-details" style="border-left: 4px solid #FFA500;">
+            <h3 style="color: #FFA500;">Partial Fulfillment Notice</h3>
+            <p>Some items in your order could only be partially fulfilled due to limited inventory. See details below:</p>
+            <ul>
+                @foreach($partiallyFulfilled as $partial)
+                    <li>
+                        <strong>{{ $partial['product_name'] }}</strong>: Requested {{ $partial['requested'] }}, Fulfilled {{ $partial['fulfilled'] }}
+                    </li>
+                @endforeach
+            </ul>
+        </div>
+        @endif
+        
         <div class="order-details">
             <h3>Order Items</h3>
             @foreach($orderItems as $item)

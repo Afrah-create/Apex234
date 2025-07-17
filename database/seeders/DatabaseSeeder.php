@@ -154,14 +154,15 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Seed inventory: ensure the three main products are present in every distribution center
-        foreach ($distributionCenters as $center) {
-            foreach ($yogurtProducts as $product) {
-                \App\Models\Inventory::factory()->create([
-                    'yogurt_product_id' => $product->id,
-                    'distribution_center_id' => $center->id,
-                ]);
-            }
-        }
+        // Commented out to avoid seeding inventory records without vendor_id
+        // foreach ($distributionCenters as $center) {
+        //     foreach ($yogurtProducts as $product) {
+        //         \App\Models\Inventory::factory()->create([
+        //             'yogurt_product_id' => $product->id,
+        //             'distribution_center_id' => $center->id,
+        //         ]);
+        //     }
+        // }
 
         // (Optional) Seed additional random inventory for vendor-added products
         // $inventory = \App\Models\Inventory::factory(30)->create([

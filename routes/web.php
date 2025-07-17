@@ -151,12 +151,17 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::put('/{id}', [AdminOrderController::class, 'update'])->name('update');
     Route::delete('/{id}', [AdminOrderController::class, 'destroy'])->name('destroy');
     Route::patch('/{id}/status', [AdminOrderController::class, 'updateStatus'])->name('update-status');
-    
     // API routes for data
     Route::get('/api/orders-data', [AdminOrderController::class, 'getOrdersData'])->name('api.orders-data');
     Route::get('/api/order-statistics', [AdminOrderController::class, 'getOrderStatistics'])->name('api.order-statistics');
     Route::patch('/{order}/status', [App\Http\Controllers\AdminOrderController::class, 'updateStatus'])->name('admin.orders.updateStatus');
+    // Bulk update route
+    Route::post('/bulk-update', [AdminOrderController::class, 'bulkUpdate'])->name('bulk-update');
 });
+
+// Admin order payment status update
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])
+    ->patch('/admin/orders/{id}/update-payment-status', [\App\Http\Controllers\AdminOrderController::class, 'updatePaymentStatus'])->name('admin.orders.updatePaymentStatus');
 
 // Admin inventory analytics
 Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/inventory')->name('admin.inventory.')->group(function () {
@@ -227,7 +232,7 @@ Route::middleware(['auth', 'verified'])->prefix('vendor')->name('vendor.')->grou
         return view('vendor.manage-products');
     })->name('manage-products');
     Route::post('/reserve-batch/{id}', [\App\Http\Controllers\VendorProductionController::class, 'reserveBatch'])->name('reserve-batch');
-    Route::get('/products/{id}/edit', [\App\Http\Controllers\VendorProductController::class, 'show'])->name('products.edit');
+    Route::get('/products/{id}/edit', [\App\Http\Controllers\VendorProductController::class, 'edit'])->name('products.edit');
 });
 
 // Password reset by token (code) form
@@ -379,10 +384,16 @@ Route::middleware(['auth', 'verified'])->get('/vendor/deliveries', [\App\Http\Co
 Route::middleware(['auth'])->get('/api/cart', [\App\Http\Controllers\CartController::class, 'getCart']);
 Route::middleware(['auth'])->post('/api/cart', [\App\Http\Controllers\CartController::class, 'saveCart']);
 
-// Prefer the new closure-based /help route
-Route::get('/help', function () {
-    return view('help.index');
-})->name('help.index');
+// Help page route (resolved)
+Route::view('/help', 'help.index')->name('help');
+
+Route::middleware(['auth'])->get('/api/notifications/unread', function() {
+    $user = auth()->user();
+    $notifications = $user->unreadNotifications->filter(function($notification) {
+        return in_array(class_basename($notification->type), ['OrderPlacedNotification', 'DeliveryNoteNotification']);
+    })->values();
+    return response()->json($notifications);
+});
 
 require __DIR__.'/auth.php';
 
@@ -487,6 +498,7 @@ Route::middleware(['auth', 'verified'])->get('/vendor/production', [\App\Http\Co
 Route::middleware(['auth'])->get('/chat', [\App\Http\Controllers\ChatController::class, 'index'])->name('chat');
 Route::middleware(['auth'])->get('/chat/recipients', [\App\Http\Controllers\ChatController::class, 'getRecipients']);
 Route::middleware(['auth'])->get('/chat/unread-counts', [\App\Http\Controllers\ChatController::class, 'getUnreadCountsPerUser']);
+Route::middleware(['auth'])->get('/chat/unread-grouped', [\App\Http\Controllers\ChatController::class, 'getUnreadMessagesGroupedBySender']);
 Route::middleware(['auth'])->get('/chat/background', [\App\Http\Controllers\ChatController::class, 'getChatBackground']);
 Route::middleware(['auth'])->post('/chat/background', [\App\Http\Controllers\ChatController::class, 'setChatBackground']);
 
@@ -511,6 +523,13 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::delete('/{id}', [\App\Http\Controllers\AdminDistributionCenterController::class, 'destroy'])->name('destroy');
 });
 
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])
+    ->get('/admin/distribution-centers/{id}/vendor-inventory-stats', [\App\Http\Controllers\AdminDistributionCenterController::class, 'vendorInventoryStats']);
+
+// Add this route for flat inventory stats by product (not grouped by vendor)
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])
+    ->get('/admin/distribution-centers/{id}/inventory-stats', [\App\Http\Controllers\AdminDistributionCenterController::class, 'inventoryStats']);
+
 Route::post('/driver/orders/{order}/proof', [\App\Http\Controllers\DriverOrderController::class, 'uploadProof'])->name('driver.orders.proof');
 Route::post('/vendor/orders/{order}/assign-driver', [\App\Http\Controllers\VendorOrderController::class, 'assignDriver'])->name('vendor.orders.assignDriver');
 
@@ -519,9 +538,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 Route::middleware(['auth', 'verified'])->get('/vendor/reports', [\App\Http\Controllers\VendorDashboardController::class, 'reportsPage'])->name('vendor.reports');
-
 // Supplier reports page (web)
 Route::middleware(['auth', 'verified'])->get('/supplier/reports', [\App\Http\Controllers\SupplierDashboardController::class, 'reportsPage'])->name('supplier.reports');
-
 // Supplier reports API (for AJAX/fetching report data)
 Route::middleware(['auth', 'verified'])->get('/supplier/my-reports', [\App\Http\Controllers\SupplierDashboardController::class, 'myReports'])->name('supplier.my-reports');

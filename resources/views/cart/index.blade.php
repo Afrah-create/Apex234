@@ -410,6 +410,9 @@
         @if(session('success'))
             <div class="mb-4 text-green-700 bg-green-100 p-2 rounded">{{ session('success') }}</div>
         @endif
+        @if(session('error'))
+            <div class="mb-4 text-red-700 bg-red-100 p-2 rounded">{{ session('error') }}</div>
+        @endif
         @if($cartItems->count())
         <div class="overflow-x-auto">
             <table class="cart-table">

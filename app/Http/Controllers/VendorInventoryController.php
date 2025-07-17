@@ -81,7 +81,8 @@ class VendorInventoryController extends Controller
                 'created_at',
                 'updated_at'
             ])
-            ->where('status', 'available')
+            ->where('vendor_id', $vendorId)
+            ->where('status', 'delivered')
             ->get()
             ->map(function($material) {
                 return [
@@ -133,7 +134,7 @@ class VendorInventoryController extends Controller
         ]);
 
         // Get the product
-        $product = YogurtProduct::where('vendor_id', $vendor->id)->where('product_name', $request->product_name)->first();
+        $product = YogurtProduct::where('product_name', $request->product_name)->first();
         if (!$product) {
             return response()->json(['error' => 'Product not found'], 404);
         }
@@ -204,42 +205,37 @@ class VendorInventoryController extends Controller
     // Update product inventory
     public function updateProductInventory(Request $request, $id): JsonResponse
     {
-        $inventory = Inventory::findOrFail($id);
-        
-        $request->validate([
-            'quantity_available' => 'required|integer|min:0',
-            'quantity_reserved' => 'integer|min:0',
-            'quantity_damaged' => 'integer|min:0',
-            'quantity_expired' => 'integer|min:0',
-            'storage_temperature' => 'numeric|between:-10,20',
-            'storage_location' => 'in:cold_room,refrigerator,freezer,warehouse',
-            'shelf_location' => 'nullable|string',
-            'unit_cost' => 'numeric|min:0',
-            'notes' => 'nullable|string',
-        ]);
+        $vendor = Auth::user()->vendor;
+        $inventory = Inventory::where('id', $id)
+            ->where('vendor_id', $vendor->id)
+            ->firstOrFail();
 
-        // Calculate stock difference
-        $oldQuantity = $inventory->quantity_available;
-        $newQuantity = $request->quantity_available;
-        $quantityDifference = $newQuantity - $oldQuantity;
+        // Only accept reserved and damaged as input
+        $quantity_reserved = (int) $request->input('quantity_reserved', $inventory->quantity_reserved);
+        $quantity_damaged = (int) $request->input('quantity_damaged', $inventory->quantity_damaged);
 
-        // Update inventory
-        $inventory->quantity_available = $newQuantity;
-        $inventory->quantity_reserved = $request->quantity_reserved ?? $inventory->quantity_reserved;
-        $inventory->quantity_damaged = $request->quantity_damaged ?? $inventory->quantity_damaged;
-        $inventory->quantity_expired = $request->quantity_expired ?? $inventory->quantity_expired;
-        $inventory->storage_temperature = $request->storage_temperature ?? $inventory->storage_temperature;
-        $inventory->storage_location = $request->storage_location ?? $inventory->storage_location;
-        $inventory->shelf_location = $request->shelf_location ?? $inventory->shelf_location;
-        $inventory->unit_cost = $request->unit_cost ?? $inventory->unit_cost;
-        $inventory->total_value = $newQuantity * $inventory->unit_cost;
+        // Get the stock (total produced for this batch)
+        $stock = $inventory->quantity_available + $inventory->quantity_reserved + $inventory->quantity_damaged;
+
+        // Enforce invariant
+        if (($quantity_reserved + $quantity_damaged) > $stock) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The sum of reserved and damaged quantities cannot exceed the total stock (' . $stock . ').'
+            ], 422);
+        }
+
+        // Always recalculate available
+        $inventory->quantity_reserved = $quantity_reserved;
+        $inventory->quantity_damaged = $quantity_damaged;
+        $inventory->quantity_available = $stock - ($quantity_reserved + $quantity_damaged);
+        $inventory->total_value = $inventory->quantity_available * $inventory->unit_cost;
         $inventory->last_updated = now()->toDateString();
-        $inventory->notes = $request->notes ?? $inventory->notes;
 
         // Determine inventory status
-        if ($newQuantity <= 10) {
+        if ($inventory->quantity_available <= 10) {
             $inventory->inventory_status = 'low_stock';
-        } elseif ($newQuantity == 0) {
+        } elseif ($inventory->quantity_available == 0) {
             $inventory->inventory_status = 'out_of_stock';
         } else {
             $inventory->inventory_status = 'available';
@@ -247,10 +243,12 @@ class VendorInventoryController extends Controller
 
         $inventory->save();
 
-        // Update product stock
+        // Sync product stock with sum of all available inventory
         $product = $inventory->yogurtProduct;
-        $product->stock = $product->stock + $quantityDifference;
-        $product->save();
+        if ($product) {
+            $product->stock = $product->inventories()->sum('quantity_available');
+            $product->save();
+        }
 
         return response()->json([
             'success' => true,
@@ -410,13 +408,12 @@ class VendorInventoryController extends Controller
         // Raw materials summary
         $rawMaterialSummary = DB::table('raw_materials')
             ->selectRaw('
-                SUM(CASE WHEN status = "available" THEN quantity ELSE 0 END) as available_quantity,
-                SUM(CASE WHEN status = "in_use" THEN quantity ELSE 0 END) as in_use_quantity,
-                SUM(CASE WHEN status = "expired" THEN quantity ELSE 0 END) as expired_quantity,
-                SUM(CASE WHEN status = "disposed" THEN quantity ELSE 0 END) as disposed_quantity,
+                SUM(CASE WHEN status = "delivered" THEN quantity ELSE 0 END) as delivered_quantity,
                 SUM(total_cost) as total_cost,
                 COUNT(*) as total_materials
             ')
+            ->where('vendor_id', $vendorId)
+            ->where('status', 'delivered')
             ->first();
 
         return response()->json([
@@ -428,6 +425,8 @@ class VendorInventoryController extends Controller
     // Get inventory chart data
     public function getInventoryChartData(): JsonResponse
     {
+        $vendor = Auth::user()->vendor;
+        $vendorId = $vendor ? $vendor->id : null;
         // Product inventory by status
         $productStatusData = Inventory::with(['yogurtProduct'])
             ->whereHas('yogurtProduct', function($query) {
@@ -440,12 +439,16 @@ class VendorInventoryController extends Controller
         // Raw materials by type
         $rawMaterialTypeData = DB::table('raw_materials')
             ->selectRaw('material_type, SUM(quantity) as total_quantity')
+            ->where('vendor_id', $vendorId)
+            ->where('status', 'delivered')
             ->groupBy('material_type')
             ->get();
 
-        // Raw materials by status
+        // Raw materials by status (only delivered for this vendor)
         $rawMaterialStatusData = DB::table('raw_materials')
             ->selectRaw('status, SUM(quantity) as total_quantity')
+            ->where('vendor_id', $vendorId)
+            ->where('status', 'delivered')
             ->groupBy('status')
             ->get();
 
