@@ -1,3 +1,9 @@
+<style>
+  html, body {
+    overflow: auto !important;
+    height: auto !important;
+  }
+</style>
 <x-guest-layout>
     <form method="POST" action="{{ route('register') }}">
         
