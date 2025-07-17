@@ -904,3 +904,18 @@ body.email-bg {
     padding: 0.7rem 2.2rem !important;
     border-radius: 0.5rem !important;
 } 
+
+html, body {
+    scrollbar-width: thin;
+    scrollbar-color: #888 #f1f1f1;
+}
+html::-webkit-scrollbar, body::-webkit-scrollbar {
+    width: 8px;
+}
+html::-webkit-scrollbar-thumb, body::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+html::-webkit-scrollbar-track, body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+} 
