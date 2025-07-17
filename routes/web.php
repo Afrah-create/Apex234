@@ -384,10 +384,16 @@ Route::middleware(['auth', 'verified'])->get('/vendor/deliveries', [\App\Http\Co
 Route::middleware(['auth'])->get('/api/cart', [\App\Http\Controllers\CartController::class, 'getCart']);
 Route::middleware(['auth'])->post('/api/cart', [\App\Http\Controllers\CartController::class, 'saveCart']);
 
-// Prefer the new closure-based /help route
-Route::get('/help', function () {
-    return view('help.index');
-})->name('help.index');
+// Help page route (resolved)
+Route::view('/help', 'help.index')->name('help');
+
+Route::middleware(['auth'])->get('/api/notifications/unread', function() {
+    $user = auth()->user();
+    $notifications = $user->unreadNotifications->filter(function($notification) {
+        return in_array(class_basename($notification->type), ['OrderPlacedNotification', 'DeliveryNoteNotification']);
+    })->values();
+    return response()->json($notifications);
+});
 
 require __DIR__.'/auth.php';
 
@@ -492,6 +498,7 @@ Route::middleware(['auth', 'verified'])->get('/vendor/production', [\App\Http\Co
 Route::middleware(['auth'])->get('/chat', [\App\Http\Controllers\ChatController::class, 'index'])->name('chat');
 Route::middleware(['auth'])->get('/chat/recipients', [\App\Http\Controllers\ChatController::class, 'getRecipients']);
 Route::middleware(['auth'])->get('/chat/unread-counts', [\App\Http\Controllers\ChatController::class, 'getUnreadCountsPerUser']);
+Route::middleware(['auth'])->get('/chat/unread-grouped', [\App\Http\Controllers\ChatController::class, 'getUnreadMessagesGroupedBySender']);
 Route::middleware(['auth'])->get('/chat/background', [\App\Http\Controllers\ChatController::class, 'getChatBackground']);
 Route::middleware(['auth'])->post('/chat/background', [\App\Http\Controllers\ChatController::class, 'setChatBackground']);
 

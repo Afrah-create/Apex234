@@ -139,6 +139,11 @@ class VendorOrderController extends Controller
             'expected_delivery_date' => $request->expected_delivery_date,
         ]);
 
+        // Notify supplier's user
+        if ($supplier->user) {
+            $supplier->user->notify(new \App\Notifications\RawMaterialOrderPlacedNotification($order, $vendor));
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Order placed successfully! Supplier has been notified.',

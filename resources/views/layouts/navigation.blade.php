@@ -67,7 +67,7 @@
                     <x-dropdown-link :href="route('profile.edit')">
                         {{ __('Profile') }}
                     </x-dropdown-link>
-                    <x-dropdown-link :href="route('help.index')">
+                    <x-dropdown-link :href="route('help')">
                         {{ __('Help & Support') }}
                     </x-dropdown-link>
                     <form method="POST" action="{{ route('logout') }}">
@@ -87,7 +87,7 @@
             <x-nav-link :href="route('register')" :active="request()->routeIs('register')" class="text-white hover:text-blue-200">
                 {{ __('Register') }}
             </x-nav-link>
-            <x-nav-link :href="route('help.index')" :active="request()->routeIs('help.index')" class="text-white hover:text-blue-200">
+            <x-nav-link :href="route('help')" :active="request()->routeIs('help')" class="text-white hover:text-blue-200">
                 {{ __('Help & Support') }}
             </x-nav-link>
         @endguest
@@ -99,13 +99,85 @@
 document.addEventListener('DOMContentLoaded', function () {
     const bellBtn = document.getElementById('notificationBellBtn');
     const dropdown = document.getElementById('notificationDropdown');
+                const notificationDot = document.getElementById('notificationDot');
+    const chatNotificationDot = document.getElementById('chatNotificationDot');
+    const notificationMessages = document.getElementById('notificationMessages');
+
+    // Fetch unread chat count and update badges
+    function updateChatBadges() {
+        fetch('/chat/unread-grouped')
+            .then(res => res.json())
+            .then(data => {
+                let totalUnread = 0;
+                if (Array.isArray(data)) {
+                    data.forEach(item => {
+                        totalUnread += item.unread_count;
+                    });
+                }
+                // Update chat icon badge
+                if (totalUnread > 0) {
+                    chatNotificationDot.textContent = totalUnread;
+                    chatNotificationDot.classList.remove('hidden');
+                } else {
+                    chatNotificationDot.classList.add('hidden');
+                }
+                // Update notification bell badge
+                if (totalUnread > 0) {
+                    notificationDot.textContent = totalUnread;
+                    notificationDot.classList.remove('hidden');
+                } else {
+                    notificationDot.classList.add('hidden');
+                }
+            });
+        }
+    updateChatBadges();
+    setInterval(updateChatBadges, 15000); // Poll every 15s
 
     if (bellBtn && dropdown) {
-        bellBtn.addEventListener('click', function (e) {
+        bellBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             dropdown.classList.toggle('hidden');
+            if (!dropdown.classList.contains('hidden')) {
+                // Load unread chat messages grouped by sender
+                fetch('/chat/unread-grouped')
+                    .then(res => res.json())
+                    .then(unreadChats => {
+                        if (!Array.isArray(unreadChats) || unreadChats.length === 0) {
+                            notificationMessages.innerHTML = '<div class="text-gray-500 text-center py-4">No unread chat messages.</div>';
+                            return;
+                        }
+                        notificationMessages.innerHTML = '';
+                        unreadChats.forEach(chat => {
+                            const senderId = chat.sender_id;
+                            const senderName = chat.sender_name || 'User #' + senderId;
+                            const senderAvatar = chat.sender_avatar || '/images/default-avatar.png';
+                            const message = chat.latest_message || 'You have a new message.';
+                            const time = chat.latest_message_time ? `<div class='text-xs text-gray-500'>${chat.latest_message_time}</div>` : '';
+                            const div = document.createElement('div');
+                            div.className = 'mb-3 border-b pb-2 flex flex-col gap-1';
+                            div.innerHTML = `
+                                <div class=\"flex items-center gap-2\">
+                                    <img src=\"${senderAvatar}\" alt=\"Profile\" class=\"w-8 h-8 rounded-full object-cover border border-gray-300\" />
+                                    <span class=\"font-semibold text-blue-700\">${senderName}</span>
+                                    <span class=\"ml-auto bg-red-500 text-white rounded-full px-2 text-xs font-bold\">${chat.unread_count}</span>
+                                </div>
+                                <div class=\"text-gray-700\">${message}</div>
+                                ${time}
+                                <button class=\"reply-btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded mt-1 w-max\" data-user-id=\"${senderId}\">Reply</button>
+                            `;
+                            notificationMessages.appendChild(div);
+                        });
+                        // Add click handler to each reply button
+                        document.querySelectorAll('.reply-btn').forEach(btn => {
+                            btn.addEventListener('click', function(ev) {
+                                ev.preventDefault();
+                                const userId = this.getAttribute('data-user-id');
+                                window.location.href = `/chat?user_id=${userId}`;
+                            });
+                        });
+                    });
+            }
         });
-
         // Hide dropdown when clicking outside
         document.addEventListener('click', function (e) {
             if (!dropdown.contains(e.target) && !bellBtn.contains(e.target)) {

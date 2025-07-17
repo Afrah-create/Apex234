@@ -165,6 +165,30 @@ class ChatController extends Controller
         return response()->json($counts);
     }
 
+    // Get unread chat messages grouped by sender (for notification dropdown)
+    public function getUnreadMessagesGroupedBySender()
+    {
+        $userId = Auth::id();
+        $unreadMessages = ChatMessage::where('receiver_id', $userId)
+            ->where('is_read', false)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $grouped = $unreadMessages->groupBy('sender_id')->map(function($messages, $senderId) {
+            $sender = User::find($senderId);
+            return [
+                'sender_id' => $senderId,
+                'sender_name' => $sender ? $sender->name : 'Unknown',
+                'sender_avatar' => $sender ? $sender->profile_photo_url : null,
+                'unread_count' => $messages->count(),
+                'latest_message' => $messages->first()->message,
+                'latest_message_time' => $messages->first()->created_at->toDateTimeString(),
+            ];
+        })->values();
+
+        return response()->json($grouped);
+    }
+
     // Get the authenticated user's chat background
     public function getChatBackground()
     {
