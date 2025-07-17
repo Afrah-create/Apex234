@@ -68,7 +68,7 @@
 <body>
     <div class="header-orange-bar"></div>
     <div class="header-topbar">
-        <div>Sell with Caramel Yoghurt</div>
+        <div>Enjoy Caramel Yoghurt</div>
         <div class="caramel-mini">
             <span style="color:#222; font-weight:bold;">CARAMEL</span>
             <span style="color:#bfa76a; font-size:1em; font-weight:normal;">FRESH</span>
