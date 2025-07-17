@@ -29,7 +29,7 @@
         <h2 class="text-xl font-semibold mt-6 mb-2">6. Changes to Terms</h2>
         <p>We may update these Terms of Use from time to time. Continued use of the platform after changes constitutes acceptance of the new terms.</p>
         <h2 class="text-xl font-semibold mt-6 mb-2">7. Contact Us</h2>
-        <p>If you have any questions about these Terms, please contact us at support@example.com.</p>
+        <p>If you have any questions about these Terms, please contact us at yoghurtcaramel@gmail.com.</p>
     </div>
 </div>
 @endsection 

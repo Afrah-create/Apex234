@@ -14,7 +14,7 @@
         </div>
         <div>
             <h2 class="text-xl font-semibold text-gray-800">Who to contact for technical support?</h2>
-            <p class="text-gray-700 mt-2">If you need further assistance, please email our support team at <a href="mailto:support@example.com" class="text-blue-600 underline">support@example.com</a>.</p>
+            <p class="text-gray-700 mt-2">If you need further assistance, please email our support team at <a href="mailto:yoghurtcaramel@gmail.com" class="text-blue-600 underline">yoghurtcaramel@gmail.com</a>.</p>
         </div>
         <div>
             <h2 class="text-xl font-semibold text-gray-800">How to register as a vendor, supplier, or retailer?</h2>
@@ -26,7 +26,7 @@
         </div>
         <div>
             <h2 class="text-xl font-semibold text-gray-800">How doreport a bug or suggest a feature?</h2>
-            <p class="text-gray-700 mt-2">Please email your feedback to <a href="mailto:support@example.com" class="text-blue-600 underline">support@example.com</a> with a description of the issue or suggestion.</p>
+            <p class="text-gray-700 mt-2">Please email your feedback to <a href="mailto:yoghurtcaramel@gmail.com" class="text-blue-600 underline">yoghurtcaramel@gmail.com</a> with a description of the issue or suggestion.</p>
         </div>
     </div>
 </div>

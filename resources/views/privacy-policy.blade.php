@@ -36,7 +36,7 @@
         <h2 class="text-xl font-semibold mt-6 mb-2">6. Changes to This Privacy Policy</h2>
         <p>We may update this Privacy Policy from time to time. We will notify you of any changes by updating the effective date at the top of this policy.</p>
         <h2 class="text-xl font-semibold mt-6 mb-2">7. Contact Us</h2>
-        <p>If you have any questions or concerns about this Privacy Policy, please contact us at support@example.com.</p>
+        <p>If you have any questions or concerns about this Privacy Policy, please contact us at yoghurtcaramel@gmail.com.</p>
     </div>
 </div>
 @endsection 

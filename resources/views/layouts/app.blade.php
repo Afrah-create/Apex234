@@ -60,7 +60,7 @@
                                 <li><button class="chatbot-q" data-a="You can register as a retailer, supplier, or vendor from the registration page.">How to register?</button></li>
                                 <li><button class="chatbot-q" data-a="Click 'Forgot Password?' on the login page and follow the instructions.">How to reset my password?</button></li>
                                 <li><button class="chatbot-q" data-a="You can browse the FAQ on the Help & Support page.">Where to find help?</button></li>
-                                <li><button class="chatbot-q" data-a="Contact support@example.com for assistance.">How to contact support?</button></li>
+                                <li><button class="chatbot-q" data-a="Contact yoghurtcaramel@gmail.com for assistance.">How to contact support?</button></li>
                                 <li><button class="chatbot-q" data-a="You need to register and log in to access your dashboard.">How to access my dashboard?</button></li>
                             @else
                                 @php $role = auth()->user()->getPrimaryRoleName(); @endphp
@@ -74,24 +74,24 @@
                                     <li><button class="chatbot-q" data-a="Go to your dashboard to see your assigned employees.">How to see my employees?</button></li>
                                     <li><button class="chatbot-q" data-a="Go to the Orders section to view and manage orders.">How to manage orders?</button></li>
                                     <li><button class="chatbot-q" data-a="You can update your business info from your profile page.">How to update my business information?</button></li>
-                                    <li><button class="chatbot-q" data-a="Contact support@example.com if you need help with vendor features.">How to get vendor support?</button></li>
+                                    <li><button class="chatbot-q" data-a="Contact yoghurtcaramel@gmail.com if you need help with vendor features.">How to get vendor support?</button></li>
                                     <li><button class="chatbot-q" data-a="You can view your dashboard for business analytics and stats.">Where to see my business stats?</button></li>
                                 @elseif($role === 'supplier')
                                     <li><button class="chatbot-q" data-a="Go to your dashboard to add new raw materials.">How to add raw materials?</button></li>
                                     <li><button class="chatbot-q" data-a="You can view your deliveries in the Deliveries section.">How to view my deliveries?</button></li>
                                     <li><button class="chatbot-q" data-a="Update your company info from your profile page.">How to update my company information?</button></li>
-                                    <li><button class="chatbot-q" data-a="Contact support@example.com for supplier-related help.">How to get supplier support?</button></li>
+                                    <li><button class="chatbot-q" data-a="Contact yoghurtcaramel@gmail.com for supplier-related help.">How to get supplier support?</button></li>
                                     <li><button class="chatbot-q" data-a="You can view payment history in your dashboard.">How do I view payment history?</button></li>
                                 @elseif($role === 'retailer')
                                     <li><button class="chatbot-q" data-a="Go to your dashboard to place new orders.">How to place an order?</button></li>
                                     <li><button class="chatbot-q" data-a="You can view your order history in the Orders section.">How to view my order history?</button></li>
                                     <li><button class="chatbot-q" data-a="Update your store info from your profile page.">How to update my store information?</button></li>
-                                    <li><button class="chatbot-q" data-a="Contact support@example.com for retailer support.">How to get retailer support?</button></li>
+                                    <li><button class="chatbot-q" data-a="Contact yoghurtcaramel@gmail.com for retailer support.">How to get retailer support?</button></li>
                                     <li><button class="chatbot-q" data-a="You can view your dashboard for sales analytics.">Where to see my sales stats?</button></li>
                                 @elseif($role === 'employee')
                                     <li><button class="chatbot-q" data-a="Check your assigned tasks in your dashboard.">How to see my tasks?</button></li>
                                     <li><button class="chatbot-q" data-a="You can update your profile from the profile page.">How to update my profile?</button></li>
-                                    <li><button class="chatbot-q" data-a="Contact your assigned vendor or support@example.com for help.">How to get help as an employee?</button></li>
+                                    <li><button class="chatbot-q" data-a="Contact your assigned vendor or yoghurtcaramel@gmail.com for help.">How to get help as an employee?</button></li>
                                     <li><button class="chatbot-q" data-a="You can view your work schedule in your dashboard.">How to view my work schedule?</button></li>
                                     <li><button class="chatbot-q" data-a="You can report issues to your vendor or via the Help & Support page.">How to report an issue?</button></li>
                                 @endif
