@@ -408,7 +408,19 @@
             <div class="mb-4 text-green-700 bg-green-100 p-2 rounded">{{ session('success') }}</div>
         @endif
         @if(session('error'))
-            <div class="mb-4 text-red-700 bg-red-100 p-2 rounded">{{ session('error') }}</div>
+            <div id="cart-error-toast" class="fixed top-6 right-6 z-50 flex items-center gap-3 p-4 rounded-lg bg-red-50 border border-red-200 shadow-lg animate-fade-in-up" style="min-width: 280px; max-width: 90vw;">
+                <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="text-red-500">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="#fee2e2"/>
+                    <path d="M12 8v4m0 4h.01" stroke="#b91c1c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span class="text-red-700 font-semibold text-base">{{ session('error') }}</span>
+            </div>
+            <script>
+                setTimeout(function() {
+                    var toast = document.getElementById('cart-error-toast');
+                    if (toast) toast.style.display = 'none';
+                }, 3500);
+            </script>
         @endif
         @if($cartItems->count())
         <div class="overflow-x-auto">
@@ -464,7 +476,7 @@
                 </svg>
                 Continue Shopping
             </a>
-            <a href="{{ route('checkout.index') }}" class="checkout-btn-primary">
+            <a href="{{ route('cart.proceedToCheckout') }}" class="checkout-btn-primary">
                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right:8px;">
                     <path d="M5 13l4 4L19 7"/>
                 </svg>
@@ -544,6 +556,13 @@
             color: #bbb;
             font-size: 0.98rem;
             text-align: center;
+        }
+        @keyframes fade-in-up {
+            0% { opacity: 0; transform: translateY(30px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up {
+            animation: fade-in-up 0.5s cubic-bezier(0.4,0,0.2,1);
         }
     </style>
     <script>

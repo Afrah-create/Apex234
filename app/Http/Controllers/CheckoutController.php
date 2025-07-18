@@ -146,7 +146,8 @@ class CheckoutController extends Controller
             }
 
             if (!empty($inventoryIssues)) {
-                throw new \Exception('Inventory issues: ' . implode(', ', $inventoryIssues));
+                // Customer-friendly message
+                throw new \Exception('Sorry, some items in your cart are currently out of stock. Please review your cart and try again.');
             }
 
             // Calculate additional costs

@@ -383,6 +383,8 @@ Route::middleware(['auth', 'verified'])->get('/vendor/deliveries', [\App\Http\Co
 // Cart API routes
 Route::middleware(['auth'])->get('/api/cart', [\App\Http\Controllers\CartController::class, 'getCart']);
 Route::middleware(['auth'])->post('/api/cart', [\App\Http\Controllers\CartController::class, 'saveCart']);
+Route::get('/cart/proceed-to-checkout', [CartController::class, 'proceedToCheckout'])->name('cart.proceedToCheckout');
+Route::get('/cart/removed-items', [\App\Http\Controllers\CartController::class, 'removedItems'])->name('cart.removedItems');
 
 // Help page route (resolved)
 Route::view('/help', 'help.index')->name('help');
