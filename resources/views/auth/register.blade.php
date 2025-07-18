@@ -121,12 +121,12 @@
             @csrf
             <div class="form-group">
                 <label for="name">Name</label>
-                <input id="name" type="text" name="name" value="{{ old('name') }}" required autofocus autocomplete="name" />
+                <input id="name" type="text" name="name" value="{{ old('name') }}" required autofocus autocomplete="name" placeholder="Full name" />
                 <x-input-error :messages="$errors->get('name')" class="error-message" />
             </div>
             <div class="form-group">
                 <label for="email">Email</label>
-                <input id="email" type="email" name="email" value="{{ old('email') }}" required autocomplete="username" />
+                <input id="email" type="email" name="email" value="{{ old('email') }}" required autocomplete="username" placeholder="e.g. user@example.com" />
                 <x-input-error :messages="$errors->get('email')" class="error-message" />
             </div>
             <div class="form-group">
@@ -142,43 +142,43 @@
             <div id="vendor-fields" style="display: none;">
                 <div class="form-group">
                     <label for="business_name">Business Name</label>
-                    <input id="business_name" type="text" name="business_name" value="{{ old('business_name') }}" />
+                    <input id="business_name" type="text" name="business_name" value="{{ old('business_name') }}" placeholder="Business legal name" />
                     <x-input-error :messages="$errors->get('business_name')" class="error-message" />
                 </div>
                 <div class="form-group">
                     <label for="business_address">Business Address</label>
-                    <textarea id="business_address" name="business_address" rows="3">{{ old('business_address') }}</textarea>
+                    <textarea id="business_address" name="business_address" rows="3" placeholder="Street, City, State, ZIP">{{ old('business_address') }}</textarea>
                     <x-input-error :messages="$errors->get('business_address')" class="error-message" />
                 </div>
                 <div class="form-group">
                     <label for="phone_number">Phone Number</label>
-                    <input id="phone_number" type="text" name="phone_number" value="{{ old('phone_number') }}" />
+                    <input id="phone_number" type="text" name="phone_number" value="{{ old('phone_number') }}" placeholder="e.g. +1 555 123 4567" />
                     <x-input-error :messages="$errors->get('phone_number')" class="error-message" />
                 </div>
                 <div class="form-group">
                     <label for="tax_id">Tax ID (Optional)</label>
-                    <input id="tax_id" type="text" name="tax_id" value="{{ old('tax_id') }}" />
+                    <input id="tax_id" type="text" name="tax_id" value="{{ old('tax_id') }}" placeholder="Optional: e.g. 12-3456789" />
                     <x-input-error :messages="$errors->get('tax_id')" class="error-message" />
                 </div>
                 <div class="form-group">
                     <label for="business_license">Business License (Optional)</label>
-                    <input id="business_license" type="text" name="business_license" value="{{ old('business_license') }}" />
+                    <input id="business_license" type="text" name="business_license" value="{{ old('business_license') }}" placeholder="Optional: License number" />
                     <x-input-error :messages="$errors->get('business_license')" class="error-message" />
                 </div>
                 <div class="form-group">
                     <label for="description">Business Description (Optional)</label>
-                    <textarea id="description" name="description" rows="3">{{ old('description') }}</textarea>
+                    <textarea id="description" name="description" rows="3" placeholder="Optional: Brief business description">{{ old('description') }}</textarea>
                     <x-input-error :messages="$errors->get('description')" class="error-message" />
                 </div>
             </div>
             <div class="form-group">
                 <label for="password">Password</label>
-                <input id="password" type="password" name="password" required autocomplete="new-password" />
+                <input id="password" type="password" name="password" required autocomplete="new-password" placeholder="At least 8 characters" />
                 <x-input-error :messages="$errors->get('password')" class="error-message" />
             </div>
             <div class="form-group">
                 <label for="password_confirmation">Confirm Password</label>
-                <input id="password_confirmation" type="password" name="password_confirmation" required autocomplete="new-password" />
+                <input id="password_confirmation" type="password" name="password_confirmation" required autocomplete="new-password" placeholder="Re-enter your password" />
                 <x-input-error :messages="$errors->get('password_confirmation')" class="error-message" />
             </div>
             <div class="form-group" style="display: flex; flex-direction: column; align-items: stretch; gap: 0.5rem; margin-top: 1rem; width: 100%;">
