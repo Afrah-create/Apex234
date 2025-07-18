@@ -131,6 +131,7 @@
             </div>
             <div class="form-group">
                 <label for="role">Register as</label>
+                <div style="font-size: 0.97rem; color: #555; margin-bottom: 0.2rem;">Please select your account type to continue registration.</div>
                 <select id="role" name="role" required>
                     <option value="retailer" {{ old('role') == 'retailer' ? 'selected' : '' }}>Retailer</option>
                     <option value="supplier" {{ old('role') == 'supplier' ? 'selected' : '' }}>Supplier</option>
