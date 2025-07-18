@@ -283,65 +283,42 @@ class OrderProcessingService
         $distributionCenterId = $order->distribution_center_id;
         foreach ($orderItems as $item) {
             $product = $item->yogurtProduct;
-            $vendorId = $product->vendor_id; // Use the product's vendor
             $quantityToDeduct = $item->quantity;
-            // Get all inventory records for this product and vendor, order does not matter
-            $inventories = \App\Models\Inventory::where('yogurt_product_id', $product->id)
-                ->where('vendor_id', $vendorId)
-                ->when($distributionCenterId, function($query) use ($distributionCenterId) {
-                    return $query->where('distribution_center_id', $distributionCenterId);
-                })
-                ->where('quantity_available', '>', 0)
-                ->get();
-
-            if ($inventories->isEmpty()) {
-                \Illuminate\Support\Facades\Log::warning('No inventory found for deduction', [
-                    'order_id' => $order->id,
-                    'order_item_id' => $item->id,
-                    'product_id' => $product ? $product->id : null,
-                    'product_name' => $product ? $product->product_name : null,
-                    'vendor_id' => $vendorId,
-                    'distribution_center_id' => $distributionCenterId,
-                    'quantity_to_deduct' => $quantityToDeduct
-                ]);
-            }
-
-            foreach ($inventories as $inventory) {
-                if ($quantityToDeduct <= 0) break;
-                $deduct = min($inventory->quantity_available, $quantityToDeduct);
-                $inventory->quantity_available -= $deduct;
+            // Find all vendors in this center with enough inventory for this product
+            $vendorInventory = \App\Models\Inventory::where('yogurt_product_id', $product->id)
+                ->where('distribution_center_id', $distributionCenterId)
+                ->where('quantity_available', '>=', $quantityToDeduct)
+                ->first();
+            if ($vendorInventory) {
+                // Deduct from this vendor only
+                $vendorInventory->quantity_available -= $quantityToDeduct;
                 // Update inventory_status if needed
-                if ($inventory->quantity_available === 0) {
-                    $inventory->inventory_status = 'out_of_stock';
-                } elseif ($inventory->quantity_available < 10) {
-                    $inventory->inventory_status = 'low_stock';
+                if ($vendorInventory->quantity_available === 0) {
+                    $vendorInventory->inventory_status = 'out_of_stock';
+                } elseif ($vendorInventory->quantity_available < 10) {
+                    $vendorInventory->inventory_status = 'low_stock';
                 } else {
-                    $inventory->inventory_status = 'available';
+                    $vendorInventory->inventory_status = 'available';
                 }
-                $inventory->save();
-                $quantityToDeduct -= $deduct;
-                // LOGGING: Each deduction
-                \Illuminate\Support\Facades\Log::info('Inventory deduction', [
-                    'inventory_id' => $inventory->id,
-                    'deducted' => $deduct,
-                    'remaining_in_inventory' => $inventory->quantity_available,
-                    'quantity_left_to_deduct' => $quantityToDeduct
-                ]);
-            }
-            if ($quantityToDeduct > 0) {
-                \Illuminate\Support\Facades\Log::error('Deduction incomplete: not enough inventory to fulfill order item', [
+                $vendorInventory->save();
+                // Sync product stock with sum of all available inventory
+                $product->stock = $product->inventories()->sum('quantity_available');
+                $product->save();
+                // Optionally, update the order item with the vendor_id used
+                $item->vendor_id = $vendorInventory->vendor_id;
+                $item->save();
+            } else {
+                // Not enough inventory in any single vendor in this center
+                \Illuminate\Support\Facades\Log::error('No single vendor in center can fulfill order item', [
                     'order_id' => $order->id,
                     'order_item_id' => $item->id,
                     'product_id' => $product ? $product->id : null,
                     'product_name' => $product ? $product->product_name : null,
-                    'vendor_id' => $vendorId,
                     'distribution_center_id' => $distributionCenterId,
-                    'quantity_left' => $quantityToDeduct
+                    'quantity_needed' => $quantityToDeduct
                 ]);
+                // Optionally, throw or mark the order as unfulfillable here
             }
-            // Sync product stock with sum of all available inventory
-            $product->stock = $product->inventories()->sum('quantity_available');
-            $product->save();
         }
     }
 
