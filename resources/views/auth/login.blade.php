@@ -40,7 +40,7 @@
         }
         .auth-subtitle, .login-subtitle, .register-subtitle {
             font-size: 0.98rem; /* reduced from 1.05rem */
-            color: #4CAF50;
+            color: #2563eb;
             text-align: center;
             margin-bottom: 0.4rem; /* reduced from 0.7rem */
         }
@@ -65,7 +65,7 @@
             box-sizing: border-box;
         }
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-            border-color: #4CAF50;
+            border-color: #2563eb;
             outline: none;
         }
         .status-message, .error-message {
@@ -80,7 +80,7 @@
         }
         .action-btn, .auth-login-form button, .auth-login-form .x-primary-button {
             width: 100%;
-            background: #4CAF50;
+            background: #2563eb;
             color: #fff;
             border: none;
             border-radius: 0.5rem;
@@ -92,7 +92,7 @@
             transition: background 0.2s;
         }
         .action-btn:hover, .auth-login-form button:hover, .auth-login-form .x-primary-button:hover {
-            background: #388e3c;
+            background: #1746a2;
         }
         .link {
             color: #2563eb;
