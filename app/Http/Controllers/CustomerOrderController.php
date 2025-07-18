@@ -20,8 +20,12 @@ class CustomerOrderController extends Controller
     // List all orders for the authenticated customer
     public function index()
     {
-        $orders = Auth::user()->orders()->where('order_type', 'customer')->latest()->get();
-        return view('customer.orders.index', compact('orders'));
+        $orders = Auth::user()->orders()->latest()->get();
+        // Group orders by order_date (date only)
+        $ordersByDate = $orders->groupBy(function($order) {
+            return optional($order->order_date)->format('Y-m-d');
+        });
+        return view('customer.orders.index', compact('ordersByDate'));
     }
 
     // Show a specific order for the authenticated customer

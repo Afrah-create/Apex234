@@ -124,7 +124,7 @@
         @if(session('success'))
             <div class="bg-green-100 text-green-800 px-4 py-2 rounded mb-4" style="margin-bottom:18px;">{{ session('success') }}</div>
         @endif
-        @if($orders->isEmpty())
+        @if(empty($ordersByDate) || $ordersByDate->isEmpty())
             <div style="text-align: center; padding: 48px 24px; background: #f8f9fa; border-radius: 12px; margin: 24px 0;">
                 <div style="font-size: 3rem; margin-bottom: 16px;">🛒</div>
                 <h3 style="color: #222; margin-bottom: 12px; font-size: 1.3rem;">No Orders Yet</h3>
@@ -132,32 +132,35 @@
                 <a href="/dashboard/customer" class="orders-action-btn" style="display: inline-block; padding: 12px 24px; font-size: 1.1rem;">Start Shopping</a>
             </div>
         @else
-            <div class="overflow-x-auto">
-                <table class="orders-table">
-                    <thead>
-                        <tr>
-                            <th>Order #</th>
-                            <th>Date</th>
-                            <th>Status</th>
-                            <th>Total</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($orders as $order)
-                        <tr>
-                            <td>{{ $order->order_number }}</td>
-                            <td>{{ $order->order_date }}</td>
-                            <td>{{ ucfirst($order->order_status) }}</td>
-                            <td>{{ $order->total_amount ?? '-' }}</td>
-                            <td>
-                                <a href="{{ route('customer.orders.show', $order->id) }}" class="orders-action-btn">View</a>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+            @foreach($ordersByDate as $date => $orders)
+                <h2 class="orders-title" style="margin-top: 2.5rem;">{{ \Carbon\Carbon::parse($date)->format('F j, Y') }}</h2>
+                <div class="overflow-x-auto">
+                    <table class="orders-table">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Total</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($orders as $order)
+                            <tr>
+                                <td>{{ $order->order_number }}</td>
+                                <td>{{ $order->order_date }}</td>
+                                <td>{{ ucfirst($order->order_status) }}</td>
+                                <td>{{ $order->total_amount ?? '-' }}</td>
+                                <td>
+                                    <a href="{{ route('customer.orders.show', $order->id) }}" class="orders-action-btn">View</a>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endforeach
         @endif
     </div>
     <footer class="customer-footer">

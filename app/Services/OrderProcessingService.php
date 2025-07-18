@@ -294,22 +294,30 @@ class OrderProcessingService
                 ->where('quantity_available', '>', 0)
                 ->get();
 
-            // LOGGING: Trace deduction attempt
-            \Illuminate\Support\Facades\Log::info('Reserving inventory for order', [
-                'order_id' => $order->id,
-                'order_item_id' => $item->id,
-                'product_id' => $product ? $product->id : null,
-                'product_name' => $product ? $product->product_name : null,
-                'vendor_id' => $vendorId,
-                'quantity_to_deduct' => $quantityToDeduct,
-                'found_inventories' => $inventories->pluck('id')->toArray(),
-                'distribution_center_id' => $distributionCenterId,
-            ]);
+            if ($inventories->isEmpty()) {
+                \Illuminate\Support\Facades\Log::warning('No inventory found for deduction', [
+                    'order_id' => $order->id,
+                    'order_item_id' => $item->id,
+                    'product_id' => $product ? $product->id : null,
+                    'product_name' => $product ? $product->product_name : null,
+                    'vendor_id' => $vendorId,
+                    'distribution_center_id' => $distributionCenterId,
+                    'quantity_to_deduct' => $quantityToDeduct
+                ]);
+            }
 
             foreach ($inventories as $inventory) {
                 if ($quantityToDeduct <= 0) break;
                 $deduct = min($inventory->quantity_available, $quantityToDeduct);
                 $inventory->quantity_available -= $deduct;
+                // Update inventory_status if needed
+                if ($inventory->quantity_available === 0) {
+                    $inventory->inventory_status = 'out_of_stock';
+                } elseif ($inventory->quantity_available < 10) {
+                    $inventory->inventory_status = 'low_stock';
+                } else {
+                    $inventory->inventory_status = 'available';
+                }
                 $inventory->save();
                 $quantityToDeduct -= $deduct;
                 // LOGGING: Each deduction
@@ -318,6 +326,17 @@ class OrderProcessingService
                     'deducted' => $deduct,
                     'remaining_in_inventory' => $inventory->quantity_available,
                     'quantity_left_to_deduct' => $quantityToDeduct
+                ]);
+            }
+            if ($quantityToDeduct > 0) {
+                \Illuminate\Support\Facades\Log::error('Deduction incomplete: not enough inventory to fulfill order item', [
+                    'order_id' => $order->id,
+                    'order_item_id' => $item->id,
+                    'product_id' => $product ? $product->id : null,
+                    'product_name' => $product ? $product->product_name : null,
+                    'vendor_id' => $vendorId,
+                    'distribution_center_id' => $distributionCenterId,
+                    'quantity_left' => $quantityToDeduct
                 ]);
             }
             // Sync product stock with sum of all available inventory
