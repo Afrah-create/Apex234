@@ -9,8 +9,12 @@
         border-radius: 12px;
         overflow: hidden;
         box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-        margin: 32px auto;
+        margin: 8px auto 0 auto;
         max-width: 1100px;
+        border: 1.5px solid #fff;
+    }
+    body {
+        background: #fff;
     }
     .user-list {
         width: 320px;
@@ -56,7 +60,7 @@
         font-size: 1.2em;
     }
     .user-list .user {
-        padding: 18px 24px;
+        padding: 8px 12px;
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -68,10 +72,10 @@
         background: #e7fbe9;
     }
     .user-list .avatar {
-        width: 44px;
-        height: 44px;
+        width: 28px;
+        height: 28px;
         border-radius: 50%;
-        margin-right: 16px;
+        margin-right: 8px;
         object-fit: cover;
         background: #eee;
     }
@@ -79,18 +83,19 @@
         flex: 1;
     }
     .user-list .user-name {
-        font-weight: 600;
-        font-size: 1.1rem;
+        font-weight: 500;
+        font-size: 0.95rem;
+        line-height: 1.1;
     }
     .user-list .last-message {
         color: #888;
-        font-size: 0.95rem;
-        margin-top: 2px;
+        font-size: 0.85rem;
+        margin-top: 1px;
     }
     .user-list .message-time {
-        font-size: 0.85rem;
+        font-size: 0.75rem;
         color: #aaa;
-        margin-left: 8px;
+        margin-left: 4px;
     }
     .unread-badge {
         display: none;
