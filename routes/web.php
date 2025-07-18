@@ -501,6 +501,8 @@ Route::middleware(['auth'])->get('/chat/unread-counts', [\App\Http\Controllers\C
 Route::middleware(['auth'])->get('/chat/unread-grouped', [\App\Http\Controllers\ChatController::class, 'getUnreadMessagesGroupedBySender']);
 Route::middleware(['auth'])->get('/chat/background', [\App\Http\Controllers\ChatController::class, 'getChatBackground']);
 Route::middleware(['auth'])->post('/chat/background', [\App\Http\Controllers\ChatController::class, 'setChatBackground']);
+Route::middleware(['auth'])->get('/chat/messages', [\App\Http\Controllers\ChatController::class, 'getMessages']);
+Route::middleware(['auth'])->post('/chat/send', [\App\Http\Controllers\ChatController::class, 'sendMessage']);
 
 Route::get('/privacy-policy', function () {
     return view('privacy-policy');
