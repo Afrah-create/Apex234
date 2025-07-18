@@ -124,7 +124,7 @@
             <!-- Email Address -->
             <div class="form-group">
                 <label for="email" class="form-group label">Email</label>
-                <input id="email" class="form-group input" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
+                <input id="email" class="form-group input" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" placeholder="e.g. user@example.com" />
                 <x-input-error :messages="$errors->get('email')" class="error-message" />
             </div>
             <!-- Password -->
@@ -133,7 +133,7 @@
                 <input id="password" class="form-group input"
                                 type="password"
                                 name="password"
-                                required autocomplete="current-password" />
+                                required autocomplete="current-password" placeholder="Enter your password" />
                 <x-input-error :messages="$errors->get('password')" class="error-message" />
             </div>
             <!-- Remember Me -->
