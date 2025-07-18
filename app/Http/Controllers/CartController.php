@@ -103,6 +103,28 @@ class CartController extends Controller
         return redirect()->route('cart.index')->with('success', 'Product removed from cart!');
     }
 
+    // Add this method to handle proceed to checkout
+    public function proceedToCheckout()
+    {
+        $cartItems = CartItem::with('product')->where('user_id', Auth::id())->get();
+        $removed = [];
+        foreach ($cartItems as $item) {
+            if (!$item->product || $item->product->stock < $item->quantity) {
+                $removed[] = $item->product ? $item->product->product_name : 'Unknown Product';
+                $item->delete();
+            }
+        }
+        $remainingItems = CartItem::where('user_id', Auth::id())->count();
+        if ($remainingItems === 0) {
+            return redirect()->route('cart.index')->with('error', 'All items in your cart are out of stock and have been removed. Please add available products to your cart.');
+        }
+        if (!empty($removed)) {
+            session(['removed_cart_items' => $removed]);
+            return redirect()->route('cart.removedItems');
+        }
+        return redirect()->route('checkout.index');
+    }
+
     // API methods for cart management
     public function getCart()
     {
@@ -118,5 +140,14 @@ class CartController extends Controller
             ['cart_data' => $request->cart]
         );
         return response()->json(['success' => true]);
+    }
+
+    public function removedItems()
+    {
+        $removed = session('removed_cart_items', []);
+        if (empty($removed)) {
+            return redirect()->route('cart.index');
+        }
+        return view('cart.removed-items', compact('removed'));
     }
 } 

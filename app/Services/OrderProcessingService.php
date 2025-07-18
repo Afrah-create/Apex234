@@ -283,46 +283,42 @@ class OrderProcessingService
         $distributionCenterId = $order->distribution_center_id;
         foreach ($orderItems as $item) {
             $product = $item->yogurtProduct;
-            $vendorId = $product->vendor_id; // Use the product's vendor
             $quantityToDeduct = $item->quantity;
-            // Get all inventory records for this product and vendor, order does not matter
-            $inventories = \App\Models\Inventory::where('yogurt_product_id', $product->id)
-                ->where('vendor_id', $vendorId)
-                ->when($distributionCenterId, function($query) use ($distributionCenterId) {
-                    return $query->where('distribution_center_id', $distributionCenterId);
-                })
-                ->where('quantity_available', '>', 0)
-                ->get();
-
-            // LOGGING: Trace deduction attempt
-            \Illuminate\Support\Facades\Log::info('Reserving inventory for order', [
-                'order_id' => $order->id,
-                'order_item_id' => $item->id,
-                'product_id' => $product ? $product->id : null,
-                'product_name' => $product ? $product->product_name : null,
-                'vendor_id' => $vendorId,
-                'quantity_to_deduct' => $quantityToDeduct,
-                'found_inventories' => $inventories->pluck('id')->toArray(),
-                'distribution_center_id' => $distributionCenterId,
-            ]);
-
-            foreach ($inventories as $inventory) {
-                if ($quantityToDeduct <= 0) break;
-                $deduct = min($inventory->quantity_available, $quantityToDeduct);
-                $inventory->quantity_available -= $deduct;
-                $inventory->save();
-                $quantityToDeduct -= $deduct;
-                // LOGGING: Each deduction
-                \Illuminate\Support\Facades\Log::info('Inventory deduction', [
-                    'inventory_id' => $inventory->id,
-                    'deducted' => $deduct,
-                    'remaining_in_inventory' => $inventory->quantity_available,
-                    'quantity_left_to_deduct' => $quantityToDeduct
+            // Find all vendors in this center with enough inventory for this product
+            $vendorInventory = \App\Models\Inventory::where('yogurt_product_id', $product->id)
+                ->where('distribution_center_id', $distributionCenterId)
+                ->where('quantity_available', '>=', $quantityToDeduct)
+                ->first();
+            if ($vendorInventory) {
+                // Deduct from this vendor only
+                $vendorInventory->quantity_available -= $quantityToDeduct;
+                // Update inventory_status if needed
+                if ($vendorInventory->quantity_available === 0) {
+                    $vendorInventory->inventory_status = 'out_of_stock';
+                } elseif ($vendorInventory->quantity_available < 10) {
+                    $vendorInventory->inventory_status = 'low_stock';
+                } else {
+                    $vendorInventory->inventory_status = 'available';
+                }
+                $vendorInventory->save();
+                // Sync product stock with sum of all available inventory
+                $product->stock = $product->inventories()->sum('quantity_available');
+                $product->save();
+                // Optionally, update the order item with the vendor_id used
+                $item->vendor_id = $vendorInventory->vendor_id;
+                $item->save();
+            } else {
+                // Not enough inventory in any single vendor in this center
+                \Illuminate\Support\Facades\Log::error('No single vendor in center can fulfill order item', [
+                    'order_id' => $order->id,
+                    'order_item_id' => $item->id,
+                    'product_id' => $product ? $product->id : null,
+                    'product_name' => $product ? $product->product_name : null,
+                    'distribution_center_id' => $distributionCenterId,
+                    'quantity_needed' => $quantityToDeduct
                 ]);
+                // Optionally, throw or mark the order as unfulfillable here
             }
-            // Sync product stock with sum of all available inventory
-            $product->stock = $product->inventories()->sum('quantity_available');
-            $product->save();
         }
     }
 

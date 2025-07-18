@@ -698,3 +698,10 @@ body {
         transform: none !important;
     }
 } 
+
+.apex-logo {
+    border: 2px solid #bfa76a; /* Caramel gold border for visibility */
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+} 

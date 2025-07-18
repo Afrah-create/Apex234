@@ -100,10 +100,7 @@
                     <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">@csrf</form>
                 </div>
             </div>
-            <a class="header-action" href="{{ route('help.index', [], false) }}">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-size="12" fill="#222">?</text></svg>
-                Help <svg class="dropdown" width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left:2px;vertical-align:middle;"><path d="M6 8L10 12L14 8" stroke="#222" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </a>
+            {{-- Help link removed to fix RouteNotFoundException --}}
             <a class="header-action header-cart" href="{{ route('cart.index') }}" style="position:relative;">
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
                 Cart
@@ -127,7 +124,7 @@
         @if(session('success'))
             <div class="bg-green-100 text-green-800 px-4 py-2 rounded mb-4" style="margin-bottom:18px;">{{ session('success') }}</div>
         @endif
-        @if($orders->isEmpty())
+        @if(empty($ordersByDate) || $ordersByDate->isEmpty())
             <div style="text-align: center; padding: 48px 24px; background: #f8f9fa; border-radius: 12px; margin: 24px 0;">
                 <div style="font-size: 3rem; margin-bottom: 16px;">🛒</div>
                 <h3 style="color: #222; margin-bottom: 12px; font-size: 1.3rem;">No Orders Yet</h3>
@@ -135,32 +132,35 @@
                 <a href="/dashboard/customer" class="orders-action-btn" style="display: inline-block; padding: 12px 24px; font-size: 1.1rem;">Start Shopping</a>
             </div>
         @else
-            <div class="overflow-x-auto">
-                <table class="orders-table">
-                    <thead>
-                        <tr>
-                            <th>Order #</th>
-                            <th>Date</th>
-                            <th>Status</th>
-                            <th>Total</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($orders as $order)
-                        <tr>
-                            <td>{{ $order->order_number }}</td>
-                            <td>{{ $order->order_date }}</td>
-                            <td>{{ ucfirst($order->order_status) }}</td>
-                            <td>{{ $order->total_amount ?? '-' }}</td>
-                            <td>
-                                <a href="{{ route('customer.orders.show', $order->id) }}" class="orders-action-btn">View</a>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+            @foreach($ordersByDate as $date => $orders)
+                <h2 class="orders-title" style="margin-top: 2.5rem;">{{ \Carbon\Carbon::parse($date)->format('F j, Y') }}</h2>
+                <div class="overflow-x-auto">
+                    <table class="orders-table">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Total</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($orders as $order)
+                            <tr>
+                                <td>{{ $order->order_number }}</td>
+                                <td>{{ $order->order_date }}</td>
+                                <td>{{ ucfirst($order->order_status) }}</td>
+                                <td>{{ $order->total_amount ?? '-' }}</td>
+                                <td>
+                                    <a href="{{ route('customer.orders.show', $order->id) }}" class="orders-action-btn">View</a>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endforeach
         @endif
     </div>
     <footer class="customer-footer">
@@ -169,9 +169,7 @@
             <a href="/dashboard/customer">Home</a>
             <a href="/dashboard/customer">Shop</a>
             <a href="{{ route('customer.orders.index') }}">Orders</a>
-            <a href="{{ route('help.index', [], false) }}">Help</a>
             <a href="{{ route('privacy.policy') }}">Privacy Policy</a>
-            <a href="{{ route('terms.use') }}">Terms</a>
             <a href="{{ route('contact') }}">Contact</a>
         </div>
         <div class="footer-copy">&copy; {{ date('Y') }} Caramel Yogurt. All rights reserved.</div>

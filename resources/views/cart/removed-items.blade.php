@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Details - Caramel Yoghurt</title>
+    <title>Items Removed from Cart - Caramel Yoghurt</title>
+    <link href="https://fonts.googleapis.com/css?family=Segoe+UI:400,600&display=swap" rel="stylesheet">
     <style>
         body {
             margin: 0;
@@ -196,12 +197,6 @@
             font-size: 0.98rem;
             text-align: center;
         }
-        @media (max-width: 600px) {
-            .header-main { padding: 8px 2vw; }
-            .header-topbar { padding: 4px 2vw 4px 2vw; }
-            .header-search { max-width: 98vw; min-width: 0; }
-            .header-actions { gap: 10px; }
-        }
     </style>
 </head>
 <body>
@@ -216,19 +211,19 @@
     </div>
     <div class="header-main">
         <div class="header-logo">
-            <img src="{{ asset('images/apex-logo.png') }}" alt="Apex Logo" class="apex-logo" />CARAMEL YOGHURT
+            <img src="{{ asset('images/apex-logo.png') }}" alt="Apex Logo" class="apex-logo" />CARAMEL YOGHURT 
         </div>
-        <form class="header-search" method="GET" action="{{ route('dashboard.customer') }}">
+        <form class="header-search" onsubmit="return false;">
             <div class="header-searchbox">
                 <span class="search-icon">
                     <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 </span>
-                <input type="text" name="search" placeholder="Search yoghurt, dairy products, and more" value="{{ request('search', $search ?? '') }}">
+                <input type="text" placeholder="Search yoghurt, dairy products, and more">
             </div>
             <button class="header-searchbtn" type="submit">Search</button>
         </form>
         <div class="header-actions">
-            <div class="header-action account-action" tabindex="0" style="position:relative; margin-left: 18px;"> <!-- Added margin to separate from search bar -->
+            <div class="header-action account-action" tabindex="0" style="position:relative;">
                 @php $user = Auth::user(); @endphp
                 <img src="{{ $user->profile_photo_url }}" alt="Profile Photo" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid #2563eb;vertical-align:middle;cursor:pointer;" />
                 <div class="account-dropdown" id="accountDropdown">
@@ -238,168 +233,64 @@
                     <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">@csrf</form>
                 </div>
             </div>
-            <a class="header-action" href="{{ route('privacy.policy') }}">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-size="12" fill="#222">?</text></svg>
-                Privacy Policy
-            </a>
-            <a class="header-action header-cart" href="{{ route('cart.index') }}" style="position:relative;">
+            {{-- Help link removed to fix RouteNotFoundException --}}
+            <a class="header-action header-cart" href="{{ route('cart.index') }}">
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
                 Cart
             </a>
         </div>
     </div>
     <div class="header-orange-bar"></div>
-    <div class="container mx-auto py-8">
-        <div class="order-details-card">
-            <h1 class="order-details-title">Order Details</h1>
-            <table class="order-details-table">
-                <tr><th>Order #</th><td>{{ $order->order_number }}</td></tr>
-                <tr><th>Date</th><td>{{ $order->order_date }}</td></tr>
-                <tr><th>Status</th><td>{{ ucfirst($order->order_status) }}</td></tr>
-                <tr><th>Total</th><td>{{ $order->total_amount ?? '-' }}</td></tr>
-                <tr><th>Delivery Address</th><td>{{ $order->delivery_address }}</td></tr>
-                <tr><th>Delivery Contact</th><td>{{ $order->delivery_contact }}</td></tr>
-                <tr><th>Delivery Phone</th><td>{{ $order->delivery_phone }}</td></tr>
-                <tr><th>Special Instructions</th><td>{{ $order->special_instructions ?? '-' }}</td></tr>
-                <tr><th>Notes</th><td>{{ $order->notes ?? '-' }}</td></tr>
-            </table>
-            <h2 class="order-items-title">Order Items</h2>
-            <table class="order-items-table">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Product</th>
-                        <th>Quantity</th>
-                        <th>Unit Price</th>
-                        <th>Subtotal</th>
-                    </tr>
-                </thead>
-                <tbody>
-                @foreach($order->orderItems as $index => $item)
-                    <tr>
-                        <td>{{ $index + 1 }}</td>
-                        <td>{{ $item->yogurtProduct->name ?? 'Product' }}</td>
-                        <td>{{ $item->quantity }}</td>
-                        <td>{{ $item->unit_price }}</td>
-                        <td>{{ $item->total_price }}</td>
-                    </tr>
+    <div style="display:flex;align-items:center;justify-content:center;min-height:60vh;">
+        <div class="removed-card" style="background:#fff; border-radius:12px; box-shadow:0 2px 12px rgba(37,99,235,0.10); padding:22px 20px 20px 20px; max-width:350px; width:100%; text-align:center; border:1.5px solid #f3f4f6;">
+            <div class="icon" style="margin-bottom:12px;">
+                <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" stroke="#b91c1c" stroke-width="2" fill="#fee2e2"/>
+                    <path d="M12 8v4m0 4h.01" stroke="#b91c1c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <h2 style="color:#b91c1c;font-size:1.18rem;font-weight:700;margin-bottom:0.7rem;">Some items were removed from your cart</h2>
+            <p style="font-size:1rem;margin-bottom:0.7rem;">The following items are out of stock and have been removed:</p>
+            <ul style="list-style:none;padding:0;margin:0 0 1.1rem 0;">
+                @foreach($removed as $item)
+                    <li style="background:#fee2e2;color:#b91c1c;margin-bottom:6px;padding:7px 0;border-radius:6px;font-size:0.98rem;font-weight:500;">{{ $item }}</li>
                 @endforeach
-                </tbody>
-            </table>
-            <a href="{{ route('customer.orders.index') }}" class="back-link">Back to My Orders</a>
+            </ul>
+            <div class="actions" style="display:flex;gap:10px;justify-content:center;margin-top:0.7rem;">
+                <a href="{{ route('checkout.index') }}" style="padding:8px 16px;border-radius:6px;font-size:0.98rem;font-weight:600;border:none;cursor:pointer;transition:background 0.18s;text-decoration:none;display:inline-block;background:linear-gradient(135deg,#2563eb 0%,#1e40af 100%);color:#fff;">Proceed with Available Items</a>
+                <a href="{{ route('cart.index') }}" style="padding:8px 16px;border-radius:6px;font-size:0.98rem;font-weight:600;border:1.5px solid #d1d5db;cursor:pointer;transition:background 0.18s;text-decoration:none;display:inline-block;background:#f3f4f6;color:#222;">Back to Cart</a>
+            </div>
         </div>
     </div>
     <footer class="customer-footer">
-    <div class="footer-container">
-        <div class="footer-links">
-            <a href="/dashboard/customer">Home</a>
-            <a href="/dashboard/customer">Shop</a>
-            <a href="{{ route('customer.orders.index') }}">Orders</a>
-            <a href="{{ route('privacy.policy') }}">Privacy Policy</a>
-            <a href="#">Contact</a>
+        <div class="footer-container">
+            <div class="footer-links">
+                <a href="/dashboard/customer">Home</a>
+                <a href="/dashboard/customer">Shop</a>
+                <a href="{{ route('customer.orders.index') }}">Orders</a>
+                {{-- Help link removed from footer --}}
+                <a href="{{ route('privacy.policy') }}">Privacy Policy</a>
+                <a href="#">Terms</a>
+                <a href="#">Contact</a>
+            </div>
+            <div class="footer-copy">&copy; {{ date('Y') }} Caramel Yogurt. All rights reserved.</div>
         </div>
-        <div class="footer-copy">&copy; {{ date('Y') }} Caramel Yogurt. All rights reserved.</div>
-    </div>
-</footer>
+    </footer>
     <script>
-    // Account dropdown logic
-    const accountAction = document.querySelector('.account-action');
-    const accountDropdown = document.getElementById('accountDropdown');
-    if (accountAction && accountDropdown) {
-        accountAction.addEventListener('click', function(e) {
-            e.stopPropagation();
-            accountDropdown.classList.toggle('show');
-        });
-        document.addEventListener('click', function(e) {
-            if (!accountAction.contains(e.target)) {
-                accountDropdown.classList.remove('show');
-            }
-        });
-    }
-    </script>
-    <style>
-    .order-details-card {
-        background: #fff;
-        max-width: 600px;
-        margin: 40px auto 0 auto;
-        border-radius: 12px;
-        box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-        padding: 32px 28px 28px 28px;
-    }
-    .order-details-title {
-        font-size: 2.1rem;
-        font-weight: bold;
-        margin-bottom: 18px;
-        color: #222;
-        letter-spacing: 1px;
-    }
-    .order-details-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 32px;
-    }
-    .order-details-table th {
-        text-align: left;
-        padding: 8px 12px 8px 0;
-        color: #555;
-        font-weight: 600;
-        width: 180px;
-        background: none;
-        border: none;
-    }
-    .order-details-table td {
-        padding: 8px 0;
-        color: #222;
-        background: none;
-        border: none;
-    }
-    .order-items-title {
-        font-size: 1.2rem;
-        font-weight: 600;
-        margin-bottom: 10px;
-        margin-top: 18px;
-        color: #ff9900;
-    }
-    .order-items-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 24px;
-        background: #fafafa;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-    }
-    .order-items-table th, .order-items-table td {
-        padding: 10px 12px;
-        border-bottom: 1px solid #ececec;
-        text-align: left;
-    }
-    .order-items-table th {
-        background: #ff9900;
-        color: #fff;
-        font-weight: 600;
-    }
-    .order-items-table tr:last-child td {
-        border-bottom: none;
-    }
-    .back-link {
-        display: inline-block;
-        margin-top: 18px;
-        color: #ff9900;
-        text-decoration: none;
-        font-weight: 500;
-        font-size: 1.05rem;
-        transition: color 0.2s;
-    }
-    .back-link:hover {
-        color: #e67c00;
-        text-decoration: underline;
-    }
-    @media (max-width: 700px) {
-        .order-details-card { padding: 16px 4vw; }
-        .order-details-title { font-size: 1.3rem; }
-        .order-items-title { font-size: 1.05rem; }
-    }
-    </style>
+// Account dropdown logic
+const accountAction = document.querySelector('.account-action');
+const accountDropdown = document.getElementById('accountDropdown');
+if (accountAction && accountDropdown) {
+    accountAction.addEventListener('click', function(e) {
+        e.stopPropagation();
+        accountDropdown.classList.toggle('show');
+    });
+    document.addEventListener('click', function(e) {
+        if (!accountAction.contains(e.target)) {
+            accountDropdown.classList.remove('show');
+        }
+    });
+}
+</script>
 </body>
 </html> 
