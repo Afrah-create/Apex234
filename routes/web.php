@@ -385,7 +385,7 @@ Route::middleware(['auth'])->get('/api/cart', [\App\Http\Controllers\CartControl
 Route::middleware(['auth'])->post('/api/cart', [\App\Http\Controllers\CartController::class, 'saveCart']);
 
 // Help page route (resolved)
-Route::view('/help', 'help.index')->name('help');
+Route::view('/help', 'help.index')->name('help.index');
 
 Route::middleware(['auth'])->get('/api/notifications/unread', function() {
     $user = auth()->user();
