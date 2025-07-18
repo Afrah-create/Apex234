@@ -387,7 +387,7 @@ Route::get('/cart/proceed-to-checkout', [CartController::class, 'proceedToChecko
 Route::get('/cart/removed-items', [\App\Http\Controllers\CartController::class, 'removedItems'])->name('cart.removedItems');
 
 // Help page route (resolved)
-Route::view('/help', 'help.index')->name('help');
+Route::view('/help', 'help.index')->name('help.index');
 
 Route::middleware(['auth'])->get('/api/notifications/unread', function() {
     $user = auth()->user();
