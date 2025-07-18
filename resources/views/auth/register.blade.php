@@ -12,43 +12,43 @@
         }
         .auth-container, .login-container, .register-container {
             max-width: 420px;
-            margin: 48px auto;
+            margin: 24px auto; /* reduced from 48px */
             background: #fff;
             border-radius: 14px;
             box-shadow: 0 6px 32px rgba(0,0,0,0.10);
-            padding: 2.5rem 2rem 2rem 2rem;
+            padding: 1.5rem 1.2rem 1.2rem 1.2rem; /* reduced padding */
         }
         .auth-header, .login-header, .register-header {
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin-bottom: 2rem;
+            margin-bottom: 1.2rem; /* reduced from 2rem */
         }
         .auth-logo, .login-logo, .register-logo {
-            width: 72px;
-            height: 72px;
+            width: 60px; /* reduced from 72px */
+            height: 60px;
             border-radius: 50%;
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.5rem; /* reduced from 0.75rem */
             box-shadow: 0 2px 8px rgba(0,0,0,0.10);
         }
         .auth-title, .login-title, .register-title {
-            font-size: 1.6rem;
+            font-size: 1.3rem; /* reduced from 1.6rem */
             font-weight: bold;
             color: #2d3748;
-            margin-bottom: 0.2rem;
+            margin-bottom: 0.15rem; /* reduced from 0.2rem */
             text-align: center;
         }
         .auth-subtitle, .login-subtitle, .register-subtitle {
-            font-size: 1.05rem;
+            font-size: 0.98rem; /* reduced from 1.05rem */
             color: #4CAF50;
             text-align: center;
-            margin-bottom: 0.7rem;
+            margin-bottom: 0.4rem; /* reduced from 0.7rem */
         }
         form {
             margin-top: 0;
         }
         .form-group {
-            margin-bottom: 1.2rem;
+            margin-bottom: 0.7rem; /* reduced from 1.2rem */
         }
         .form-group label {
             font-weight: 500;
@@ -62,6 +62,7 @@
             border-radius: 0.5rem;
             font-size: 1rem;
             margin-top: 0.2rem;
+            box-sizing: border-box; /* ensure no overflow */
         }
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
             border-color: #4CAF50;
@@ -83,10 +84,10 @@
             color: #fff;
             border: none;
             border-radius: 0.5rem;
-            padding: 0.85rem 0;
-            font-size: 1.08rem;
+            padding: 0.65rem 0; /* reduced from 0.85rem */
+            font-size: 1.02rem; /* slightly reduced */
             font-weight: 600;
-            margin-top: 1.2rem;
+            margin-top: 0.7rem; /* reduced from 1.2rem */
             cursor: pointer;
             transition: background 0.2s;
         }
@@ -100,11 +101,11 @@
         }
         @media (max-width: 600px) {
             .auth-container, .login-container, .register-container {
-                padding: 1.2rem 0.5rem 1.5rem 0.5rem;
-                max-width: 98vw;
+                padding: 0.7rem 0.2rem 1rem 0.2rem; /* reduced for mobile */
+                max-width: 99vw;
             }
             .auth-title, .login-title, .register-title {
-                font-size: 1.2rem;
+                font-size: 1rem;
             }
         }
     </style>
@@ -120,17 +121,17 @@
             @csrf
             <div class="form-group">
                 <label for="name">Name</label>
-                <input id="name" class="form-group input" type="text" name="name" value="{{ old('name') }}" required autofocus autocomplete="name" />
+                <input id="name" type="text" name="name" value="{{ old('name') }}" required autofocus autocomplete="name" />
                 <x-input-error :messages="$errors->get('name')" class="error-message" />
             </div>
             <div class="form-group">
                 <label for="email">Email</label>
-                <input id="email" class="form-group input" type="email" name="email" value="{{ old('email') }}" required autocomplete="username" />
+                <input id="email" type="email" name="email" value="{{ old('email') }}" required autocomplete="username" />
                 <x-input-error :messages="$errors->get('email')" class="error-message" />
             </div>
             <div class="form-group">
                 <label for="role">Register as</label>
-                <select id="role" name="role" class="form-group input" required>
+                <select id="role" name="role" required>
                     <option value="retailer" {{ old('role') == 'retailer' ? 'selected' : '' }}>Retailer</option>
                     <option value="supplier" {{ old('role') == 'supplier' ? 'selected' : '' }}>Supplier</option>
                     <option value="vendor" {{ old('role') == 'vendor' ? 'selected' : '' }}>Vendor</option>
@@ -141,48 +142,48 @@
             <div id="vendor-fields" style="display: none;">
                 <div class="form-group">
                     <label for="business_name">Business Name</label>
-                    <input id="business_name" class="form-group input" type="text" name="business_name" value="{{ old('business_name') }}" />
+                    <input id="business_name" type="text" name="business_name" value="{{ old('business_name') }}" />
                     <x-input-error :messages="$errors->get('business_name')" class="error-message" />
                 </div>
                 <div class="form-group">
                     <label for="business_address">Business Address</label>
-                    <textarea id="business_address" name="business_address" class="form-group input" rows="3">{{ old('business_address') }}</textarea>
+                    <textarea id="business_address" name="business_address" rows="3">{{ old('business_address') }}</textarea>
                     <x-input-error :messages="$errors->get('business_address')" class="error-message" />
                 </div>
                 <div class="form-group">
                     <label for="phone_number">Phone Number</label>
-                    <input id="phone_number" class="form-group input" type="text" name="phone_number" value="{{ old('phone_number') }}" />
+                    <input id="phone_number" type="text" name="phone_number" value="{{ old('phone_number') }}" />
                     <x-input-error :messages="$errors->get('phone_number')" class="error-message" />
                 </div>
                 <div class="form-group">
                     <label for="tax_id">Tax ID (Optional)</label>
-                    <input id="tax_id" class="form-group input" type="text" name="tax_id" value="{{ old('tax_id') }}" />
+                    <input id="tax_id" type="text" name="tax_id" value="{{ old('tax_id') }}" />
                     <x-input-error :messages="$errors->get('tax_id')" class="error-message" />
                 </div>
                 <div class="form-group">
                     <label for="business_license">Business License (Optional)</label>
-                    <input id="business_license" class="form-group input" type="text" name="business_license" value="{{ old('business_license') }}" />
+                    <input id="business_license" type="text" name="business_license" value="{{ old('business_license') }}" />
                     <x-input-error :messages="$errors->get('business_license')" class="error-message" />
                 </div>
                 <div class="form-group">
                     <label for="description">Business Description (Optional)</label>
-                    <textarea id="description" name="description" class="form-group input" rows="3">{{ old('description') }}</textarea>
+                    <textarea id="description" name="description" rows="3">{{ old('description') }}</textarea>
                     <x-input-error :messages="$errors->get('description')" class="error-message" />
                 </div>
             </div>
             <div class="form-group">
                 <label for="password">Password</label>
-                <input id="password" class="form-group input" type="password" name="password" required autocomplete="new-password" />
+                <input id="password" type="password" name="password" required autocomplete="new-password" />
                 <x-input-error :messages="$errors->get('password')" class="error-message" />
             </div>
             <div class="form-group">
                 <label for="password_confirmation">Confirm Password</label>
-                <input id="password_confirmation" class="form-group input" type="password" name="password_confirmation" required autocomplete="new-password" />
+                <input id="password_confirmation" type="password" name="password_confirmation" required autocomplete="new-password" />
                 <x-input-error :messages="$errors->get('password_confirmation')" class="error-message" />
             </div>
-            <div class="form-group" style="display: flex; justify-content: flex-end; align-items: center; gap: 1rem; margin-top: 1.5rem;">
-                <a href="{{ route('login') }}" class="link">Already registered?</a>
-                <button type="submit" class="action-btn">Register</button>
+            <div class="form-group" style="display: flex; flex-direction: column; align-items: stretch; gap: 0.5rem; margin-top: 1rem; width: 100%;">
+                <button type="submit" class="action-btn" style="margin-top: 0;">Register</button>
+                <a href="{{ route('login') }}" class="link" style="text-align: center;">Already registered?</a>
             </div>
         </form>
     </div>
