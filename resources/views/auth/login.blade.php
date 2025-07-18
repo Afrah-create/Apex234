@@ -12,43 +12,43 @@
         }
         .auth-container, .login-container, .register-container {
             max-width: 420px;
-            margin: 48px auto;
+            margin: 24px auto; /* reduced from 48px */
             background: #fff;
             border-radius: 14px;
             box-shadow: 0 6px 32px rgba(0,0,0,0.10);
-            padding: 2.5rem 2rem 2rem 2rem;
+            padding: 1.5rem 1.2rem 1.2rem 1.2rem; /* reduced padding */
         }
         .auth-header, .login-header, .register-header {
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin-bottom: 2rem;
+            margin-bottom: 1.2rem; /* reduced from 2rem */
         }
         .auth-logo, .login-logo, .register-logo {
-            width: 72px;
-            height: 72px;
+            width: 60px; /* reduced from 72px */
+            height: 60px;
             border-radius: 50%;
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.5rem; /* reduced from 0.75rem */
             box-shadow: 0 2px 8px rgba(0,0,0,0.10);
         }
         .auth-title, .login-title, .register-title {
-            font-size: 1.6rem;
+            font-size: 1.3rem; /* reduced from 1.6rem */
             font-weight: bold;
             color: #2d3748;
-            margin-bottom: 0.2rem;
+            margin-bottom: 0.15rem; /* reduced from 0.2rem */
             text-align: center;
         }
         .auth-subtitle, .login-subtitle, .register-subtitle {
-            font-size: 1.05rem;
+            font-size: 0.98rem; /* reduced from 1.05rem */
             color: #4CAF50;
             text-align: center;
-            margin-bottom: 0.7rem;
+            margin-bottom: 0.4rem; /* reduced from 0.7rem */
         }
         form {
             margin-top: 0;
         }
         .form-group {
-            margin-bottom: 1.2rem;
+            margin-bottom: 0.7rem; /* reduced from 1.2rem */
         }
         .form-group label {
             font-weight: 500;
@@ -84,10 +84,10 @@
             color: #fff;
             border: none;
             border-radius: 0.5rem;
-            padding: 0.85rem 0;
-            font-size: 1.08rem;
+            padding: 0.65rem 0; /* reduced from 0.85rem */
+            font-size: 1.02rem; /* slightly reduced */
             font-weight: 600;
-            margin-top: 1.2rem;
+            margin-top: 0.7rem; /* reduced from 1.2rem */
             cursor: pointer;
             transition: background 0.2s;
         }
@@ -101,11 +101,11 @@
         }
         @media (max-width: 600px) {
             .auth-container, .login-container, .register-container {
-                padding: 1.2rem 0.5rem 1.5rem 0.5rem;
-                max-width: 98vw;
+                padding: 0.7rem 0.2rem 1rem 0.2rem; /* reduced for mobile */
+                max-width: 99vw;
             }
             .auth-title, .login-title, .register-title {
-                font-size: 1.2rem;
+                font-size: 1rem;
             }
         }
     </style>
