@@ -21,113 +21,82 @@ class OrderProcessingService
      */
     public function processCustomerOrder(Order $order)
     {
-        if ($order->order_type === 'bulk') {
-            DB::beginTransaction();
-            try {
-                $orderItems = $order->orderItems()->with('yogurtProduct')->get();
-                $partiallyFulfilled = [];
-                $anyPartial = false;
-                foreach ($orderItems as $item) {
-                    $product = $item->yogurtProduct;
-                    if (!$product) continue;
-                    $distributionCenterId = $order->distribution_center_id;
-                    $vendorId = $product->vendor_id;
-                    $inventory = \App\Models\Inventory::where('yogurt_product_id', $product->id)
-                        ->where('vendor_id', $vendorId)
-                        ->when($distributionCenterId, function($query) use ($distributionCenterId) {
-                            return $query->where('distribution_center_id', $distributionCenterId);
-                        })
-                        ->orderByDesc('quantity_available')
-                        ->first();
-                    $available = $inventory ? $inventory->quantity_available : 0;
-                    $toFulfill = min($item->quantity, $available);
-                    if ($toFulfill < $item->quantity) {
-                        $anyPartial = true;
-                        $partiallyFulfilled[] = [
-                            'product_name' => $product->product_name,
-                            'requested' => $item->quantity,
-                            'fulfilled' => $toFulfill
-                        ];
-                    }
-                    // Update order item to actual fulfilled quantity
-                    $item->fulfilled_quantity = $toFulfill;
-                    $item->save();
-                    // Deduct inventory
-                    if ($inventory) {
-                        $inventory->quantity_available = max(0, $inventory->quantity_available - $toFulfill);
-                        $inventory->save();
-                    }
-                }
-                $order->update([
-                    'order_status' => 'confirmed',
-                    'notes' => $order->notes . ($anyPartial ? ' [Partially fulfilled: some items were only partially fulfilled due to limited inventory]' : ' [Auto-confirmed by system]')
-                ]);
-                if (!$order->distribution_center_id) {
-                    $distributionCenter = $this->assignDistributionCenter($order);
-                    $order->update(['distribution_center_id' => $distributionCenter->id]);
-                }
-                // Always create and assign delivery after confirmation
-                $this->createAndAssignDelivery($order);
-                $this->sendOrderConfirmation($order, $partiallyFulfilled);
-                DB::commit();
-                \Illuminate\Support\Facades\Log::info('Customer bulk order processed with partial fulfillment', ['order_id' => $order->id]);
-                return true;
-            } catch (\Exception $e) {
-                DB::rollBack();
-                \Illuminate\Support\Facades\Log::error('Bulk order processing failed', [
-                    'order_id' => $order->id,
-                    'error' => $e->getMessage()
-                ]);
-                return false;
-            }
-        }
-
         DB::beginTransaction();
         try {
-            // Validate inventory availability
-            $inventoryCheck = $this->validateInventory($order);
-            if (!$inventoryCheck['success']) {
-                $order->update([
-                    'order_status' => 'cancelled',
-                    'notes' => $order->notes . ' [Cancelled: ' . $inventoryCheck['message'] . ']'
+            $orderItems = $order->orderItems()->with('yogurtProduct')->get();
+            $distributionCenterId = $order->distribution_center_id;
+            // 1. Validate inventory
+            foreach ($orderItems as $item) {
+                $product = $item->yogurtProduct;
+                $totalAvailable = \App\Models\Inventory::where('yogurt_product_id', $product->id)
+                    ->where('distribution_center_id', $distributionCenterId)
+                    ->sum('quantity_available');
+                if ($totalAvailable < $item->quantity) {
+                    DB::rollBack();
+                    return false;
+                }
+            }
+            // 2. Deduct inventory FIFO by expiry
+            foreach ($orderItems as $item) {
+                $product = $item->yogurtProduct;
+                $quantityToDeduct = $item->quantity;
+                $inventories = \App\Models\Inventory::where('yogurt_product_id', $product->id)
+                    ->where('distribution_center_id', $distributionCenterId)
+                    ->where('quantity_available', '>', 0)
+                    ->orderBy('expiry_date')
+                    ->get();
+                foreach ($inventories as $inventory) {
+                    if ($quantityToDeduct <= 0) break;
+                    $deduct = min($inventory->quantity_available, $quantityToDeduct);
+                    $inventory->quantity_available -= $deduct;
+                    // Update status
+                    if ($inventory->quantity_available == 0) {
+                        $inventory->inventory_status = 'out_of_stock';
+                    } elseif ($inventory->quantity_available < 10) {
+                        $inventory->inventory_status = 'low_stock';
+                    } else {
+                        $inventory->inventory_status = 'available';
+                    }
+                    $inventory->save();
+                    $quantityToDeduct -= $deduct;
+                }
+                // Update product stock
+                $product->stock = $product->inventories()->sum('quantity_available');
+                $product->save();
+            }
+            // 3. Create delivery and assign driver
+            $driver = \App\Models\Driver::withCount(['deliveries' => function($query) {
+                $query->whereIn('delivery_status', ['scheduled', 'in_transit', 'out_for_delivery']);
+            }])->where('status', 'active')->orderBy('deliveries_count', 'asc')->first();
+            if ($driver) {
+                $order->driver_id = $driver->id;
+                $order->order_status = 'shipped';
+                $order->save();
+                $order->delivery()->create([
+                    'order_id' => $order->id,
+                    'distribution_center_id' => $order->distribution_center_id,
+                    'vehicle_number' => $driver->vehicle_number ?? null,
+                    'driver_id' => $driver->id,
+                    'driver_name' => $driver->name,
+                    'driver_phone' => $driver->phone,
+                    'driver_license' => $driver->license,
+                    'scheduled_delivery_date' => $order->requested_delivery_date ?? now()->addDay(),
+                    'scheduled_delivery_time' => '09:00',
+                    'delivery_address' => $order->delivery_address,
+                    'recipient_name' => $order->delivery_contact,
+                    'recipient_phone' => $order->delivery_phone,
+                    'delivery_number' => uniqid('DEL-'),
+                    'delivery_status' => 'scheduled',
                 ]);
-                
-                $this->notifyOrderCancellation($order, $inventoryCheck['message']);
-                DB::commit();
-                return false;
+                // 4. Notify vendor (if applicable)
+                if ($order->vendor && $order->vendor->user) {
+                    $order->vendor->user->notify(new \App\Notifications\VendorAssignedOrderNotification($order));
+                }
             }
-
-            // Auto-confirm order if inventory is available
-            $order->update([
-                'order_status' => 'confirmed',
-                'notes' => $order->notes . ' [Auto-confirmed by system]'
-            ]);
-
-            // Always create and assign delivery after confirmation
-            $this->createAndAssignDelivery($order);
-
-            // Reserve inventory
-            $this->reserveInventory($order);
-
-            // Assign to nearest distribution center if not already assigned
-            if (!$order->distribution_center_id) {
-                $distributionCenter = $this->assignDistributionCenter($order);
-                $order->update(['distribution_center_id' => $distributionCenter->id]);
-            }
-
-            // Send confirmation notifications
-            $this->sendOrderConfirmation($order);
-
             DB::commit();
-            \Illuminate\Support\Facades\Log::info('Customer order processed successfully', ['order_id' => $order->id]);
             return true;
-
         } catch (\Exception $e) {
             DB::rollBack();
-            \Illuminate\Support\Facades\Log::error('Order processing failed', [
-                'order_id' => $order->id,
-                'error' => $e->getMessage()
-            ]);
             return false;
         }
     }
@@ -139,44 +108,83 @@ class OrderProcessingService
     {
         DB::beginTransaction();
         try {
-            // Validate inventory for retailer orders
-            $inventoryCheck = $this->validateInventory($order);
-            if (!$inventoryCheck['success']) {
-                $order->update([
-                    'order_status' => 'pending',
-                    'notes' => $order->notes . ' [Pending: ' . $inventoryCheck['message'] . ']'
-                ]);
-                
-                $this->notifyRetailerOrderPending($order, $inventoryCheck['message']);
-                DB::commit();
-                return false;
+            $orderItems = $order->orderItems()->with('yogurtProduct')->get();
+            $distributionCenterId = $order->distribution_center_id;
+            // 1. Validate inventory
+            foreach ($orderItems as $item) {
+                $product = $item->yogurtProduct;
+                $totalAvailable = \App\Models\Inventory::where('yogurt_product_id', $product->id)
+                    ->where('distribution_center_id', $distributionCenterId)
+                    ->sum('quantity_available');
+                if ($totalAvailable < $item->quantity) {
+                    DB::rollBack();
+                    return false;
+                }
             }
-
-            // Auto-confirm retailer order
-            $order->update([
-                'order_status' => 'confirmed',
-                'notes' => $order->notes . ' [Auto-confirmed for retailer]'
-            ]);
-
-            // Always create and assign delivery after confirmation
-            $this->createAndAssignDelivery($order);
-
-            // Reserve inventory
-            $this->reserveInventory($order);
-
-            // Send confirmation to retailer
-            $this->sendRetailerOrderConfirmation($order);
-
+            // 2. Deduct inventory FIFO by expiry
+            foreach ($orderItems as $item) {
+                $product = $item->yogurtProduct;
+                $quantityToDeduct = $item->quantity;
+                $inventories = \App\Models\Inventory::where('yogurt_product_id', $product->id)
+                    ->where('distribution_center_id', $distributionCenterId)
+                    ->where('quantity_available', '>', 0)
+                    ->orderBy('expiry_date')
+                    ->get();
+                foreach ($inventories as $inventory) {
+                    if ($quantityToDeduct <= 0) break;
+                    $deduct = min($inventory->quantity_available, $quantityToDeduct);
+                    $inventory->quantity_available -= $deduct;
+                    // Update status
+                    if ($inventory->quantity_available == 0) {
+                        $inventory->inventory_status = 'out_of_stock';
+                    } elseif ($inventory->quantity_available < 10) {
+                        $inventory->inventory_status = 'low_stock';
+                    } else {
+                        $inventory->inventory_status = 'available';
+                    }
+                    $inventory->save();
+                    $quantityToDeduct -= $deduct;
+                }
+                // Update product stock
+                $product->stock = $product->inventories()->sum('quantity_available');
+                $product->save();
+            }
+            // 3. Create delivery and assign driver
+            $driver = \App\Models\Driver::withCount(['deliveries' => function($query) {
+                $query->whereIn('delivery_status', ['scheduled', 'in_transit', 'out_for_delivery']);
+            }])->where('status', 'active')->orderBy('deliveries_count', 'asc')->first();
+            if ($driver) {
+                $order->driver_id = $driver->id;
+                $order->order_status = 'shipped';
+                $order->save();
+                $order->delivery()->create([
+                    'order_id' => $order->id,
+                    'distribution_center_id' => $order->distribution_center_id,
+                    'vehicle_number' => $driver->vehicle_number ?? null,
+                    'driver_id' => $driver->id,
+                    'driver_name' => $driver->name,
+                    'driver_phone' => $driver->phone,
+                    'driver_license' => $driver->license,
+                    'scheduled_delivery_date' => $order->requested_delivery_date ?? now()->addDay(),
+                    'scheduled_delivery_time' => '09:00',
+                    'delivery_address' => $order->delivery_address,
+                    'recipient_name' => $order->delivery_contact,
+                    'recipient_phone' => $order->delivery_phone,
+                    'delivery_number' => uniqid('DEL-'),
+                    'delivery_status' => 'scheduled',
+                ]);
+                // 4. Notify vendor and customer (in-app notification)
+                if ($order->vendor && $order->vendor->user) {
+                    $order->vendor->user->notify(new \App\Notifications\OrderStatusUpdate($order, 'processing', 'shipped'));
+                }
+                if ($order->customer) {
+                    $order->customer->notify(new \App\Notifications\OrderStatusUpdate($order, 'processing', 'shipped'));
+                }
+            }
             DB::commit();
-            \Illuminate\Support\Facades\Log::info('Retailer order processed successfully', ['order_id' => $order->id]);
             return true;
-
         } catch (\Exception $e) {
             DB::rollBack();
-            \Illuminate\Support\Facades\Log::error('Retailer order processing failed', [
-                'order_id' => $order->id,
-                'error' => $e->getMessage()
-            ]);
             return false;
         }
     }

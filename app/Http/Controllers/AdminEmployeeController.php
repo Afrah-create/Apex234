@@ -56,10 +56,15 @@ class AdminEmployeeController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
-            'role' => 'required|in:Production Worker,Warehouse Staff,Driver,Sales Manager',
+            'role' => 'required',
             'vendor_id' => 'nullable|exists:vendors,id',
             'distribution_center_id' => 'nullable|exists:distribution_centers,id',
             'status' => 'required|in:Active,On Leave,Terminated',
+            // Driver fields are optional
+            'license' => 'nullable|string|max:255',
+            'license_expiry' => 'nullable|date',
+            'vehicle_number' => 'nullable|string|max:255',
+            'driver_photo' => 'nullable|file|image|max:2048',
         ]);
 
         // Create the user
@@ -75,7 +80,7 @@ class AdminEmployeeController extends Controller
         }
 
         // Create the employee record
-        \App\Models\Employee::create([
+        $employee = \App\Models\Employee::create([
             'name' => $request->name,
             'role' => $request->role,
             'vendor_id' => $request->vendor_id,
@@ -83,6 +88,25 @@ class AdminEmployeeController extends Controller
             'status' => $request->status,
             'user_id' => $user->id,
         ]);
+
+        // If the role is driver, create a Driver record and link it
+        if (strtolower($request->role) === 'driver') {
+            $photoPath = null;
+            if ($request->hasFile('driver_photo')) {
+                $photoPath = $request->file('driver_photo')->store('driver_photos', 'public');
+            }
+            \App\Models\Driver::create([
+                'employee_id' => $employee->id,
+                'name' => $request->name,
+                'phone' => $request->mobile,
+                'email' => $request->email,
+                'license' => $request->license,
+                'license_expiry' => $request->license_expiry,
+                'vehicle_number' => $request->vehicle_number,
+                'photo' => $photoPath,
+                'status' => 'active',
+            ]);
+        }
 
         return redirect()->route('admin.users.index')->with('success', 'Employee created!');
     }
