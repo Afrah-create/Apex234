@@ -33,7 +33,9 @@ class YogurtProduct extends Model
 
     public function getStockAttribute()
     {
-        return $this->inventories()->sum('quantity_available');
+        return $this->inventories()->get()->sum(function($inventory) {
+            return $inventory->quantity_available - $inventory->quantity_reserved;
+        });
     }
 
     public function vendor()

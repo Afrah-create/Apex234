@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Services\BatchProductionService;
+use App\Models\Delivery;
+use App\Models\Driver;
 
 class CheckoutController extends Controller
 {
@@ -92,7 +94,7 @@ class CheckoutController extends Controller
                 $inventory = \App\Models\Inventory::where('distribution_center_id', $center->id)
                     ->where('yogurt_product_id', $item->product->id)
                     ->first();
-                if ($inventory && $inventory->quantity_available >= $item->quantity) {
+                if ($inventory && ($inventory->quantity_available - $inventory->quantity_reserved) >= $item->quantity) {
                     $found = true;
                     break;
                 }
@@ -277,7 +279,36 @@ class CheckoutController extends Controller
             } else {
                 // Optionally: handle no eligible vendor (e.g., notify admin, mark as unassigned, etc.)
             }
-            // --- End Automatic Vendor Assignment ---
+
+            // --- Schedule Delivery and Assign Driver ---
+            $order->refresh(); // Make sure vendor_id and distribution_center_id are up to date
+            if ($order->vendor_id && $order->distribution_center_id) {
+                $employeeDriver = \App\Models\Employee::where('role', 'Driver')
+                    ->where('status', 'Active')
+                    ->orderByRaw('(
+                        SELECT COUNT(*) FROM deliveries WHERE deliveries.driver_id = employees.id AND deliveries.delivery_status IN ("scheduled", "in_transit", "out_for_delivery")
+                    ) ASC')
+                    ->first();
+                if ($employeeDriver) {
+                    Delivery::create([
+                        'order_id' => $order->id,
+                        'distribution_center_id' => $order->distribution_center_id,
+                        'vendor_id' => $order->vendor_id,
+                        'vehicle_number' => null,
+                        'driver_id' => $employeeDriver->id,
+                        'driver_name' => $employeeDriver->name,
+                        'driver_phone' => $employeeDriver->user ? $employeeDriver->user->mobile ?? $employeeDriver->user->phone ?? null : null,
+                        'driver_license' => null, // Add if available in Employee
+                        'scheduled_delivery_date' => $order->requested_delivery_date ?? now()->addDay(),
+                        'scheduled_delivery_time' => '09:00',
+                        'delivery_address' => $order->delivery_address,
+                        'recipient_name' => $order->delivery_contact,
+                        'recipient_phone' => $order->delivery_phone,
+                        'delivery_number' => uniqid('DEL-'),
+                        'delivery_status' => 'scheduled',
+                    ]);
+                }
+            }
 
             \Illuminate\Support\Facades\Log::info('Customer order created successfully', [
                 'order_id' => $order->id,
@@ -285,6 +316,14 @@ class CheckoutController extends Controller
                 'user_id' => Auth::id(),
                 'total_amount' => $finalTotal
             ]);
+
+            // Notify all admins about new order with warehouse staff and customer details
+            $adminUsers = \App\Models\User::whereHas('roles', function($query) {
+                $query->where('name', 'admin');
+            })->get();
+            foreach ($adminUsers as $admin) {
+                $admin->notify(new \App\Notifications\OrderPlacedNotification($order, Auth::user()));
+            }
 
             return redirect()->route('customer.orders.show', $order->id)
                 ->with('success', 'Order placed successfully! Your order number is: ' . $order->order_number);
@@ -422,10 +461,13 @@ class CheckoutController extends Controller
                     $allAvailable = false;
                     break;
                 }
-                // Check total inventory for this product at this center (sum across all records)
+                // Check total available inventory for this product at this center (available - reserved)
                 $totalAvailable = \App\Models\Inventory::where('distribution_center_id', $center->id)
                     ->where('yogurt_product_id', $product->id)
-                    ->sum('quantity_available');
+                    ->get()
+                    ->sum(function($inventory) {
+                        return $inventory->quantity_available - $inventory->quantity_reserved;
+                    });
                 if ($totalAvailable < $item->quantity) {
                     $allAvailable = false;
                     break;

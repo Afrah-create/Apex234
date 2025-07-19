@@ -208,12 +208,12 @@ async function loadInventorySummaryCards() {
             if (typeof val === 'string' && val.trim() === '') return '-';
             return Number(val).toLocaleString();
         }
-        document.getElementById('summary-total-products').textContent = safeNumber(data.product_summary?.total_batches);
-        document.getElementById('summary-total-value').textContent = safeNumber(data.product_summary?.total_value) + ' UGX';
-        document.getElementById('summary-total-available').textContent = safeNumber(data.product_summary?.total_available);
-        document.getElementById('summary-total-reserved').textContent = safeNumber(data.product_summary?.total_reserved);
-        document.getElementById('summary-total-damaged').textContent = safeNumber(data.product_summary?.total_damaged);
-        document.getElementById('summary-total-expired').textContent = safeNumber(data.product_summary?.total_expired);
+        document.getElementById('summary-total-products').textContent = safeNumber(data.total_products);
+        document.getElementById('summary-total-value').textContent = safeNumber(data.total_value) + ' UGX';
+        document.getElementById('summary-total-available').textContent = safeNumber(data.total_available);
+        document.getElementById('summary-total-reserved').textContent = safeNumber(data.total_reserved);
+        document.getElementById('summary-total-damaged').textContent = safeNumber(data.total_damaged);
+        document.getElementById('summary-total-expired').textContent = safeNumber(data.total_expired);
     } catch (error) {
         console.error('Error loading inventory summary:', error);
         [
@@ -291,14 +291,13 @@ async function loadInventorySummary() {
     try {
         const response = await fetch('/api/vendor/inventory/summary');
         const data = await response.json();
-        
-        document.getElementById('total-products').textContent = data.product_summary.total_batches || 0;
-        document.getElementById('total-value').textContent = 
-            ((data.product_summary.total_value || 0) + (data.raw_material_summary.total_cost || 0)).toLocaleString() + ' UGX';
-        
-        // Calculate low stock items
-        const lowStockCount = data.product_summary.total_available <= 10 ? 1 : 0;
-        document.getElementById('low-stock-items').textContent = lowStockCount;
+        document.getElementById('total-products').textContent = data.total_products || 0;
+        document.getElementById('total-value').textContent = (data.total_value || 0).toLocaleString() + ' UGX';
+        document.getElementById('low-stock-items').textContent = data.low_stock_items || 0;
+        if (document.getElementById('total-available')) document.getElementById('total-available').textContent = data.total_available || 0;
+        if (document.getElementById('total-reserved')) document.getElementById('total-reserved').textContent = data.total_reserved || 0;
+        if (document.getElementById('total-damaged')) document.getElementById('total-damaged').textContent = data.total_damaged || 0;
+        if (document.getElementById('total-expired')) document.getElementById('total-expired').textContent = data.total_expired || 0;
     } catch (error) {
         console.error('Error loading inventory summary:', error);
     }

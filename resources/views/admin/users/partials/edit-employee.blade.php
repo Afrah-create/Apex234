@@ -13,10 +13,8 @@
         <div class="mb-4">
             <label class="block font-semibold mb-1">Role</label>
             <select name="role" required class="border rounded px-3 py-2 w-full">
-                <option value="Production Worker" @if($employee->role == 'Production Worker') selected @endif>Production Worker</option>
                 <option value="Warehouse Staff" @if($employee->role == 'Warehouse Staff') selected @endif>Warehouse Staff</option>
                 <option value="Driver" @if($employee->role == 'Driver') selected @endif>Driver</option>
-                <option value="Sales Manager" @if($employee->role == 'Sales Manager') selected @endif>Sales Manager</option>
             </select>
         </div>
         <div class="mb-4">

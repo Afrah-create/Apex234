@@ -117,6 +117,57 @@
         </div>
     </div>
 
+    <!-- Orders to Process (Packing & Shipping) -->
+    <div class="employee-card">
+        <h3>Orders to Process</h3>
+        @php
+            $ordersToProcess = \App\Models\Order::whereIn('order_status', ['confirmed', 'processing'])
+                ->orderBy('created_at', 'asc')->get();
+        @endphp
+        @if($ordersToProcess->count() > 0)
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Status</th>
+                            <th>Customer</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($ordersToProcess as $order)
+                            <tr>
+                                <td>{{ $order->order_number }}</td>
+                                <td>{{ ucfirst($order->order_status) }}</td>
+                                <td>{{ $order->customer->name ?? 'N/A' }}</td>
+                                <td>{{ $order->created_at->format('M d, Y H:i') }}</td>
+                                <td>
+                                    @if($order->order_status === 'confirmed')
+                                        <form method="POST" action="{{ route('dashboard.employee.order.packed', $order->id) }}" style="display:inline;">
+                                            @csrf
+                                            <button type="submit" class="action-btn action-green">Mark as Packed</button>
+                                        </form>
+                                    @elseif($order->order_status === 'processing')
+                                        <form method="POST" action="{{ route('dashboard.employee.order.shipped', $order->id) }}" style="display:inline;">
+                                            @csrf
+                                            <button type="submit" class="action-btn action-blue">Mark as Shipped</button>
+                                        </form>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <div class="empty-state">
+                <p>No orders to process at this time.</p>
+            </div>
+        @endif
+    </div>
+
     <!-- Product Availability -->
     <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
         <h3 class="text-lg font-semibold mb-4 text-gray-900">Product Availability</h3>

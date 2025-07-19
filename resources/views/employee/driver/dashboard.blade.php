@@ -89,78 +89,69 @@
     <!-- Assigned Deliveries -->
     <div class="employee-card">
         <h3>Assigned Deliveries</h3>
-        @if($assignedDeliveries->count() > 0)
-            <div class="table-container">
-                <table class="data-table">
-                    <thead>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Delivery ID</th>
+                        <th>Customer</th>
+                        <th>Address</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="deliveries-table-body">
+                    @foreach($assignedDeliveries as $delivery)
                         <tr>
-                            <th>Delivery ID</th>
-                            <th>Customer</th>
-                            <th>Address</th>
-                            <th>Status</th>
-                            <th>Date</th>
-                            <th>Actions</th>
+                            <td class="font-medium">#{{ $delivery->id }}</td>
+                            <td>
+                                @if($delivery->order && $delivery->order->customer)
+                                    {{ $delivery->order->customer->name }}
+                                @elseif($delivery->retailer)
+                                    {{ $delivery->retailer->store_name }}
+                                @else
+                                    N/A
+                                @endif
+                            </td>
+                            <td>{{ $delivery->delivery_address ?? 'N/A' }}</td>
+                            <td>{{ ucfirst($delivery->delivery_status) }}</td>
+                            <td>{{ $delivery->created_at ? $delivery->created_at->format('M d, Y') : '' }}</td>
+                            <td class="action-buttons">
+                                <button class="action-btn action-secondary" onclick="toggleOrderDetails({{ $delivery->id }})">View</button>
+                                @if(in_array($delivery->delivery_status, ['scheduled', 'out_for_delivery']))
+                                    <form method="POST" action="{{ route('dashboard.employee.delivery.delivered', $delivery->id) }}" enctype="multipart/form-data" style="display:inline;">
+                                        @csrf
+                                        <input type="file" name="proof_photo" accept="image/*" style="display:inline-block; margin-right:8px;" required>
+                                        <button type="submit" class="action-btn action-green">Mark as Delivered</button>
+                                    </form>
+                                @endif
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($assignedDeliveries as $delivery)
-                            <tr>
-                                <td class="font-medium">#{{ $delivery->id }}</td>
-                                <td>{{ $delivery->customer_name ?? 'N/A' }}</td>
-                                <td>{{ $delivery->delivery_address ?? 'N/A' }}</td>
-                                <td>
-                                    <span class="status-badge {{ $delivery->status === 'completed' ? 'status-completed' : ($delivery->status === 'in_progress' ? 'status-progress' : 'status-pending') }}">
-                                        {{ ucfirst(str_replace('_', ' ', $delivery->status)) }}
-                                    </span>
-                                </td>
-                                <td>{{ $delivery->created_at->format('M d, Y') }}</td>
-                                <td class="action-buttons">
-                                    <button class="action-btn action-secondary" onclick="toggleOrderDetails({{ $delivery->id }})">View</button>
-                                </td>
-                            </tr>
-                            <tr id="order-details-{{ $delivery->id }}" style="display:none; background:#f9f9f9;">
-                                <td colspan="6">
-                                    <div style="padding:16px;">
-                                        <strong>Order Details</strong><br>
-                                        <ul>
-                                            <li><b>Retailer:</b> {{ $delivery->retailer->store_name ?? 'N/A' }}</li>
-                                            <li><b>Address:</b> {{ $delivery->delivery_address }}</li>
-                                            <li><b>Contact:</b> {{ $delivery->recipient_name ?? 'N/A' }} ({{ $delivery->recipient_phone ?? 'N/A' }})</li>
-                                            <li><b>Order Number:</b> {{ $delivery->order->order_number ?? 'N/A' }}</li>
-                                            <li><b>Order Items:</b>
-                                                <ul>
-                                                @foreach($delivery->order->orderItems as $item)
-                                                    <li>{{ $item->yogurtProduct->product_name ?? 'Product' }} - {{ $item->quantity }} x {{ $item->unit_price }} UGX</li>
-                                                @endforeach
-                                                </ul>
-                                            </li>
-                                        </ul>
-                                        @if($delivery->order->order_status === 'out_for_delivery')
-                                        <form action="{{ route('driver.orders.proof', $delivery->order->id) }}" method="POST" enctype="multipart/form-data" style="margin-top:12px;">
-                                            @csrf
-                                            <label for="proof_photo">Upload Proof of Delivery (Photo):</label>
-                                            <input type="file" name="proof_photo" accept="image/*" required>
-                                            <button type="submit" class="btn btn-success">Mark as Delivered</button>
-                                        </form>
-                                        @endif
-                                        @if($delivery->order->proof_photo)
-                                            <div style="margin-top:12px;">
-                                                <strong>Proof of Delivery:</strong><br>
-                                                <img src="{{ asset('storage/' . $delivery->order->proof_photo) }}" style="max-width:300px;">
-                                            </div>
-                                        @endif
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        @else
-            <div class="empty-state">
-                <p>No deliveries assigned yet</p>
-            </div>
-        @endif
+                        <tr id="order-details-{{ $delivery->id }}" style="display:none; background:#f9f9f9;">
+                            <td colspan="6">
+                                <div style="padding:16px;">
+                                    <strong>Order Details</strong><br>
+                                    <ul>
+                                        <li><b>Retailer:</b> {{ $delivery->retailer->store_name ?? 'N/A' }}</li>
+                                        <li><b>Address:</b> {{ $delivery->delivery_address }}</li>
+                                        <li><b>Contact:</b> {{ $delivery->recipient_name ?? 'N/A' }} ({{ $delivery->recipient_phone ?? 'N/A' }})</li>
+                                        <li><b>Order Number:</b> {{ $delivery->order->order_number ?? 'N/A' }}</li>
+                                        <li><b>Order Items:</b>
+                                            <ul>
+                                            @foreach($delivery->order && $delivery->order->orderItems ? $delivery->order->orderItems : [] as $item)
+                                                <li>{{ $item->yogurtProduct->product_name ?? 'Product' }} - {{ $item->quantity }} x {{ $item->unit_price }} UGX</li>
+                                            @endforeach
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- Vehicle Information -->
@@ -212,3 +203,68 @@
     @endif
 </div>
 @endsection 
+
+<script>
+function fetchDeliveries() {
+    fetch("{{ route('driver.assigned-deliveries') }}")
+        .then(response => response.json())
+        .then(data => {
+            const tbody = document.getElementById('deliveries-table-body');
+            tbody.innerHTML = '';
+            if (!data.deliveries || data.deliveries.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6">No deliveries assigned yet</td></tr>';
+            } else {
+                data.deliveries.forEach(delivery => {
+                    let customerName = 'N/A';
+                    if (delivery.order && delivery.order.customer) {
+                        customerName = delivery.order.customer.name;
+                    } else if (delivery.retailer) {
+                        customerName = delivery.retailer.store_name;
+                    }
+                    let actionButtons = `<button class="action-btn action-secondary" onclick="toggleOrderDetails(${delivery.id})">View</button>`;
+                    if (['scheduled', 'out_for_delivery'].includes(delivery.delivery_status)) {
+                        actionButtons += `
+                            <form method="POST" action="/dashboard/employee/delivery/${delivery.id}/delivered" enctype="multipart/form-data" style="display:inline;">
+                                <input type="hidden" name="_token" value="${document.querySelector('meta[name=csrf-token]').getAttribute('content')}">
+                                <input type="file" name="proof_photo" accept="image/*" style="display:inline-block; margin-right:8px;" required>
+                                <button type="submit" class="action-btn action-green">Mark as Delivered</button>
+                            </form>
+                        `;
+                    }
+                    tbody.innerHTML += `
+                        <tr>
+                            <td class="font-medium">#${delivery.id}</td>
+                            <td>${customerName}</td>
+                            <td>${delivery.delivery_address ?? 'N/A'}</td>
+                            <td>${delivery.delivery_status ? delivery.delivery_status.charAt(0).toUpperCase() + delivery.delivery_status.slice(1) : ''}</td>
+                            <td>${delivery.created_at ? new Date(delivery.created_at).toLocaleDateString() : ''}</td>
+                            <td class="action-buttons">${actionButtons}</td>
+                        </tr>
+                        <tr id="order-details-${delivery.id}" style="display:none; background:#f9f9f9;">
+                            <td colspan="6">
+                                <div style="padding:16px;">
+                                    <strong>Order Details</strong><br>
+                                    <ul>
+                                        <li><b>Retailer:</b> ${delivery.retailer ? (delivery.retailer.store_name ?? 'N/A') : 'N/A'}</li>
+                                        <li><b>Address:</b> ${delivery.delivery_address}</li>
+                                        <li><b>Contact:</b> ${delivery.recipient_name ?? 'N/A'} (${delivery.recipient_phone ?? 'N/A'})</li>
+                                        <li><b>Order Number:</b> ${delivery.order ? (delivery.order.order_number ?? 'N/A') : 'N/A'}</li>
+                                        <li><b>Order Items:</b>
+                                            <ul>
+                                                ${(delivery.order && delivery.order.order_items) ? delivery.order.order_items.map(item =>
+                                                    `<li>${item.yogurt_product ? (item.yogurt_product.product_name ?? 'Product') : 'Product'} - ${item.quantity} x ${item.unit_price} UGX</li>`
+                                                ).join('') : ''}
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+        });
+}
+fetchDeliveries();
+setInterval(fetchDeliveries, 30000);
+</script> 

@@ -101,6 +101,9 @@
                 </div>
             </div>
             <script>
+                window.Laravel = {!! json_encode([
+                    'userId' => auth()->check() ? auth()->user()->id : null,
+                ]) !!};
                 const chatbotToggle = document.getElementById('chatbot-toggle');
                 const chatbotWindow = document.getElementById('chatbot-window');
                 const chatbotClose = document.getElementById('chatbot-close');
@@ -156,7 +159,6 @@
 
         <!-- Custom JavaScript -->
         <script src="{{ asset('js/carousel.js') }}"></script>
-        <script src="{{ asset('js/app.js') }}"></script>
         @yield('scripts')
         @include('components.confirm-modal')
     </body>

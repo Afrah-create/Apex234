@@ -13,6 +13,7 @@ use App\Http\Controllers\VendorApplicantController;
 use App\Http\Controllers\SupplierController;
 use App\Models\YogurtProduct;
 use App\Http\Controllers\CartController;
+use Illuminate\Support\Facades\Broadcast;
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -127,6 +128,11 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('customer/orders', \App\Http\Controllers\CustomerOrderController::class)
         ->names('customer.orders')
         ->only(['index', 'show', 'store']);
+    // Warehouse staff and driver actions
+    Route::post('/dashboard/employee/order/{orderId}/packed', [\App\Http\Controllers\EmployeeDashboardController::class, 'markOrderPacked'])->name('dashboard.employee.order.packed');
+    Route::post('/dashboard/employee/order/{orderId}/shipped', [\App\Http\Controllers\EmployeeDashboardController::class, 'markOrderShipped'])->name('dashboard.employee.order.shipped');
+    Route::post('/dashboard/employee/delivery/{deliveryId}/out-for-delivery', [\App\Http\Controllers\EmployeeDashboardController::class, 'markDeliveryOutForDelivery'])->name('dashboard.employee.delivery.out_for_delivery');
+    Route::post('/dashboard/employee/delivery/{deliveryId}/delivered', [\App\Http\Controllers\EmployeeDashboardController::class, 'markDeliveryDelivered'])->name('dashboard.employee.delivery.delivered');
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -340,6 +346,8 @@ Route::middleware(['auth', 'verified'])->prefix('api/supplier/orders')->group(fu
     Route::get('/stats', [\App\Http\Controllers\SupplierOrderController::class, 'orderStats']);
     Route::post('/raw-material-orders/{id}/archive', [\App\Http\Controllers\SupplierOrderController::class, 'archiveRawMaterialOrder']);
     Route::post('/raw-material-orders/{id}/unarchive', [\App\Http\Controllers\SupplierOrderController::class, 'unarchiveRawMaterialOrder']);
+    // Bulk update status for supplier raw material orders
+    Route::post('/bulk-update-status', [\App\Http\Controllers\SupplierOrderController::class, 'bulkUpdateStatus']);
 });
 
 // Supplier Dashboard
@@ -512,6 +520,8 @@ Route::middleware(['auth'])->get('/chat/unread-counts', [\App\Http\Controllers\C
 Route::middleware(['auth'])->get('/chat/unread-grouped', [\App\Http\Controllers\ChatController::class, 'getUnreadMessagesGroupedBySender']);
 Route::middleware(['auth'])->get('/chat/background', [\App\Http\Controllers\ChatController::class, 'getChatBackground']);
 Route::middleware(['auth'])->post('/chat/background', [\App\Http\Controllers\ChatController::class, 'setChatBackground']);
+Route::middleware(['auth'])->get('/chat/messages', [\App\Http\Controllers\ChatController::class, 'getMessages']);
+Route::middleware(['auth'])->post('/chat/send', [\App\Http\Controllers\ChatController::class, 'sendMessage']);
 
 Route::get('/privacy-policy', function () {
     return view('privacy-policy');
@@ -553,3 +563,20 @@ Route::middleware(['auth', 'verified'])->get('/vendor/reports', [\App\Http\Contr
 Route::middleware(['auth', 'verified'])->get('/supplier/reports', [\App\Http\Controllers\SupplierDashboardController::class, 'reportsPage'])->name('supplier.reports');
 // Supplier reports API (for AJAX/fetching report data)
 Route::middleware(['auth', 'verified'])->get('/supplier/my-reports', [\App\Http\Controllers\SupplierDashboardController::class, 'myReports'])->name('supplier.my-reports');
+
+Route::get('/admin/deliveries/{delivery}', [App\Http\Controllers\AdminDeliveryController::class, 'show'])->name('admin.deliveries.show');
+Route::middleware(['auth'])->get('/driver/assigned-deliveries', [\App\Http\Controllers\DriverDashboardApiController::class, 'assignedDeliveries'])->name('driver.assigned-deliveries');
+
+// Bulk update delivery status (admin)
+Route::post('/admin/deliveries/bulk-update-status', [\App\Http\Controllers\AdminDeliveryController::class, 'bulkUpdateStatus'])->name('admin.deliveries.bulk-update-status');
+
+// Admin API: Driver delivery loads graph
+Route::get('/api/admin/driver-delivery-loads', [\App\Http\Controllers\AdminDeliveryController::class, 'driverDeliveryLoads'])->name('api.admin.driver-delivery-loads');
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/notifications/fetch', [App\Http\Controllers\NotificationController::class, 'fetch'])->name('notifications.fetch');
+    Route::post('/notifications/mark-all-read', [App\Http\Controllers\NotificationController::class, 'markAllRead'])->name('notifications.markAllRead');
+    Route::get('/notifications', [App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
+});
+
+Broadcast::routes();

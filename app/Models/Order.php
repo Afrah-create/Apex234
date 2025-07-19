@@ -58,4 +58,9 @@ class Order extends Model
     {
         return $this->belongsTo(\App\Models\Vendor::class);
     }
+
+    public function warehouseStaff()
+    {
+        return $this->belongsTo(\App\Models\Employee::class, 'warehouse_staff_id');
+    }
 } 

@@ -260,4 +260,63 @@ class AdminOrderController extends Controller
         ])->setPaper('a4', 'landscape');
         return $pdf->download('raw_material_orders.pdf');
     }
+
+    public function markAsShipped(Request $request, $id)
+    {
+        $order = Order::findOrFail($id);
+        DB::beginTransaction();
+        try {
+            // Assign the least busy active driver
+            $driver = \App\Models\Driver::withCount(['deliveries' => function($query) {
+                $query->whereIn('delivery_status', ['scheduled', 'in_transit', 'out_for_delivery']);
+            }])->where('status', 'active')->orderBy('deliveries_count', 'asc')->first();
+            if ($driver) {
+                $order->driver_id = $driver->id;
+            }
+            $order->order_status = 'shipped';
+            $order->save();
+            // Create delivery if it does not exist, otherwise update
+            $delivery = $order->delivery;
+            if (!$delivery) {
+                $delivery = $order->delivery()->create([
+                    'order_id' => $order->id,
+                    'distribution_center_id' => $order->distribution_center_id,
+                    'retailer_id' => $order->retailer_id ?? null,
+                    'vendor_id' => $order->vendor_id ?? null,
+                    'delivery_status' => 'scheduled',
+                    'delivery_address' => $order->delivery_address,
+                    'recipient_name' => $order->delivery_contact,
+                    'recipient_phone' => $order->delivery_phone,
+                    'delivery_number' => uniqid('DEL-'),
+                    'driver_id' => $driver ? $driver->id : null,
+                    'driver_name' => $driver ? $driver->name : null,
+                    'driver_phone' => $driver ? $driver->phone : null,
+                    'driver_license' => $driver ? $driver->license : null,
+                    'vehicle_number' => $driver ? $driver->vehicle_number : null,
+                    'scheduled_delivery_date' => $order->requested_delivery_date ?? now()->addDay(),
+                    'scheduled_delivery_time' => '09:00',
+                ]);
+            } else {
+                $delivery->driver_id = $driver ? $driver->id : null;
+                $delivery->driver_name = $driver ? $driver->name : null;
+                $delivery->driver_phone = $driver ? $driver->phone : null;
+                $delivery->driver_license = $driver ? $driver->license : null;
+                $delivery->vehicle_number = $driver ? $driver->vehicle_number : null;
+                $delivery->delivery_status = 'scheduled';
+                $delivery->save();
+            }
+            // Notify vendor and customer
+            if ($order->vendor && $order->vendor->user) {
+                $order->vendor->user->notify(new \App\Notifications\OrderStatusUpdate($order, 'confirmed', 'shipped'));
+            }
+            if ($order->customer) {
+                $order->customer->notify(new \App\Notifications\OrderStatusUpdate($order, 'confirmed', 'shipped'));
+            }
+            DB::commit();
+            return redirect()->route('admin.orders.index')->with('success', 'Order marked as shipped and driver assigned.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->route('admin.orders.index')->with('error', 'Failed to mark order as shipped: ' . $e->getMessage());
+        }
+    }
 } 

@@ -36,6 +36,55 @@
                 <input type="url" id="photo_url" name="photo_url" value="{{ old('photo_url') }}" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
             <div>
+                <label for="role" class="block font-semibold mb-1">Role</label>
+                <select id="role" name="role" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">Select Role</option>
+                    <option value="admin">Admin</option>
+                    <option value="employee">Employee</option>
+                    <option value="driver">Driver</option>
+                    <option value="retailer">Retailer</option>
+                    <option value="vendor">Vendor</option>
+                    <option value="supplier">Supplier</option>
+                </select>
+            </div>
+            <div id="driver-fields" style="display:none;">
+                <div>
+                    <label for="license" class="block font-semibold mb-1">Driver License</label>
+                    <input type="text" name="license" id="license" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div>
+                    <label for="license_expiry" class="block font-semibold mb-1">License Expiry Date</label>
+                    <input type="date" name="license_expiry" id="license_expiry" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div>
+                    <label for="vehicle_number" class="block font-semibold mb-1">Vehicle Number</label>
+                    <input type="text" name="vehicle_number" id="vehicle_number" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div>
+                    <label for="driver_photo" class="block font-semibold mb-1">Driver Photo</label>
+                    <input type="file" name="driver_photo" id="driver_photo" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+            </div>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const roleSelect = document.getElementById('role');
+                    const driverFields = document.getElementById('driver-fields');
+                    if (roleSelect) {
+                        roleSelect.addEventListener('change', function() {
+                            if (this.value === 'driver') {
+                                driverFields.style.display = '';
+                            } else {
+                                driverFields.style.display = 'none';
+                            }
+                        });
+                        // Initial check
+                        if (roleSelect.value === 'driver') {
+                            driverFields.style.display = '';
+                        }
+                    }
+                });
+            </script>
+            <div>
                 <label for="password" class="block font-semibold mb-1">Password</label>
                 <input type="password" id="password" name="password" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>

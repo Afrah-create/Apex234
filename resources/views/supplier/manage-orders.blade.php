@@ -45,12 +45,31 @@
         <input type="text" id="search-input" class="w-full md:w-1/3 px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Search by vendor name or order ID...">
     </div>
 
+    <!-- Bulk Status Update Bar -->
+    <div class="flex flex-col md:flex-row md:items-center gap-4 mb-4">
+        <div class="flex items-center gap-2">
+            <input type="checkbox" id="select-all-orders" class="form-checkbox h-5 w-5 text-blue-600" />
+            <label for="select-all-orders" class="font-semibold">Select All</label>
+        </div>
+        <select id="bulk-status" class="border rounded px-2 py-1">
+            <option value="">Bulk Update Status</option>
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="processing">Processing</option>
+            <option value="shipped">Shipped</option>
+            <option value="delivered">Delivered</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="unavailable">Unavailable</option>
+        </select>
+        <button id="bulk-update-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Update Selected</button>
+    </div>
     <!-- Orders Table -->
     <div class="bg-white rounded-lg shadow overflow-hidden">
         <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
                 <thead class="bg-gray-50">
                     <tr>
+                        <th class="px-2 py-3 text-left font-semibold"><input type="checkbox" id="select-all-orders-header" class="form-checkbox h-5 w-5 text-blue-600" /></th>
                         <th class="px-4 py-3 text-left font-semibold">Order ID</th>
                         <th class="px-4 py-3 text-left font-semibold">Vendor</th>
                         <th class="px-4 py-3 text-left font-semibold">Material</th>
@@ -246,6 +265,7 @@ function renderOrders() {
         const tr = document.createElement('tr');
         tr.className = 'border-b hover:bg-gray-50';
         tr.innerHTML = `
+            <td class="px-2 py-3"><input type="checkbox" class="order-checkbox" value="${order.id}" /></td>
             <td class="px-4 py-3 font-medium">#${order.id}</td>
             <td class="px-4 py-3">
                 <div class="font-medium">${order.vendor_name}</div>
@@ -332,7 +352,6 @@ function getActionButtons(order) {
             break;
         case 'shipped':
             buttons += `<button onclick="deliverOrder(${order.id})" class="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded text-xs">Deliver</button>`;
-            buttons += `<a href="/supplier/delivery-form?order_id=${order.id}&distribution_center_id=${order.distribution_center_id || ''}&vendor_id=${order.vendor_id || ''}&vendor_name=${encodeURIComponent(order.vendor_name || '')}&vendor_address=${encodeURIComponent(order.vendor_address || '')}&vendor_phone=${encodeURIComponent(order.vendor_phone || '')}" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs ml-1">Create Delivery</a>`;
             break;
     }
     // Archive/Unarchive logic
@@ -546,6 +565,47 @@ function showMessage(message, type) {
 document.getElementById('status-filter').addEventListener('change', applyFilters);
 document.getElementById('material-filter').addEventListener('change', applyFilters);
 document.getElementById('search-input').addEventListener('input', applyFilters);
+
+// Add JS for select all and bulk update
+document.getElementById('select-all-orders').addEventListener('change', function() {
+    const checked = this.checked;
+    document.querySelectorAll('.order-checkbox').forEach(cb => { cb.checked = checked; });
+    document.getElementById('select-all-orders-header').checked = checked;
+});
+document.getElementById('select-all-orders-header').addEventListener('change', function() {
+    const checked = this.checked;
+    document.querySelectorAll('.order-checkbox').forEach(cb => { cb.checked = checked; });
+    document.getElementById('select-all-orders').checked = checked;
+});
+document.getElementById('bulk-update-btn').addEventListener('click', async function() {
+    const selected = Array.from(document.querySelectorAll('.order-checkbox:checked')).map(cb => cb.value);
+    const status = document.getElementById('bulk-status').value;
+    if (!selected.length || !status) {
+        showMessage('Select orders and a status to update.', 'error');
+        return;
+    }
+    try {
+        const res = await fetch('/api/supplier/orders/bulk-update-status', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ order_ids: selected, status })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showMessage('Orders updated successfully!', 'success');
+            loadIncomingOrders();
+            loadOrderStats();
+        } else {
+            showMessage(data.message || 'Bulk update failed.', 'error');
+        }
+    } catch (err) {
+        showMessage('Bulk update failed.', 'error');
+    }
+});
 
 // Initial load
 document.addEventListener('DOMContentLoaded', function() {

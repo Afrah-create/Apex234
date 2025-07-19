@@ -96,10 +96,7 @@
                 </div>
 
                 <!-- Bulk Actions Bar -->
-                <div id="bulk-actions-bar" class="flex space-x-2 mb-2" style="display:none;">
-                    <button onclick="bulkDeleteOrders()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm">Delete Selected</button>
-                    <button onclick="bulkEditStatus()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm">Edit Status</button>
-                </div>
+                <!-- Removed manual bulk actions for status update -->
 
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
@@ -185,71 +182,10 @@
 </main>
 
     <!-- Status Update Modal -->
-    <div id="status-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div class="mt-3">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Update Order Status</h3>
-                <form id="status-form">
-                    <input type="hidden" id="order-id">
-                    <div class="mb-4">
-                        <label for="order-status" class="block text-sm font-medium text-gray-700 mb-2">Order Status</label>
-                        <select id="order-status" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="pending">Pending</option>
-                            <option value="confirmed">Confirmed</option>
-                            <option value="processing">Processing</option>
-                            <option value="shipped">Shipped</option>
-                            <option value="delivered">Delivered</option>
-                            <option value="cancelled">Cancelled</option>
-                        </select>
-                    </div>
-                    <div class="flex justify-end space-x-3">
-                        <button type="button" onclick="closeStatusModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md">
-                            Cancel
-                        </button>
-                        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md">
-                            Update Status
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+    <!-- Removed status update modal for manual status changes -->
 
     <!-- Inline Edit Modal -->
-    <div id="editOrderModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.3); z-index:1000; align-items:center; justify-content:center;">
-      <div class="modal-dialog" style="background:#fff; padding:2rem; border-radius:8px; min-width:320px; max-width:90vw;">
-        <h4>Edit Order <span id="edit-order-id"></span></h4>
-        <form id="editOrderForm">
-          <input type="hidden" id="edit-order-id-input" name="order_id">
-          <div class="form-group mb-2">
-            <label for="edit-order-type">Order Type</label>
-            <select id="edit-order-type" name="order_type" class="form-control">
-              <option value="customer">Customer</option>
-              <option value="rush">Rush</option>
-              <option value="bulk">Bulk</option>
-              <option value="regular">Regular</option>
-            </select>
-          </div>
-          <div class="form-group mb-2">
-            <label for="edit-order-status">Order Status</label>
-            <select id="edit-order-status" name="order_status" class="form-control">
-              <option value="pending">Pending</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="delivered">Delivered</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-          </div>
-          <div class="form-group mb-2">
-            <label for="edit-delivery-address">Delivery Address</label>
-            <input type="text" id="edit-delivery-address" name="delivery_address" class="form-control">
-          </div>
-          <div class="mt-3">
-            <button type="submit" class="btn btn-primary">Save</button>
-            <button type="button" class="btn btn-secondary" onclick="closeEditOrderModal()">Cancel</button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <!-- Removed inline edit modal for manual status changes -->
 
     <!-- Bulk Update Modal -->
     <div id="bulkUpdateModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:1000; align-items:center; justify-content:center;">
@@ -400,7 +336,6 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex space-x-2">
                                 <button onclick="viewOrder(${order.id})" class="text-blue-600 hover:text-blue-900">View</button>
-                                <button onclick="openStatusModal(${order.id}, '${order.order_status}')" class="text-purple-600 hover:text-purple-900">Status</button>
                                 <button onclick="deleteOrder(${order.id})" class="text-red-600 hover:text-red-900">Delete</button>
                             </div>
                         </td>
@@ -461,46 +396,7 @@
         }
 
         // Status modal functions
-        function openStatusModal(orderId, currentStatus) {
-            document.getElementById('order-id').value = orderId;
-            document.getElementById('order-status').value = currentStatus;
-            document.getElementById('status-modal').classList.remove('hidden');
-        }
-
-        function closeStatusModal() {
-            document.getElementById('status-modal').classList.add('hidden');
-        }
-
-        // Update order status
-        async function updateOrderStatus(event) {
-            event.preventDefault();
-            
-            const orderId = document.getElementById('order-id').value;
-            const status = document.getElementById('order-status').value;
-
-            try {
-                const response = await fetch(`/admin/orders/${orderId}/status`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    },
-                    body: JSON.stringify({ order_status: status })
-                });
-
-                if (response.ok) {
-                    closeStatusModal();
-                    loadOrdersData();
-                    loadOrderStatistics();
-                    showBulkActionMessage('Order status updated successfully', 'success');
-                } else {
-                    showBulkActionMessage('Error updating order status', 'error');
-                }
-            } catch (error) {
-                console.error('Error updating order status:', error);
-                showBulkActionMessage('Error updating order status', 'error');
-            }
-        }
+        // Removed openStatusModal, closeStatusModal, updateOrderStatus functions
 
         // Delete order
         async function deleteOrder(orderId) {
@@ -538,48 +434,10 @@
             window.location.href = `/admin/orders/${orderId}/edit`;
         }
 
-        function openEditOrderModal(order) {
-            document.getElementById('edit-order-id').textContent = order.id;
-            document.getElementById('edit-order-id-input').value = order.id;
-            document.getElementById('edit-order-type').value = order.order_type;
-            document.getElementById('edit-order-status').value = order.order_status;
-            document.getElementById('edit-delivery-address').value = order.delivery_address;
-            document.getElementById('editOrderModal').style.display = 'flex';
-        }
-        function closeEditOrderModal() {
-            document.getElementById('editOrderModal').style.display = 'none';
-        }
+        // Removed openEditOrderModal, closeEditOrderModal functions
 
         // Handle form submit
-        const editOrderForm = document.getElementById('editOrderForm');
-        if (editOrderForm) {
-            editOrderForm.onsubmit = async function(e) {
-                e.preventDefault();
-                const id = document.getElementById('edit-order-id-input').value;
-                const order_type = document.getElementById('edit-order-type').value;
-                const order_status = document.getElementById('edit-order-status').value;
-                const delivery_address = document.getElementById('edit-delivery-address').value;
-                try {
-                    const response = await fetch(`/admin/orders/${id}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                        },
-                        body: JSON.stringify({ order_type, order_status, delivery_address })
-                    });
-                    if (response.ok) {
-                        showBulkActionMessage('Order updated successfully', 'success');
-                        closeEditOrderModal();
-                        loadOrdersData();
-                    } else {
-                        showBulkActionMessage('Failed to update order', 'error');
-                    }
-                } catch (err) {
-                    showBulkActionMessage('Error updating order', 'error');
-                }
-            }
-        }
+        // Removed editOrderForm.onsubmit
 
         // Refresh data
         function refreshData() {
@@ -721,15 +579,7 @@
             loadOrderStatistics();
             showBulkActionMessage('Selected orders deleted successfully', 'success');
         }
-        function bulkEditStatus() {
-            const selectedIds = getSelectedOrderIds();
-            if (selectedIds.length === 0) {
-                alert('Please select at least one order to update.');
-                return;
-            }
-            document.getElementById('bulkUpdateModal').style.display = 'flex';
-            document.body.classList.add('bulk-modal-open');
-        }
+        // Removed bulkEditStatus function
 
         // Modal close/cancel handlers
         function closeBulkUpdateModal() {
@@ -789,7 +639,7 @@
             document.getElementById('payment-filter').addEventListener('change', filterOrders);
 
             // Set up status form
-            document.getElementById('status-form').addEventListener('submit', updateOrderStatus);
+            // Removed status form event listener
 
             // Call this on page load
             loadRawMaterialOrdersData();

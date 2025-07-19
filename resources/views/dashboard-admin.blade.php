@@ -108,6 +108,66 @@
             @endif
         </div>
         
+        <!-- Recent Deliveries Table -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-semibold text-gray-900">Recent Deliveries</h2>
+                <a href="{{ route('admin.orders.index') }}" class="text-blue-500 hover:underline">View All Orders</a>
+            </div>
+            <div class="overflow-x-auto rounded-lg border border-gray-200">
+                <table class="min-w-full divide-y divide-gray-200 rounded-lg overflow-hidden">
+                    <thead class="bg-gray-100 sticky top-0 z-10">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Delivery ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Order ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Driver</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Scheduled Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Delivery Address</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Recipient</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-100">
+                        @php $recentDeliveries = $recentDeliveries ?? \App\Models\Delivery::with(['order'])->latest()->take(10)->get(); @endphp
+                        @forelse($recentDeliveries as $delivery)
+                        <tr class="hover:bg-blue-50 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">{{ $delivery->id }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $delivery->order_id }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $delivery->driver_name ?? '-' }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <span class="inline-block px-2 py-1 rounded-full text-xs font-semibold 
+                                    @if($delivery->delivery_status === 'scheduled') bg-blue-100 text-blue-800
+                                    @elseif($delivery->delivery_status === 'in_transit') bg-yellow-100 text-yellow-800
+                                    @elseif($delivery->delivery_status === 'out_for_delivery') bg-purple-100 text-purple-800
+                                    @elseif($delivery->delivery_status === 'delivered') bg-green-100 text-green-800
+                                    @elseif($delivery->delivery_status === 'failed') bg-red-100 text-red-800
+                                    @elseif($delivery->delivery_status === 'cancelled') bg-gray-100 text-gray-800
+                                    @else bg-gray-100 text-gray-800 @endif">
+                                    {{ ucfirst($delivery->delivery_status) }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $delivery->scheduled_delivery_date ?? '-' }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $delivery->delivery_address ?? '-' }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $delivery->recipient_name ?? '-' }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                @if($delivery->order)
+                                    <a href="{{ route('admin.orders.show', $delivery->order_id) }}" class="text-blue-500 hover:underline">View Order</a>
+                                @else
+                                    -
+                                @endif
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="8" class="px-6 py-8 text-center text-gray-400">No recent deliveries found.</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
         <!-- New Vendor Applicants Table -->
         <div class="bg-white rounded-lg shadow-md p-6 mb-8">
             <div class="flex items-center justify-between mb-4">
@@ -378,4 +438,5 @@
         <path d="M8 0a8 8 0 0 0-6.32 12.906L0 16l3.234-1.678A8 8 0 1 0 8 0zm3.993 11.403c-.2.56-1.17 1.1-1.6 1.17-.41.07-.92.1-1.48-.09-.34-.11-.78-.25-1.34-.49-2.36-.97-3.9-3.34-4.02-3.5-.12-.17-.96-1.28-.96-2.44 0-1.16.61-1.73.83-1.96.22-.23.48-.29.64-.29.16 0 .32.01.46.01.15 0 .34-.05.53.41.2.47.68 1.62.74 1.74.06.12.1.26.02.42-.08.16-.12.26-.23.4-.11.14-.23.31-.33.42-.11.11-.22.23-.1.45.12.22.54.89 1.16 1.44.8.71 1.47.93 1.7 1.03.23.1.36.09.49-.05.13-.14.56-.65.71-.87.15-.22.3-.18.5-.11.2.07 1.28.6 1.5.71.22.11.36.17.41.27.05.1.05.57-.15 1.13z"/>
     </svg>
 </a>
+
 @endsection 

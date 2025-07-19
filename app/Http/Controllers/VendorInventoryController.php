@@ -389,36 +389,24 @@ class VendorInventoryController extends Controller
     {
         $vendor = Auth::user()->vendor;
         $vendorId = $vendor ? $vendor->id : null;
-        
-        // Product inventory summary for this vendor only
-        $productSummary = Inventory::with(['yogurtProduct'])
-            ->whereHas('yogurtProduct', function($query) {
-                $query->whereIn('product_name', array_column($this->allowedProducts, 'product_name'));
-            })
-            ->selectRaw('
-                SUM(quantity_available) as total_available,
-                SUM(quantity_reserved) as total_reserved,
-                SUM(quantity_damaged) as total_damaged,
-                SUM(quantity_expired) as total_expired,
-                SUM(total_value) as total_value,
-                COUNT(*) as total_batches
-            ')
-            ->first();
-
-        // Raw materials summary
-        $rawMaterialSummary = DB::table('raw_materials')
-            ->selectRaw('
-                SUM(CASE WHEN status = "delivered" THEN quantity ELSE 0 END) as delivered_quantity,
-                SUM(total_cost) as total_cost,
-                COUNT(*) as total_materials
-            ')
+        $inventories = Inventory::with(['yogurtProduct'])
             ->where('vendor_id', $vendorId)
-            ->where('status', 'delivered')
-            ->first();
-
+            ->get();
+        $total_available = $inventories->sum('quantity_available');
+        $total_reserved = $inventories->sum('quantity_reserved');
+        $total_damaged = $inventories->sum('quantity_damaged');
+        $total_expired = $inventories->sum('quantity_expired');
+        $total_value = $inventories->sum('total_value');
+        $total_products = $inventories->pluck('yogurt_product_id')->unique()->count();
+        $low_stock_items = $inventories->filter(function($inv) { return $inv->quantity_available <= 10; })->count();
         return response()->json([
-            'product_summary' => $productSummary,
-            'raw_material_summary' => $rawMaterialSummary
+            'total_available' => $total_available,
+            'total_reserved' => $total_reserved,
+            'total_damaged' => $total_damaged,
+            'total_expired' => $total_expired,
+            'total_value' => $total_value,
+            'total_products' => $total_products,
+            'low_stock_items' => $low_stock_items,
         ]);
     }
 
@@ -432,7 +420,7 @@ class VendorInventoryController extends Controller
             ->whereHas('yogurtProduct', function($query) {
                 $query->whereIn('product_name', array_column($this->allowedProducts, 'product_name'));
             })
-            ->selectRaw('inventory_status, SUM(quantity_available) as total_quantity')
+            ->selectRaw('inventory_status, SUM(quantity_available - quantity_reserved) as total_quantity')
             ->groupBy('inventory_status')
             ->get();
 
