@@ -30,4 +30,12 @@ class Driver extends Model
     {
         return $this->belongsTo(Supplier::class);
     }
+
+    /**
+     * Get the deliveries assigned to the driver.
+     */
+    public function deliveries()
+    {
+        return $this->hasMany(\App\Models\Delivery::class, 'driver_id');
+    }
 } 

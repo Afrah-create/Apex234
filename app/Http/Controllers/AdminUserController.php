@@ -8,6 +8,7 @@ use App\Models\Vendor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Delivery;
 
 class AdminUserController extends Controller
 {
@@ -43,7 +44,10 @@ class AdminUserController extends Controller
         $employees = Employee::all();
         $vendors = Vendor::where('status', 'approved')->get();
         $vendorApplicants = \App\Models\VendorApplicant::whereIn('status', ['validated', 'pending'])->get();
-        return view('admin.users.index', ['users' => $paginatedUsers, 'employees' => $employees, 'vendors' => $vendors, 'vendorApplicants' => $vendorApplicants]);
+        $deliveries = \App\Models\Delivery::with(['order.customer', 'order.orderItems.yogurtProduct', 'retailer'])
+            ->latest()
+            ->get();
+        return view('admin.users.index', ['users' => $paginatedUsers, 'employees' => $employees, 'vendors' => $vendors, 'vendorApplicants' => $vendorApplicants, 'deliveries' => $deliveries]);
     }
 
     public function create()

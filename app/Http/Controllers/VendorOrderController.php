@@ -323,23 +323,26 @@ class VendorOrderController extends Controller
         // Deduct inventory for each item (FIFO by expiry_date)
         foreach ($order->orderItems as $item) {
             $product = $item->yogurtProduct;
-            $quantityToDeduct = $item->quantity;
+            $quantityToReserve = $item->quantity;
             $vendorId = $product->vendor_id;
             // Get all inventory records for this product and vendor, ordered by soonest expiry
             $inventories = \App\Models\Inventory::where('yogurt_product_id', $product->id)
                 ->where('vendor_id', $vendorId)
-                ->where('quantity_available', '>', 0)
+                ->whereRaw('quantity_available > quantity_reserved') // Only inventory that has available stock
                 ->orderBy('expiry_date')
                 ->get();
             foreach ($inventories as $inventory) {
-                if ($quantityToDeduct <= 0) break;
-                $deduct = min($inventory->quantity_available, $quantityToDeduct);
-                $inventory->quantity_available -= $deduct;
+                if ($quantityToReserve <= 0) break;
+                $availableForReservation = $inventory->quantity_available - $inventory->quantity_reserved;
+                $reserve = min($availableForReservation, $quantityToReserve);
+                $inventory->quantity_reserved += $reserve;
                 $inventory->save();
-                $quantityToDeduct -= $deduct;
+                $quantityToReserve -= $reserve;
             }
-            // Sync product stock with sum of all available inventory
-            $product->stock = $product->inventories()->sum('quantity_available');
+            // Sync product stock with sum of all available inventory (available - reserved)
+            $product->stock = $product->inventories()->get()->sum(function($inv) {
+                return $inv->quantity_available - $inv->quantity_reserved;
+            });
             $product->save();
         }
 

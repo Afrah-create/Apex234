@@ -23,7 +23,7 @@ class InventoryController extends Controller
         $inventoryData = YogurtProduct::leftJoin('inventories', 'yogurt_products.id', '=', 'inventories.yogurt_product_id')
             ->select(
                 'yogurt_products.product_name as product_name',
-                DB::raw('COALESCE(SUM(inventories.quantity_available), 0) as total_available'),
+                DB::raw('COALESCE(SUM(inventories.quantity_available - inventories.quantity_reserved), 0) as total_available'),
                 DB::raw('COALESCE(SUM(inventories.quantity_reserved), 0) as total_reserved'),
                 DB::raw('COALESCE(SUM(inventories.quantity_damaged), 0) as total_damaged'),
                 DB::raw('COALESCE(SUM(inventories.quantity_expired), 0) as total_expired')
@@ -73,7 +73,9 @@ class InventoryController extends Controller
     {
         $summary = [
             'total_products' => YogurtProduct::count(),
-            'total_available' => Inventory::sum('quantity_available'),
+            'total_available' => Inventory::get()->sum(function($inv) {
+                return $inv->quantity_available - $inv->quantity_reserved;
+            }),
             'total_reserved' => Inventory::sum('quantity_reserved'),
             'total_damaged' => Inventory::sum('quantity_damaged'),
             'total_expired' => Inventory::sum('quantity_expired'),

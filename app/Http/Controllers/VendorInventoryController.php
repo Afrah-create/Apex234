@@ -396,7 +396,7 @@ class VendorInventoryController extends Controller
                 $query->whereIn('product_name', array_column($this->allowedProducts, 'product_name'));
             })
             ->selectRaw('
-                SUM(quantity_available) as total_available,
+                SUM(quantity_available - quantity_reserved) as total_available,
                 SUM(quantity_reserved) as total_reserved,
                 SUM(quantity_damaged) as total_damaged,
                 SUM(quantity_expired) as total_expired,
@@ -432,7 +432,7 @@ class VendorInventoryController extends Controller
             ->whereHas('yogurtProduct', function($query) {
                 $query->whereIn('product_name', array_column($this->allowedProducts, 'product_name'));
             })
-            ->selectRaw('inventory_status, SUM(quantity_available) as total_quantity')
+            ->selectRaw('inventory_status, SUM(quantity_available - quantity_reserved) as total_quantity')
             ->groupBy('inventory_status')
             ->get();
 

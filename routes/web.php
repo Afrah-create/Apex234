@@ -544,3 +544,6 @@ Route::middleware(['auth', 'verified'])->get('/vendor/reports', [\App\Http\Contr
 Route::middleware(['auth', 'verified'])->get('/supplier/reports', [\App\Http\Controllers\SupplierDashboardController::class, 'reportsPage'])->name('supplier.reports');
 // Supplier reports API (for AJAX/fetching report data)
 Route::middleware(['auth', 'verified'])->get('/supplier/my-reports', [\App\Http\Controllers\SupplierDashboardController::class, 'myReports'])->name('supplier.my-reports');
+
+Route::get('/admin/deliveries/{delivery}', [App\Http\Controllers\AdminDeliveryController::class, 'show'])->name('admin.deliveries.show');
+Route::middleware(['auth'])->get('/driver/assigned-deliveries', [\App\Http\Controllers\DriverDashboardApiController::class, 'assignedDeliveries'])->name('driver.assigned-deliveries');

@@ -98,18 +98,16 @@ class EmployeeDashboardController extends Controller
     
     public function driverDashboard($employee)
     {
-        // Get delivery-related data - handle potential missing columns gracefully
+        // Get delivery-related data for this driver (employee)
         try {
-            $assignedDeliveries = \App\Models\Delivery::latest()->take(10)->get();
-            $completedDeliveries = \App\Models\Delivery::where('status', 'completed')->count();
-            $pendingDeliveries = \App\Models\Delivery::where('status', 'pending')->count();
+            $assignedDeliveries = \App\Models\Delivery::where('driver_id', $employee->id)->latest()->take(10)->get();
+            $completedDeliveries = \App\Models\Delivery::where('driver_id', $employee->id)->where('delivery_status', 'delivered')->count();
+            $pendingDeliveries = \App\Models\Delivery::where('driver_id', $employee->id)->where('delivery_status', 'scheduled')->count();
         } catch (\Exception $e) {
-            // Fallback if delivery table doesn't have expected columns
             $assignedDeliveries = collect([]);
             $completedDeliveries = 0;
             $pendingDeliveries = 0;
         }
-        
         return view('employee.driver.dashboard', compact('employee', 'assignedDeliveries', 'completedDeliveries', 'pendingDeliveries'));
     }
     

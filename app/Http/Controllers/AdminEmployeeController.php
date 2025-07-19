@@ -7,6 +7,7 @@ use App\Models\Employee;
 use App\Models\Vendor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use App\Models\Delivery;
 
 class AdminEmployeeController extends Controller
 {
@@ -17,7 +18,8 @@ class AdminEmployeeController extends Controller
         $vendors = Vendor::where('status', 'approved')->get();
         $distributionCenters = \App\Models\DistributionCenter::orderBy('center_name')->paginate(15);
         $vendorApplicants = \App\Models\VendorApplicant::whereIn('status', ['validated', 'pending'])->get();
-        return view('admin.users.index', compact('users', 'employees', 'vendors', 'distributionCenters', 'vendorApplicants'));
+        $deliveries = \App\Models\Delivery::with(['order.customer', 'order.orderItems.yogurtProduct', 'retailer'])->latest()->take(50)->get();
+        return view('admin.users.index', compact('users', 'employees', 'vendors', 'distributionCenters', 'vendorApplicants', 'deliveries'));
     }
 
     public function assignVendor(Request $request, Employee $employee)

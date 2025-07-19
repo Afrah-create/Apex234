@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\Delivery;
 use App\Notifications\DeliveryNoteNotification;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Driver;
+use App\Notifications\OrderStatusUpdate;
 
 class DeliveryController extends Controller
 {
@@ -16,15 +18,28 @@ class DeliveryController extends Controller
             'distribution_center_id' => 'required|exists:distribution_centers,id',
             'vendor_id' => 'required|exists:vendors,id',
             'vehicle_number' => 'nullable|string|max:50',
-            'driver_name' => 'required|string|max:100',
-            'driver_phone' => 'required|string|max:20',
-            'driver_license' => 'nullable|string|max:50',
             'scheduled_delivery_date' => 'required|date',
             'scheduled_delivery_time' => 'required',
             'delivery_address' => 'required|string',
             'recipient_name' => 'required|string',
             'recipient_phone' => 'required|string',
         ]);
+
+        // Find the least busy driver (fewest active deliveries)
+        $driver = Driver::withCount(['deliveries' => function($query) {
+            $query->whereIn('delivery_status', ['scheduled', 'in_transit', 'out_for_delivery']);
+        }])->orderBy('deliveries_count', 'asc')->first();
+
+        // Fallback: if no driver found, return error
+        if (!$driver) {
+            return response()->json(['success' => false, 'message' => 'No available driver found.'], 422);
+        }
+
+        // Add driver details to validated data
+        $validated['driver_id'] = $driver->id;
+        $validated['driver_name'] = $driver->name;
+        $validated['driver_phone'] = $driver->phone;
+        $validated['driver_license'] = $driver->license;
 
         $delivery = Delivery::create(array_merge(
             $validated,
@@ -50,6 +65,10 @@ class DeliveryController extends Controller
                 new \App\Mail\DeliveryNoteMail($delivery, $pdf->output())
             );
         }
+
+        // Notify the driver in their dashboard
+        $order = \App\Models\Order::find($validated['order_id']);
+        $driver->notify(new OrderStatusUpdate($delivery, $order));
 
         return response()->json(['success' => true, 'delivery' => $delivery]);
     }

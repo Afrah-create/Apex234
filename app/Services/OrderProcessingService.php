@@ -66,6 +66,8 @@ class OrderProcessingService
                     $distributionCenter = $this->assignDistributionCenter($order);
                     $order->update(['distribution_center_id' => $distributionCenter->id]);
                 }
+                // Always create and assign delivery after confirmation
+                $this->createAndAssignDelivery($order);
                 $this->sendOrderConfirmation($order, $partiallyFulfilled);
                 DB::commit();
                 \Illuminate\Support\Facades\Log::info('Customer bulk order processed with partial fulfillment', ['order_id' => $order->id]);
@@ -101,8 +103,8 @@ class OrderProcessingService
                 'notes' => $order->notes . ' [Auto-confirmed by system]'
             ]);
 
-            // Assign a random driver after confirmation
-            $this->assignRandomDriver($order);
+            // Always create and assign delivery after confirmation
+            $this->createAndAssignDelivery($order);
 
             // Reserve inventory
             $this->reserveInventory($order);
@@ -155,6 +157,9 @@ class OrderProcessingService
                 'order_status' => 'confirmed',
                 'notes' => $order->notes . ' [Auto-confirmed for retailer]'
             ]);
+
+            // Always create and assign delivery after confirmation
+            $this->createAndAssignDelivery($order);
 
             // Reserve inventory
             $this->reserveInventory($order);
@@ -259,11 +264,13 @@ class OrderProcessingService
                     'message' => "Product not found for item {$item->id}"
                 ];
             }
-            $vendorId = $product->vendor_id;
+            // Check available stock (available - reserved)
             $availableStock = \App\Models\Inventory::where('yogurt_product_id', $product->id)
-                ->where('vendor_id', $vendorId)
                 ->where('distribution_center_id', $distributionCenterId)
-                ->sum('quantity_available');
+                ->get()
+                ->sum(function($inventory) {
+                    return $inventory->quantity_available - $inventory->quantity_reserved;
+                });
             if ($availableStock < $item->quantity) {
                 return [
                     'success' => false,
@@ -281,45 +288,91 @@ class OrderProcessingService
     {
         $orderItems = $order->orderItems()->with('yogurtProduct')->get();
         $distributionCenterId = $order->distribution_center_id;
+        
+        \Illuminate\Support\Facades\Log::info('Starting inventory reservation', [
+            'order_id' => $order->id,
+            'distribution_center_id' => $distributionCenterId,
+            'order_items_count' => $orderItems->count()
+        ]);
+        
         foreach ($orderItems as $item) {
             $product = $item->yogurtProduct;
-            $quantityToDeduct = $item->quantity;
-            // Find all vendors in this center with enough inventory for this product
-            $vendorInventory = \App\Models\Inventory::where('yogurt_product_id', $product->id)
+            $quantityToReserve = $item->quantity;
+            
+            \Illuminate\Support\Facades\Log::info('Processing order item for inventory reservation', [
+                'order_id' => $order->id,
+                'item_id' => $item->id,
+                'product_id' => $product ? $product->id : null,
+                'product_name' => $product ? $product->product_name : null,
+                'quantity_to_reserve' => $quantityToReserve,
+                'distribution_center_id' => $distributionCenterId
+            ]);
+            
+            // Reserve from any available inventory at the center, regardless of vendor
+            $inventories = \App\Models\Inventory::where('yogurt_product_id', $product->id)
                 ->where('distribution_center_id', $distributionCenterId)
-                ->where('quantity_available', '>=', $quantityToDeduct)
-                ->first();
-            if ($vendorInventory) {
-                // Deduct from this vendor only
-                $vendorInventory->quantity_available -= $quantityToDeduct;
-                // Update inventory_status if needed
-                if ($vendorInventory->quantity_available === 0) {
-                    $vendorInventory->inventory_status = 'out_of_stock';
-                } elseif ($vendorInventory->quantity_available < 10) {
-                    $vendorInventory->inventory_status = 'low_stock';
-                } else {
-                    $vendorInventory->inventory_status = 'available';
-                }
-                $vendorInventory->save();
-                // Sync product stock with sum of all available inventory
-                $product->stock = $product->inventories()->sum('quantity_available');
-                $product->save();
-                // Optionally, update the order item with the vendor_id used
-                $item->vendor_id = $vendorInventory->vendor_id;
-                $item->save();
-            } else {
-                // Not enough inventory in any single vendor in this center
-                \Illuminate\Support\Facades\Log::error('No single vendor in center can fulfill order item', [
+                ->whereRaw('quantity_available > quantity_reserved') // Only inventory that has available stock
+                ->orderBy('expiry_date')
+                ->get();
+                
+            \Illuminate\Support\Facades\Log::info('Found inventories for reservation', [
+                'order_id' => $order->id,
+                'item_id' => $item->id,
+                'inventories_count' => $inventories->count(),
+                'total_available_before' => $inventories->sum(function($inv) {
+                    return $inv->quantity_available - $inv->quantity_reserved;
+                })
+            ]);
+            
+            foreach ($inventories as $inventory) {
+                if ($quantityToReserve <= 0) break;
+                
+                $availableForReservation = $inventory->quantity_available - $inventory->quantity_reserved;
+                $reserve = min($availableForReservation, $quantityToReserve);
+                
+                $inventory->quantity_reserved += $reserve;
+                
+                \Illuminate\Support\Facades\Log::info('Reserving inventory', [
                     'order_id' => $order->id,
-                    'order_item_id' => $item->id,
-                    'product_id' => $product ? $product->id : null,
-                    'product_name' => $product ? $product->product_name : null,
-                    'distribution_center_id' => $distributionCenterId,
-                    'quantity_needed' => $quantityToDeduct
+                    'item_id' => $item->id,
+                    'inventory_id' => $inventory->id,
+                    'reserved_amount' => $reserve,
+                    'new_reserved_quantity' => $inventory->quantity_reserved,
+                    'available_after_reservation' => $inventory->quantity_available - $inventory->quantity_reserved,
+                    'quantity_to_reserve_remaining' => $quantityToReserve
                 ]);
-                // Optionally, throw or mark the order as unfulfillable here
+                
+                // Update inventory_status if needed
+                $availableAfterReservation = $inventory->quantity_available - $inventory->quantity_reserved;
+                if ($availableAfterReservation === 0) {
+                    $inventory->inventory_status = 'out_of_stock';
+                } elseif ($availableAfterReservation < 10) {
+                    $inventory->inventory_status = 'low_stock';
+                } else {
+                    $inventory->inventory_status = 'available';
+                }
+                $inventory->save();
+                $quantityToReserve -= $reserve;
             }
+            
+            // Sync product stock with sum of all available inventory (available - reserved)
+            $product->stock = $product->inventories()->get()->sum(function($inv) {
+                return $inv->quantity_available - $inv->quantity_reserved;
+            });
+            $product->save();
+            
+            \Illuminate\Support\Facades\Log::info('Completed inventory reservation for item', [
+                'order_id' => $order->id,
+                'item_id' => $item->id,
+                'product_id' => $product->id,
+                'new_product_stock' => $product->stock,
+                'quantity_reserved' => $item->quantity - $quantityToReserve
+            ]);
         }
+        
+        \Illuminate\Support\Facades\Log::info('Completed inventory reservation for order', [
+            'order_id' => $order->id
+        ]);
     }
 
     /**
@@ -340,8 +393,10 @@ class OrderProcessingService
                 $totalAvailable = \App\Models\Inventory::where('yogurt_product_id', $product->id)
                     ->where('vendor_id', $vendorId)
                     ->where('distribution_center_id', $center->id)
-                    ->where('quantity_available', '>', 0)
-                    ->sum('quantity_available');
+                    ->get()
+                    ->sum(function($inventory) {
+                        return $inventory->quantity_available - $inventory->quantity_reserved;
+                    });
                 if ($totalAvailable < $item->quantity) {
                     $canFulfill = false;
                     break;
@@ -365,17 +420,37 @@ class OrderProcessingService
      */
     private function assignRandomDriver(Order $order)
     {
-        $drivers = Driver::all();
-        if ($drivers->isEmpty()) {
-            // No drivers available
-            return false;
-        }
-        $drivers = $drivers->shuffle();
-        foreach ($drivers as $driver) {
-            // If you add a status or max deliveries check, do it here
-            $order->driver_id = $driver->id;
+        $employeeDriver = \App\Models\Employee::where('role', 'Driver')
+            ->where('status', 'Active')
+            ->orderByRaw('(
+                SELECT COUNT(*) FROM deliveries WHERE deliveries.driver_id = employees.id AND deliveries.delivery_status IN ("scheduled", "in_transit", "out_for_delivery")
+            ) ASC')
+            ->first();
+        if ($employeeDriver) {
+            // Assign to order if needed
+            $order->driver_id = $employeeDriver->id;
             $order->order_status = 'out_for_delivery';
             $order->save();
+            // Create delivery if not exists
+            if (!$order->delivery) {
+                $order->delivery()->create([
+                    'order_id' => $order->id,
+                    'distribution_center_id' => $order->distribution_center_id,
+                    'vendor_id' => $order->vendor_id,
+                    'vehicle_number' => null,
+                    'driver_id' => $employeeDriver->id,
+                    'driver_name' => $employeeDriver->name,
+                    'driver_phone' => $employeeDriver->user ? $employeeDriver->user->mobile ?? $employeeDriver->user->phone ?? null : null,
+                    'driver_license' => null, // Add if available in Employee
+                    'scheduled_delivery_date' => $order->requested_delivery_date ?? now()->addDay(),
+                    'scheduled_delivery_time' => '09:00',
+                    'delivery_address' => $order->delivery_address,
+                    'recipient_name' => $order->delivery_contact,
+                    'recipient_phone' => $order->delivery_phone,
+                    'delivery_number' => uniqid('DEL-'),
+                    'delivery_status' => 'scheduled',
+                ]);
+            }
             return true;
         }
         return false;
@@ -567,6 +642,48 @@ class OrderProcessingService
                 'order_id' => $order->id,
                 'error' => $e->getMessage()
             ]);
+        }
+    }
+
+    /**
+     * Create and assign a delivery to an order using an available driver from employees table
+     */
+    private function createAndAssignDelivery(Order $order)
+    {
+        // Only create if not already exists
+        if ($order->delivery) {
+            return;
+        }
+        $employeeDriver = \App\Models\Employee::where('role', 'Driver')
+            ->where('status', 'Active')
+            ->orderByRaw('(
+                SELECT COUNT(*) FROM deliveries WHERE deliveries.driver_id = employees.id AND deliveries.delivery_status IN ("scheduled", "in_transit", "out_for_delivery")
+            ) ASC')
+            ->first();
+        if ($employeeDriver) {
+            $order->driver_id = $employeeDriver->id;
+            $order->order_status = 'out_for_delivery';
+            $order->save();
+            $order->delivery()->create([
+                'order_id' => $order->id,
+                'distribution_center_id' => $order->distribution_center_id,
+                'vendor_id' => $order->vendor_id,
+                'vehicle_number' => null,
+                'driver_id' => $employeeDriver->id,
+                'driver_name' => $employeeDriver->name,
+                'driver_phone' => $employeeDriver->user ? $employeeDriver->user->mobile ?? $employeeDriver->user->phone ?? null : null,
+                'driver_license' => null, // Add if available in Employee
+                'scheduled_delivery_date' => $order->requested_delivery_date ?? now()->addDay(),
+                'scheduled_delivery_time' => '09:00',
+                'delivery_address' => $order->delivery_address,
+                'recipient_name' => $order->delivery_contact,
+                'recipient_phone' => $order->delivery_phone,
+                'delivery_number' => uniqid('DEL-'),
+                'delivery_status' => 'scheduled',
+            ]);
+        } else {
+            // Optionally, log or notify that no driver is available
+            \Illuminate\Support\Facades\Log::warning('No available driver found for delivery assignment', ['order_id' => $order->id]);
         }
     }
 } 

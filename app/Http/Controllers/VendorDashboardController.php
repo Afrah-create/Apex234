@@ -23,7 +23,7 @@ class VendorDashboardController extends Controller
         $productSummary = \App\Models\Inventory::with(['yogurtProduct'])
             ->where('vendor_id', $vendorId)
             ->selectRaw('
-                SUM(quantity_available) as total_available,
+                SUM(quantity_available - quantity_reserved) as total_available,
                 SUM(quantity_reserved) as total_reserved,
                 SUM(quantity_damaged) as total_damaged,
                 SUM(quantity_expired) as total_expired,
@@ -59,44 +59,40 @@ class VendorDashboardController extends Controller
                 'datasets' => []
             ]);
         }
-        $inventoryData = \App\Models\Inventory::where('vendor_id', $vendor->id)
-            ->join('yogurt_products', 'inventories.yogurt_product_id', '=', 'yogurt_products.id')
-            ->select(
-                'yogurt_products.product_name as product_name',
-                DB::raw('SUM(inventories.quantity_available) as total_available'),
-                DB::raw('SUM(inventories.quantity_reserved) as total_reserved'),
-                DB::raw('SUM(inventories.quantity_damaged) as total_damaged'),
-                DB::raw('SUM(inventories.quantity_expired) as total_expired')
-            )
-            ->groupBy('yogurt_products.id', 'yogurt_products.product_name')
+        $vendorId = $vendor->id;
+        // Product inventory by status
+        $productStatusData = \App\Models\Inventory::with(['yogurtProduct'])
+            ->where('vendor_id', $vendorId)
+            ->selectRaw('inventory_status, SUM(quantity_available - quantity_reserved) as total_quantity')
+            ->groupBy('inventory_status')
             ->get();
         $chartData = [
-            'labels' => $inventoryData->pluck('product_name')->toArray(),
+            'labels' => $productStatusData->pluck('inventory_status')->toArray(),
             'datasets' => [
                 [
                     'label' => 'Available',
-                    'data' => $inventoryData->pluck('total_available')->toArray(),
+                    'data' => $productStatusData->pluck('total_quantity')->toArray(),
                     'backgroundColor' => 'rgba(34, 197, 94, 0.8)',
                     'borderColor' => 'rgba(34, 197, 94, 1)',
                     'borderWidth' => 1
                 ],
                 [
                     'label' => 'Reserved',
-                    'data' => $inventoryData->pluck('total_reserved')->toArray(),
+                    'data' => $productStatusData->pluck('total_quantity')->toArray(),
                     'backgroundColor' => 'rgba(59, 130, 246, 0.8)',
                     'borderColor' => 'rgba(59, 130, 246, 1)',
                     'borderWidth' => 1
                 ],
                 [
                     'label' => 'Damaged',
-                    'data' => $inventoryData->pluck('total_damaged')->toArray(),
+                    'data' => $productStatusData->pluck('total_quantity')->toArray(),
                     'backgroundColor' => 'rgba(239, 68, 68, 0.8)',
                     'borderColor' => 'rgba(239, 68, 68, 1)',
                     'borderWidth' => 1
                 ],
                 [
                     'label' => 'Expired',
-                    'data' => $inventoryData->pluck('total_expired')->toArray(),
+                    'data' => $productStatusData->pluck('total_quantity')->toArray(),
                     'backgroundColor' => 'rgba(156, 163, 175, 0.8)',
                     'borderColor' => 'rgba(156, 163, 175, 1)',
                     'borderWidth' => 1
@@ -182,7 +178,9 @@ class VendorDashboardController extends Controller
         $batchesProduced = $inventoryQuery->count();
         $unitsProduced = $inventoryQuery->sum('quantity_available');
         $unitsSold = $inventoryQuery->sum('quantity_reserved');
-        $unitsInInventory = $inventoryQuery->sum('quantity_available');
+        $unitsInInventory = $inventoryQuery->get()->sum(function($inv) {
+            return $inv->quantity_available - $inv->quantity_reserved;
+        });
         return response()->json([
             'batches_produced' => $batchesProduced,
             'units_produced' => $unitsProduced,
@@ -198,7 +196,8 @@ class VendorDashboardController extends Controller
         if (!$vendor) {
             abort(403, 'No vendor profile found.');
         }
-        $deliveries = \App\Models\Delivery::where('vendor_id', $vendor->id)
+        $deliveries = \App\Models\Delivery::with(['order.customer', 'order.orderItems.yogurtProduct', 'retailer'])
+            ->where('vendor_id', $vendor->id)
             ->orderByDesc('created_at')
             ->get();
         return view('vendor.deliveries', compact('deliveries'));
@@ -212,14 +211,14 @@ class VendorDashboardController extends Controller
         if ($vendor) {
             // Low stock products
             $lowStockProducts = \App\Models\Inventory::with('yogurtProduct')
-                ->where('quantity_available', '<=', 5)
+                ->whereRaw('quantity_available - quantity_reserved <= 5')
                 ->whereHas('yogurtProduct', function($q) use ($vendor) { $q->where('status', 'active')->where('vendor_id', $vendor->id); })
                 ->get()
                 ->map(function($inv) {
                     return [
                         'type' => 'product',
                         'name' => $inv->yogurtProduct->product_name ?? 'Product',
-                        'quantity' => $inv->quantity_available,
+                        'quantity' => $inv->quantity_available - $inv->quantity_reserved,
                         'unit' => 'units',
                     ];
                 });
