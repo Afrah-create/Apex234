@@ -50,13 +50,22 @@ Route::get('/dashboard', function () {
                     ->orderBy('created_at', 'desc')
                     ->simplePaginate(5);
                 $recentOrders->getCollection()->transform(function ($order) {
-                    $customerName = $order->retailer && $order->retailer->user ? $order->retailer->user->name : 'N/A';
+                    $customerName = $order->customer ? $order->customer->name : 'N/A';
+                    $retailerName = $order->retailer ? ($order->retailer->name ?? 'N/A') : 'N/A';
                     return (object) [
                         'id' => $order->id,
+                        'order_number' => $order->order_number ?? $order->id,
+                        'order_type' => $order->order_type ?? '-',
                         'customer_name' => $customerName,
+                        'retailer_name' => $retailerName,
+                        'order_date' => $order->order_date ?? null,
                         'created_at' => $order->created_at,
-                        'status' => $order->status,
-                        'total' => $order->total,
+                        'delivery_address' => $order->delivery_address ?? '-',
+                        'total_amount' => $order->total_amount ?? $order->total ?? 0,
+                        'total' => $order->total ?? 0,
+                        'order_status' => $order->order_status ?? $order->status ?? '-',
+                        'status' => $order->status ?? '-',
+                        'payment_status' => $order->payment_status ?? '-',
                     ];
                 });
                 $totalUsers = \App\Models\User::count();

@@ -14,7 +14,7 @@
             <div class="flex items-center justify-between mb-4">
                 <h1 class="text-2xl font-bold text-gray-900">Executive Dashboard</h1>
                 <div class="flex space-x-4">
-                    <a href="{{ route('admin.reports.index') }}" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition duration-200 flex items-center">
+                    <a href="{{ route('admin.reports.index') }}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition duration-200 flex items-center">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
@@ -35,36 +35,67 @@
                 <table class="min-w-full divide-y divide-gray-200 rounded-lg overflow-hidden">
                     <thead class="bg-gray-100 sticky top-0 z-10">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Order ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Order #</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Order Type</th>
                             <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Customer</th>
-                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Retailer</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Order Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Delivery Address</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Amount</th>
                             <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Total (UGX)</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Payment</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-100">
                         @forelse($recentOrders as $order)
                         <tr class="hover:bg-blue-50 transition-colors">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">{{ $order->id }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $order->customer_name }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $order->created_at->format('Y-m-d') }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">#{{ $order->order_number ?? $order->id }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ ucfirst($order->order_type ?? '-') }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $order->customer_name ?? '-' }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $order->retailer_name ?? '-' }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                @php
+                                    $date = '-';
+                                    if (isset($order->order_date) && $order->order_date) {
+                                        $date = \Carbon\Carbon::parse($order->order_date)->format('Y-m-d');
+                                    } elseif (isset($order->created_at) && $order->created_at) {
+                                        $date = is_string($order->created_at) ? \Carbon\Carbon::parse($order->created_at)->format('Y-m-d') : $order->created_at->format('Y-m-d');
+                                    }
+                                @endphp
+                                {{ $date }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $order->delivery_address ?? '-' }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">UGX {{ number_format($order->total_amount ?? $order->total, 0) }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                <span class="inline-block px-2 py-1 rounded-full text-xs font-semibold 
-                                    @if($order->status === 'pending') bg-yellow-100 text-yellow-800
-                                    @elseif($order->status === 'confirmed') bg-blue-100 text-blue-800
-                                    @elseif($order->status === 'processing') bg-purple-100 text-purple-800
-                                    @elseif($order->status === 'shipped') bg-indigo-100 text-indigo-800
-                                    @elseif($order->status === 'delivered') bg-green-100 text-green-800
-                                    @elseif($order->status === 'cancelled') bg-red-100 text-red-800
+                                <span class="inline-block px-2 py-1 rounded-full text-xs font-semibold
+                                    @if(($order->order_status ?? $order->status) === 'pending') bg-yellow-100 text-yellow-800
+                                    @elseif(($order->order_status ?? $order->status) === 'confirmed') bg-blue-100 text-blue-800
+                                    @elseif(($order->order_status ?? $order->status) === 'processing') bg-purple-100 text-purple-800
+                                    @elseif(($order->order_status ?? $order->status) === 'shipped') bg-indigo-100 text-indigo-800
+                                    @elseif(($order->order_status ?? $order->status) === 'delivered') bg-green-100 text-green-800
+                                    @elseif(($order->order_status ?? $order->status) === 'cancelled') bg-red-100 text-red-800
                                     @else bg-gray-100 text-gray-800 @endif">
-                                    {{ ucfirst($order->status) }}
+                                    {{ ucfirst($order->order_status ?? $order->status ?? '-') }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">UGX {{ number_format($order->total, 0) }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <span class="inline-block px-2 py-1 rounded-full text-xs font-semibold
+                                    @if(($order->payment_status ?? null) === 'pending') bg-yellow-100 text-yellow-800
+                                    @elseif(($order->payment_status ?? null) === 'paid') bg-green-100 text-green-800
+                                    @elseif(($order->payment_status ?? null) === 'failed') bg-red-100 text-red-800
+                                    @elseif(($order->payment_status ?? null) === 'refunded') bg-gray-100 text-gray-800
+                                    @else bg-gray-100 text-gray-800 @endif">
+                                    {{ ucfirst($order->payment_status ?? '-') }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <a href="{{ route('admin.orders.show', $order->id) }}" class="text-blue-600 hover:text-blue-900">View</a>
+                            </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-8 text-center text-gray-400">No recent orders found.</td>
+                            <td colspan="10" class="px-6 py-8 text-center text-gray-400">No recent orders found.</td>
                         </tr>
                         @endforelse
                     </tbody>
