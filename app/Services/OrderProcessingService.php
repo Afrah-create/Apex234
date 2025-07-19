@@ -64,35 +64,24 @@ class OrderProcessingService
                 $product->stock = $product->inventories()->sum('quantity_available');
                 $product->save();
             }
-            // 3. Create delivery and assign driver
-            $driver = \App\Models\Driver::withCount(['deliveries' => function($query) {
-                $query->whereIn('delivery_status', ['scheduled', 'in_transit', 'out_for_delivery']);
-            }])->where('status', 'active')->orderBy('deliveries_count', 'asc')->first();
-            if ($driver) {
-                $order->driver_id = $driver->id;
-                $order->order_status = 'shipped';
-                $order->save();
-                $order->delivery()->create([
-                    'order_id' => $order->id,
-                    'distribution_center_id' => $order->distribution_center_id,
-                    'vehicle_number' => $driver->vehicle_number ?? null,
-                    'driver_id' => $driver->id,
-                    'driver_name' => $driver->name,
-                    'driver_phone' => $driver->phone,
-                    'driver_license' => $driver->license,
-                    'scheduled_delivery_date' => $order->requested_delivery_date ?? now()->addDay(),
-                    'scheduled_delivery_time' => '09:00',
-                    'delivery_address' => $order->delivery_address,
-                    'recipient_name' => $order->delivery_contact,
-                    'recipient_phone' => $order->delivery_phone,
-                    'delivery_number' => uniqid('DEL-'),
-                    'delivery_status' => 'scheduled',
-                ]);
-                // 4. Notify vendor (if applicable)
-                if ($order->vendor && $order->vendor->user) {
-                    $order->vendor->user->notify(new \App\Notifications\VendorAssignedOrderNotification($order));
-                }
-            }
+            // 3. Set order status to confirmed (not shipped)
+            $order->order_status = 'confirmed';
+            $order->driver_id = null;
+            $order->save();
+            // 4. Create delivery record with status 'scheduled', no driver assigned
+            $order->delivery()->create([
+                'order_id' => $order->id,
+                'distribution_center_id' => $order->distribution_center_id,
+                'delivery_status' => 'scheduled',
+                'delivery_address' => $order->delivery_address,
+                'recipient_name' => $order->delivery_contact,
+                'recipient_phone' => $order->delivery_phone,
+                'delivery_number' => uniqid('DEL-'),
+                'driver_id' => null,
+                'driver_name' => null,
+                'driver_phone' => null,
+                'driver_license' => null,
+            ]);
             DB::commit();
             return true;
         } catch (\Exception $e) {

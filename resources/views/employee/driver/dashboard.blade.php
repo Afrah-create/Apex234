@@ -119,6 +119,13 @@
                             <td>{{ $delivery->created_at ? $delivery->created_at->format('M d, Y') : '' }}</td>
                             <td class="action-buttons">
                                 <button class="action-btn action-secondary" onclick="toggleOrderDetails({{ $delivery->id }})">View</button>
+                                @if(in_array($delivery->delivery_status, ['scheduled', 'out_for_delivery']))
+                                    <form method="POST" action="{{ route('dashboard.employee.delivery.delivered', $delivery->id) }}" enctype="multipart/form-data" style="display:inline;">
+                                        @csrf
+                                        <input type="file" name="proof_photo" accept="image/*" style="display:inline-block; margin-right:8px;" required>
+                                        <button type="submit" class="action-btn action-green">Mark as Delivered</button>
+                                    </form>
+                                @endif
                             </td>
                         </tr>
                         <tr id="order-details-{{ $delivery->id }}" style="display:none; background:#f9f9f9;">
@@ -214,6 +221,16 @@ function fetchDeliveries() {
                     } else if (delivery.retailer) {
                         customerName = delivery.retailer.store_name;
                     }
+                    let actionButtons = `<button class="action-btn action-secondary" onclick="toggleOrderDetails(${delivery.id})">View</button>`;
+                    if (['scheduled', 'out_for_delivery'].includes(delivery.delivery_status)) {
+                        actionButtons += `
+                            <form method="POST" action="/dashboard/employee/delivery/${delivery.id}/delivered" enctype="multipart/form-data" style="display:inline;">
+                                <input type="hidden" name="_token" value="${document.querySelector('meta[name=csrf-token]').getAttribute('content')}">
+                                <input type="file" name="proof_photo" accept="image/*" style="display:inline-block; margin-right:8px;" required>
+                                <button type="submit" class="action-btn action-green">Mark as Delivered</button>
+                            </form>
+                        `;
+                    }
                     tbody.innerHTML += `
                         <tr>
                             <td class="font-medium">#${delivery.id}</td>
@@ -221,9 +238,7 @@ function fetchDeliveries() {
                             <td>${delivery.delivery_address ?? 'N/A'}</td>
                             <td>${delivery.delivery_status ? delivery.delivery_status.charAt(0).toUpperCase() + delivery.delivery_status.slice(1) : ''}</td>
                             <td>${delivery.created_at ? new Date(delivery.created_at).toLocaleDateString() : ''}</td>
-                            <td class="action-buttons">
-                                <button class="action-btn action-secondary" onclick="toggleOrderDetails(${delivery.id})">View</button>
-                            </td>
+                            <td class="action-buttons">${actionButtons}</td>
                         </tr>
                         <tr id="order-details-${delivery.id}" style="display:none; background:#f9f9f9;">
                             <td colspan="6">

@@ -118,6 +118,11 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('customer/orders', \App\Http\Controllers\CustomerOrderController::class)
         ->names('customer.orders')
         ->only(['index', 'show', 'store']);
+    // Warehouse staff and driver actions
+    Route::post('/dashboard/employee/order/{orderId}/packed', [\App\Http\Controllers\EmployeeDashboardController::class, 'markOrderPacked'])->name('dashboard.employee.order.packed');
+    Route::post('/dashboard/employee/order/{orderId}/shipped', [\App\Http\Controllers\EmployeeDashboardController::class, 'markOrderShipped'])->name('dashboard.employee.order.shipped');
+    Route::post('/dashboard/employee/delivery/{deliveryId}/out-for-delivery', [\App\Http\Controllers\EmployeeDashboardController::class, 'markDeliveryOutForDelivery'])->name('dashboard.employee.delivery.out_for_delivery');
+    Route::post('/dashboard/employee/delivery/{deliveryId}/delivered', [\App\Http\Controllers\EmployeeDashboardController::class, 'markDeliveryDelivered'])->name('dashboard.employee.delivery.delivered');
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -547,3 +552,9 @@ Route::middleware(['auth', 'verified'])->get('/supplier/my-reports', [\App\Http\
 
 Route::get('/admin/deliveries/{delivery}', [App\Http\Controllers\AdminDeliveryController::class, 'show'])->name('admin.deliveries.show');
 Route::middleware(['auth'])->get('/driver/assigned-deliveries', [\App\Http\Controllers\DriverDashboardApiController::class, 'assignedDeliveries'])->name('driver.assigned-deliveries');
+
+// Bulk update delivery status (admin)
+Route::post('/admin/deliveries/bulk-update-status', [\App\Http\Controllers\AdminDeliveryController::class, 'bulkUpdateStatus'])->name('admin.deliveries.bulk-update-status');
+
+// Admin API: Driver delivery loads graph
+Route::get('/api/admin/driver-delivery-loads', [\App\Http\Controllers\AdminDeliveryController::class, 'driverDeliveryLoads'])->name('api.admin.driver-delivery-loads');
