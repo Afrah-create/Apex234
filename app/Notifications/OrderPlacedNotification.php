@@ -29,6 +29,8 @@ class OrderPlacedNotification extends Notification implements ShouldQueue
 
     public function toArray($notifiable)
     {
+        $warehouseStaff = $this->order->warehouseStaff;
+        $customer = $this->order->customer;
         return [
             'order_id' => $this->order->id,
             'order_number' => $this->order->order_number,
@@ -36,6 +38,17 @@ class OrderPlacedNotification extends Notification implements ShouldQueue
             'total_amount' => $this->order->total_amount,
             'sender_id' => $this->sender->id,
             'sender_name' => $this->sender->name,
+            'customer' => $customer ? [
+                'id' => $customer->id,
+                'name' => $customer->name,
+                'email' => $customer->email,
+                'phone' => $customer->phone ?? null,
+            ] : null,
+            'warehouse_staff' => $warehouseStaff ? [
+                'id' => $warehouseStaff->id,
+                'name' => $warehouseStaff->name,
+                'user_id' => $warehouseStaff->user_id,
+            ] : null,
             'message' => 'A new order has been placed.',
         ];
     }

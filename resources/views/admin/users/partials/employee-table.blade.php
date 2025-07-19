@@ -16,10 +16,8 @@
         <input name="password_confirmation" type="password" placeholder="Confirm Password" required class="border rounded px-2 py-1" />
         <select name="role" required class="border rounded px-2 py-1">
             <option value="">Select Role</option>
-            <option>Production Worker</option>
             <option>Warehouse Staff</option>
             <option>Driver</option>
-            <option>Sales Manager</option>
         </select>
         <select name="vendor_id" class="border rounded px-2 py-1">
             <option value="">Unassigned</option>

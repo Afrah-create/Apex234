@@ -198,6 +198,7 @@ class EmployeeDashboardController extends Controller
             return redirect()->back()->with('error', 'Order must be confirmed to be marked as packed.');
         }
         $order->order_status = 'processing';
+        $order->warehouse_staff_id = $employee->id;
         $order->save();
         // Optionally: notify customer or admin here
         return redirect()->back()->with('success', 'Order marked as packed and is now processing.');
@@ -225,6 +226,7 @@ class EmployeeDashboardController extends Controller
             $order->driver_id = $driver->id;
         }
         $order->order_status = 'shipped';
+        $order->warehouse_staff_id = $employee->id;
         $order->save();
         // Update or create delivery record
         $delivery = $order->delivery;

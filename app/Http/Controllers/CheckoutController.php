@@ -317,6 +317,14 @@ class CheckoutController extends Controller
                 'total_amount' => $finalTotal
             ]);
 
+            // Notify all admins about new order with warehouse staff and customer details
+            $adminUsers = \App\Models\User::whereHas('roles', function($query) {
+                $query->where('name', 'admin');
+            })->get();
+            foreach ($adminUsers as $admin) {
+                $admin->notify(new \App\Notifications\OrderPlacedNotification($order, Auth::user()));
+            }
+
             return redirect()->route('customer.orders.show', $order->id)
                 ->with('success', 'Order placed successfully! Your order number is: ' . $order->order_number);
 

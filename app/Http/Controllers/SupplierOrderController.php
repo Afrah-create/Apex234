@@ -402,4 +402,33 @@ class SupplierOrderController extends Controller
             'unavailable_orders' => $stats['unavailable'] ?? 0,
         ]);
     }
+
+    /**
+     * Bulk update status for multiple raw material orders (supplier)
+     */
+    public function bulkUpdateStatus(Request $request)
+    {
+        $request->validate([
+            'order_ids' => 'required|array',
+            'order_ids.*' => 'integer|exists:raw_material_orders,id',
+            'status' => 'required|in:pending,confirmed,processing,shipped,delivered,cancelled,unavailable',
+        ]);
+        $user = Auth::user();
+        $supplier = $user->supplier;
+        if (!$supplier) {
+            return response()->json(['success' => false, 'message' => 'Supplier not found.'], 404);
+        }
+        $orders = \App\Models\RawMaterialOrder::where('supplier_id', $supplier->id)
+            ->whereIn('id', $request->order_ids)
+            ->get();
+        if ($orders->isEmpty()) {
+            return response()->json(['success' => false, 'message' => 'No valid orders found for this supplier.'], 404);
+        }
+        // Optionally, check for valid status transitions here
+        foreach ($orders as $order) {
+            $order->status = $request->status;
+            $order->save();
+        }
+        return response()->json(['success' => true, 'updated' => $orders->count()]);
+    }
 } 
