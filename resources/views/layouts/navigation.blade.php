@@ -63,9 +63,9 @@
                     <x-dropdown-link :href="route('profile.edit')">
                         {{ __('Profile') }}
                     </x-dropdown-link>
-                    {{-- <x-dropdown-link :href="route('help')">
+                    <x-dropdown-link :href="route('help.index')">
                         {{ __('Help & Support') }}
-                    </x-dropdown-link> --}}
+                    </x-dropdown-link>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <x-dropdown-link :href="route('logout')"
@@ -83,9 +83,9 @@
             <x-nav-link :href="route('register')" :active="request()->routeIs('register')" class="text-white hover:text-blue-200">
                 {{ __('Register') }}
             </x-nav-link>
-            {{-- <x-nav-link :href="route('help')" :active="request()->routeIs('help')" class="text-white hover:text-blue-200">
+            <x-nav-link :href="route('help.index')" :active="request()->routeIs('help.index')" class="text-white hover:text-blue-200">
                 {{ __('Help & Support') }}
-            </x-nav-link> --}}
+            </x-nav-link>
         @endguest
     </div>
 </nav>
