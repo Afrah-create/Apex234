@@ -31,4 +31,12 @@ class OrderItem extends Model
     {
         return $this->belongsTo(YogurtProduct::class);
     }
+
+    /**
+     * Get the inventory record for the order item
+     */
+    public function inventory()
+    {
+        return $this->belongsTo(\App\Models\Inventory::class);
+    }
 } 

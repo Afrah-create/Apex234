@@ -14,4 +14,9 @@ class Inventory extends Model
     {
         return $this->belongsTo(YogurtProduct::class);
     }
+
+    public function distributionCenter()
+    {
+        return $this->belongsTo(DistributionCenter::class, 'distribution_center_id');
+    }
 } 

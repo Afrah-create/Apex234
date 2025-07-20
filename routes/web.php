@@ -263,30 +263,6 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::get('/', [AnalyticsController::class, 'index'])->name('index');
 });
 
-// Admin reports route group
-Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/reports')->name('admin.reports.')->group(function () {
-    Route::get('/', [\App\Http\Controllers\AdminReportController::class, 'index'])->name('index');
-    Route::get('/download/{filename}', [\App\Http\Controllers\AdminReportController::class, 'downloadReport'])->name('download');
-});
-
-// Reports API routes
-Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('api/reports')->name('api.reports.')->group(function () {
-    Route::get('/templates', [\App\Http\Controllers\AdminReportController::class, 'getReportTemplates'])->name('templates');
-    Route::get('/filters', [\App\Http\Controllers\AdminReportController::class, 'getReportFilters'])->name('filters');
-    Route::post('/generate', [\App\Http\Controllers\AdminReportController::class, 'generateCustomReport'])->name('generate');
-    Route::post('/export', [\App\Http\Controllers\AdminReportController::class, 'exportReport'])->name('export');
-    // Scheduled reports routes
-    Route::get('/scheduled', [\App\Http\Controllers\AdminReportController::class, 'getScheduledReports'])->name('scheduled');
-    Route::post('/scheduled', [\App\Http\Controllers\AdminReportController::class, 'createScheduledReport'])->name('scheduled.create');
-    Route::put('/scheduled/{id}', [\App\Http\Controllers\AdminReportController::class, 'updateScheduledReport'])->name('scheduled.update');
-    Route::delete('/scheduled/{id}', [\App\Http\Controllers\AdminReportController::class, 'deleteScheduledReport'])->name('scheduled.delete');
-    Route::patch('/scheduled/{id}/toggle', [\App\Http\Controllers\AdminReportController::class, 'toggleScheduledReportStatus'])->name('scheduled.toggle');
-    Route::post('/scheduled/{id}/trigger', [\App\Http\Controllers\AdminReportController::class, 'triggerScheduledReport'])->name('scheduled.trigger');
-    // Report logs routes
-    Route::get('/logs', [\App\Http\Controllers\AdminReportController::class, 'getReportLogs'])->name('logs');
-    Route::get('/statistics', [\App\Http\Controllers\AdminReportController::class, 'getReportStatistics'])->name('statistics');
-});
-
 // Workforce distribution API for admin dashboard
 Route::get('/api/workforce/distribution', [\App\Http\Controllers\AdminWorkforceController::class, 'getWorkforceDistribution'])->name('api.workforce.distribution');
 
@@ -610,3 +586,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
 Route::middleware(['auth', 'verified'])->get('/supplier/raw-material-orders/{id}', [\App\Http\Controllers\SupplierOrderController::class, 'show'])->name('supplier.raw-material-orders.show');
 Route::middleware(['auth', 'verified'])->patch('/supplier/raw-material-orders/{id}/update-payment-status', [\App\Http\Controllers\SupplierOrderController::class, 'updatePaymentStatus'])->name('supplier.raw-material-orders.updatePaymentStatus');
+
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->get('/admin/reports', [\App\Http\Controllers\AdminReportController::class, 'index'])->name('admin.reports.index');
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->get('/admin/reports/sales', [\App\Http\Controllers\AdminReportController::class, 'salesReport'])->name('admin.reports.sales');
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->get('/admin/reports/production', [\App\Http\Controllers\AdminReportController::class, 'productionReport'])->name('admin.reports.production');
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->get('/admin/reports/inventory', [\App\Http\Controllers\AdminReportController::class, 'inventoryReport'])->name('admin.reports.inventory');
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->get('/admin/reports/raw-material-orders', [\App\Http\Controllers\AdminReportController::class, 'rawMaterialOrdersReport'])->name('admin.reports.raw_material_orders');

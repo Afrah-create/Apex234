@@ -93,4 +93,7 @@ document.addEventListener('DOMContentLoaded', function () {
         .notification((notification) => {
             fetchNotifications();
         });
+
+    // Fetch notification count on page load
+    fetchNotifications();
 });

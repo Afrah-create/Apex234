@@ -32,52 +32,8 @@ class AdminReportController extends Controller
      */
     public function getReportTemplates(): JsonResponse
     {
-        $templates = [
-            [
-                'id' => 'sales_summary',
-                'name' => 'Sales Summary Report',
-                'description' => 'Comprehensive sales analysis with trends and comparisons',
-                'category' => 'Sales',
-                'icon' => 'chart-line'
-            ],
-            [
-                'id' => 'inventory_status',
-                'name' => 'Inventory Status Report',
-                'description' => 'Current inventory levels, stock movements, and alerts',
-                'category' => 'Inventory',
-                'icon' => 'box'
-            ],
-            [
-                'id' => 'supplier_performance',
-                'name' => 'Supplier Performance Report',
-                'description' => 'Supplier metrics, delivery times, and quality ratings',
-                'category' => 'Suppliers',
-                'icon' => 'users'
-            ],
-            [
-                'id' => 'financial_summary',
-                'name' => 'Financial Summary Report',
-                'description' => 'Revenue, costs, profit margins, and financial trends',
-                'category' => 'Finance',
-                'icon' => 'dollar-sign'
-            ],
-            [
-                'id' => 'user_analysis',
-                'name' => 'User Analysis Report',
-                'description' => 'Retailer, vendor, and supplier activity and performance metrics',
-                'category' => 'Users',
-                'icon' => 'user-check'
-            ],
-            [
-                'id' => 'production_metrics',
-                'name' => 'Production Metrics Report',
-                'description' => 'Production efficiency, capacity utilization, and quality metrics',
-                'category' => 'Production',
-                'icon' => 'settings'
-            ]
-        ];
-
-        return response()->json($templates);
+        // Return an empty array to clear all report templates
+        return response()->json([]);
     }
 
     /**
@@ -766,227 +722,218 @@ class AdminReportController extends Controller
         return response()->json($filters);
     }
 
-    /**
-     * Get scheduled reports
-     */
-    public function getScheduledReports(): JsonResponse
+    public function salesReport(Request $request)
     {
-        $reports = \App\Models\ScheduledReport::with(['creator'])
-            ->orderBy('created_at', 'desc')
+        // Parse date filters
+        $dateFrom = $request->input('date_from') ? Carbon::parse($request->input('date_from')) : now()->startOfMonth();
+        $dateTo = $request->input('date_to') ? Carbon::parse($request->input('date_to')) : now();
+
+        // Query total sales
+        $totalSales = \App\Models\Order::where('order_status', 'delivered')
+            ->whereBetween('created_at', [$dateFrom, $dateTo])
+            ->sum('total_amount');
+
+        // Sales by product
+        $salesByProduct = \App\Models\Order::where('order_status', 'delivered')
+            ->whereBetween('created_at', [$dateFrom, $dateTo])
+            ->with('orderItems.yogurtProduct')
+            ->get()
+            ->flatMap(function($order) {
+                return $order->orderItems;
+            })
+            ->groupBy('yogurt_product_id')
+            ->map(function($items) {
+                $product = $items->first()->yogurtProduct;
+                return [
+                    'product_name' => $product ? $product->product_name : 'Unknown',
+                    'total_sales' => $items->sum(function($item) { return $item->quantity * $item->unit_price; }),
+                    'units_sold' => $items->sum('quantity'),
+                ];
+            })->values();
+
+        // Sales by distribution center
+        $salesByDistributionCenter = \App\Models\Order::where('order_status', 'delivered')
+            ->whereBetween('created_at', [$dateFrom, $dateTo])
+            ->with('distributionCenter')
+            ->get()
+            ->groupBy('distribution_center_id')
+            ->map(function($orders, $centerId) {
+                $center = $orders->first()->distributionCenter;
+                $unitsSold = $orders->flatMap(function($order) {
+                    return $order->orderItems;
+                })->sum('quantity');
+                return [
+                    'center_name' => $center ? $center->center_name : 'Unknown',
+                    'total_sales' => $orders->sum('total_amount'),
+                    'units_sold' => $unitsSold,
+                ];
+            })->values();
+
+        // Sales over time (daily or monthly)
+        $interval = $dateFrom->diffInDays($dateTo) > 60 ? 'month' : 'day';
+        $salesOverTime = \App\Models\Order::where('order_status', 'delivered')
+            ->whereBetween('created_at', [$dateFrom, $dateTo])
+            ->selectRaw(
+                $interval === 'month'
+                    ? "DATE_FORMAT(created_at, '%Y-%m') as period, SUM(total_amount) as total_sales"
+                    : "DATE(created_at) as period, SUM(total_amount) as total_sales"
+            )
+            ->groupBy('period')
+            ->orderBy('period')
             ->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $reports
+        return view('admin.reports.sales', [
+            'totalSales' => $totalSales,
+            'salesByProduct' => $salesByProduct,
+            'salesByDistributionCenter' => $salesByDistributionCenter,
+            'salesOverTime' => $salesOverTime,
+            'dateFrom' => $dateFrom->toDateString(),
+            'dateTo' => $dateTo->toDateString(),
         ]);
     }
 
-    /**
-     * Create a new scheduled report
-     */
-    public function createScheduledReport(Request $request): JsonResponse
+    public function productionReport(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'report_type' => 'required|string',
-            'report_config' => 'required|array',
-            'frequency' => 'required|in:daily,weekly,monthly,quarterly,yearly',
-            'day_of_week' => 'nullable|string|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
-            'day_of_month' => 'nullable|integer|min:1|max:31',
-            'time' => 'required|date_format:H:i',
-            'timezone' => 'required|string',
-            'recipients' => 'required|array|min:1',
-            'recipients.*' => 'email',
-            'format' => 'required|in:pdf,excel,csv',
-            'stakeholder_type' => 'nullable|string|in:admin,vendor,retailer,supplier,employee',
-            'stakeholder_id' => 'nullable|integer',
-        ]);
+        $dateFrom = $request->input('date_from') ? Carbon::parse($request->input('date_from')) : now()->startOfMonth();
+        $dateTo = $request->input('date_to') ? Carbon::parse($request->input('date_to')) : now();
 
-        try {
-            $reportService = app(\App\Services\ReportGenerationService::class);
-            
-            $data = $request->all();
-            $data['created_by'] = Auth::id();
-            
-            $scheduledReport = $reportService->createScheduledReport($data);
+        // Total batches and units produced
+        $totalBatches = \App\Models\ProductionBatch::whereBetween('created_at', [$dateFrom, $dateTo])->count();
+        $totalUnits = \App\Models\ProductionBatch::whereBetween('created_at', [$dateFrom, $dateTo])->sum('quantity_produced');
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Scheduled report created successfully',
-                'data' => $scheduledReport->load('creator')
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error creating scheduled report: ' . $e->getMessage()
-            ], 500);
-        }
-    }
+        // Production by product
+        $productionByProduct = \App\Models\ProductionBatch::whereBetween('created_at', [$dateFrom, $dateTo])
+            ->with('product')
+            ->get()
+            ->groupBy('product_id')
+            ->map(function($batches) {
+                $product = $batches->first()->product;
+                return [
+                    'product_name' => $product ? $product->product_name : 'Unknown',
+                    'batches' => $batches->count(),
+                    'units_produced' => $batches->sum('quantity_produced'),
+                ];
+            })->values();
 
-    /**
-     * Update a scheduled report
-     */
-    public function updateScheduledReport(Request $request, $id): JsonResponse
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'report_type' => 'required|string',
-            'report_config' => 'required|array',
-            'frequency' => 'required|in:daily,weekly,monthly,quarterly,yearly',
-            'day_of_week' => 'nullable|string|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
-            'day_of_month' => 'nullable|integer|min:1|max:31',
-            'time' => 'required|date_format:H:i',
-            'timezone' => 'required|string',
-            'recipients' => 'required|array|min:1',
-            'recipients.*' => 'email',
-            'format' => 'required|in:pdf,excel,csv',
-            'is_active' => 'boolean'
-        ]);
+        // Production by vendor
+        $productionByVendor = \App\Models\ProductionBatch::whereBetween('created_at', [$dateFrom, $dateTo])
+            ->with('vendor')
+            ->get()
+            ->groupBy('vendor_id')
+            ->map(function($batches) {
+                $vendor = $batches->first()->vendor;
+                return [
+                    'vendor_name' => $vendor ? $vendor->business_name : 'Unknown',
+                    'batches' => $batches->count(),
+                    'units_produced' => $batches->sum('quantity_produced'),
+                ];
+            })->values();
 
-        try {
-            $scheduledReport = \App\Models\ScheduledReport::findOrFail($id);
-            $reportService = app(\App\Services\ReportGenerationService::class);
-            
-            $data = $request->all();
-            $scheduledReport = $reportService->updateScheduledReport($scheduledReport, $data);
+        // Production over time (daily or monthly)
+        $interval = $dateFrom->diffInDays($dateTo) > 60 ? 'month' : 'day';
+        $productionOverTime = \App\Models\ProductionBatch::whereBetween('created_at', [$dateFrom, $dateTo])
+            ->selectRaw(
+                $interval === 'month'
+                    ? "DATE_FORMAT(created_at, '%Y-%m') as period, SUM(quantity_produced) as total_units"
+                    : "DATE(created_at) as period, SUM(quantity_produced) as total_units"
+            )
+            ->groupBy('period')
+            ->orderBy('period')
+            ->get();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Scheduled report updated successfully',
-                'data' => $scheduledReport->load('creator')
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error updating scheduled report: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Delete a scheduled report
-     */
-    public function deleteScheduledReport($id): JsonResponse
-    {
-        try {
-            $scheduledReport = \App\Models\ScheduledReport::findOrFail($id);
-            $reportService = app(\App\Services\ReportGenerationService::class);
-            
-            $reportService->deleteScheduledReport($scheduledReport);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Scheduled report deleted successfully'
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error deleting scheduled report: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Toggle scheduled report status
-     */
-    public function toggleScheduledReportStatus($id): JsonResponse
-    {
-        try {
-            $scheduledReport = \App\Models\ScheduledReport::findOrFail($id);
-            $scheduledReport->is_active = !$scheduledReport->is_active;
-            $scheduledReport->save();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Scheduled report status updated successfully',
-                'data' => [
-                    'is_active' => $scheduledReport->is_active
-                ]
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error updating scheduled report status: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Get report logs
-     */
-    public function getReportLogs(Request $request): JsonResponse
-    {
-        $query = \App\Models\ReportLog::with(['scheduledReport', 'generator'])
-            ->orderBy('created_at', 'desc');
-
-        // Apply filters
-        if ($request->has('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->has('report_type')) {
-            $query->where('report_type', $request->report_type);
-        }
-
-        if ($request->has('date_from')) {
-            $query->where('created_at', '>=', $request->date_from);
-        }
-
-        if ($request->has('date_to')) {
-            $query->where('created_at', '<=', $request->date_to);
-        }
-
-        $logs = $query->paginate(20);
-
-        return response()->json([
-            'success' => true,
-            'data' => $logs
+        return view('admin.reports.production', [
+            'totalBatches' => $totalBatches,
+            'totalUnits' => $totalUnits,
+            'productionByProduct' => $productionByProduct,
+            'productionByVendor' => $productionByVendor,
+            'productionOverTime' => $productionOverTime,
+            'dateFrom' => $dateFrom->toDateString(),
+            'dateTo' => $dateTo->toDateString(),
         ]);
     }
 
-    /**
-     * Get report statistics
-     */
-    public function getReportStatistics(): JsonResponse
+    public function inventoryReport(Request $request)
     {
-        try {
-            $reportService = app(\App\Services\ReportGenerationService::class);
-            $statistics = $reportService->getReportStatistics();
+        $dateFrom = $request->input('date_from') ? Carbon::parse($request->input('date_from')) : now()->startOfMonth();
+        $dateTo = $request->input('date_to') ? Carbon::parse($request->input('date_to')) : now();
 
-            return response()->json([
-                'success' => true,
-                'data' => $statistics
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error getting report statistics: ' . $e->getMessage()
-            ], 500);
-        }
+        // Total products and total stock
+        $totalProducts = \App\Models\Inventory::distinct('yogurt_product_id')->count('yogurt_product_id');
+        $totalStock = \App\Models\Inventory::sum('quantity_available');
+        $lowStockItems = \App\Models\Inventory::where('quantity_available', '<=', 10)->count();
+
+        // Inventory by product
+        $inventoryByProduct = \App\Models\Inventory::with('yogurtProduct')
+            ->get()
+            ->groupBy('yogurt_product_id')
+            ->map(function($items) {
+                $product = $items->first()->yogurtProduct;
+                return [
+                    'product_name' => $product ? $product->product_name : 'Unknown',
+                    'total_stock' => $items->sum('quantity_available'),
+                    'low_stock' => $items->sum(function($item) { return $item->quantity_available <= 10 ? 1 : 0; }),
+                ];
+            })->values();
+
+        // Inventory by distribution center
+        $inventoryByCenter = \App\Models\Inventory::with('distributionCenter')
+            ->get()
+            ->groupBy('distribution_center_id')
+            ->map(function($items) {
+                $center = $items->first()->distributionCenter;
+                return [
+                    'center_name' => $center ? $center->center_name : 'Unknown',
+                    'total_stock' => $items->sum('quantity_available'),
+                    'low_stock' => $items->sum(function($item) { return $item->quantity_available <= 10 ? 1 : 0; }),
+                ];
+            })->values();
+
+        return view('admin.reports.inventory', [
+            'totalProducts' => $totalProducts,
+            'totalStock' => $totalStock,
+            'lowStockItems' => $lowStockItems,
+            'inventoryByProduct' => $inventoryByProduct,
+            'inventoryByCenter' => $inventoryByCenter,
+            'dateFrom' => $dateFrom->toDateString(),
+            'dateTo' => $dateTo->toDateString(),
+        ]);
     }
 
-    /**
-     * Manually trigger a scheduled report
-     */
-    public function triggerScheduledReport($id): JsonResponse
+    public function rawMaterialOrdersReport(Request $request)
     {
-        try {
-            $scheduledReport = \App\Models\ScheduledReport::findOrFail($id);
-            $reportService = app(\App\Services\ReportGenerationService::class);
-            
-            $reportService->processReport($scheduledReport);
+        $dateFrom = $request->input('date_from') ? Carbon::parse($request->input('date_from')) : now()->startOfMonth();
+        $dateTo = $request->input('date_to') ? Carbon::parse($request->input('date_to')) : now();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Report generated and delivered successfully'
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error triggering report: ' . $e->getMessage()
-            ], 500);
-        }
+        $orders = \App\Models\RawMaterialOrder::with(['supplier', 'vendor'])
+            ->whereBetween('order_date', [$dateFrom, $dateTo])
+            ->orderByDesc('order_date')
+            ->get();
+
+        $totalOrders = $orders->count();
+        $pendingOrders = $orders->where('status', 'pending')->count();
+        $deliveredOrders = $orders->where('status', 'delivered')->count();
+        $totalSpend = $orders->sum('total_amount');
+
+        // Prepare data for graph: total spend over time (by day)
+        $ordersOverTime = $orders->groupBy(function($order) {
+            return $order->order_date ? $order->order_date->format('Y-m-d') : 'Unknown';
+        })->map(function($group) {
+            return [
+                'period' => $group->first()->order_date ? $group->first()->order_date->format('Y-m-d') : 'Unknown',
+                'total_spend' => $group->sum('total_amount'),
+                'order_count' => $group->count(),
+            ];
+        })->sortBy('period')->values();
+
+        return view('admin.reports.raw_material_orders', [
+            'orders' => $orders,
+            'totalOrders' => $totalOrders,
+            'pendingOrders' => $pendingOrders,
+            'deliveredOrders' => $deliveredOrders,
+            'totalSpend' => $totalSpend,
+            'dateFrom' => $dateFrom->toDateString(),
+            'dateTo' => $dateTo->toDateString(),
+            'ordersOverTime' => $ordersOverTime,
+        ]);
     }
 } 
