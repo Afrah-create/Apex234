@@ -294,8 +294,6 @@ Route::get('/api/workforce/distribution', [\App\Http\Controllers\AdminWorkforceC
 Route::get('/admin/users', [\App\Http\Controllers\AdminEmployeeController::class, 'index'])->name('admin.users.index');
 Route::post('/admin/employees/{employee}/assign-vendor', [\App\Http\Controllers\AdminEmployeeController::class, 'assignVendor'])->name('admin.employees.assignVendor');
 Route::post('/admin/employees', [\App\Http\Controllers\AdminEmployeeController::class, 'store'])->name('admin.employees.store');
-Route::get('/admin/employees/export-csv', [\App\Http\Controllers\AdminEmployeeController::class, 'exportCsv'])->name('admin.employees.export-csv');
-Route::get('/admin/employees/export-pdf', [\App\Http\Controllers\AdminEmployeeController::class, 'exportPdf'])->name('admin.employees.export-pdf');
 
 // Admin vendor applicant management
 Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/vendor-applicants')->name('admin.vendor-applicants.')->group(function () {
@@ -505,6 +503,7 @@ Route::middleware(['auth'])->group(function () {
             })
         ]);
     });
+    Route::get('/api/warehouse-summary-stats', [\App\Http\Controllers\EmployeeDashboardController::class, 'warehouseSummaryStats'])->name('warehouse.summary.stats');
 });
 
 // Vendor inventory status ranges

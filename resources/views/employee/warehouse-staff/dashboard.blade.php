@@ -23,42 +23,42 @@
             <div class="stat-icon stat-blue">📦</div>
             <div class="stat-content">
                 <p class="stat-label">Total Orders</p>
-                <p class="stat-value">{{ $totalOrders }}</p>
+                <p class="stat-value" id="ws-total-orders">{{ $totalOrders }}</p>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon stat-yellow">⏳</div>
             <div class="stat-content">
                 <p class="stat-label">Pending</p>
-                <p class="stat-value">{{ $pendingOrders }}</p>
+                <p class="stat-value" id="ws-pending-orders">{{ $pendingOrders }}</p>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon stat-purple">🔄</div>
             <div class="stat-content">
                 <p class="stat-label">Processing</p>
-                <p class="stat-value">{{ $processingOrders }}</p>
+                <p class="stat-value" id="ws-processing-orders">{{ $processingOrders }}</p>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon stat-green">🚚</div>
             <div class="stat-content">
                 <p class="stat-label">Shipped</p>
-                <p class="stat-value">{{ $shippedOrders }}</p>
+                <p class="stat-value" id="ws-shipped-orders">{{ $shippedOrders }}</p>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon stat-green">✅</div>
             <div class="stat-content">
                 <p class="stat-label">Delivered</p>
-                <p class="stat-value">{{ $deliveredOrders }}</p>
+                <p class="stat-value" id="ws-delivered-orders">{{ $deliveredOrders }}</p>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon stat-blue">📦</div>
             <div class="stat-content">
                 <p class="stat-label">Total Deliveries</p>
-                <p class="stat-value">{{ $totalDeliveries }}</p>
+                <p class="stat-value" id="ws-total-deliveries">{{ $totalDeliveries }}</p>
             </div>
         </div>
     </div>
@@ -197,31 +197,6 @@
         @endif
     </div>
 
-    <!-- Product Availability -->
-    <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <h3 class="text-lg font-semibold mb-4 text-gray-900">Product Availability</h3>
-        @if($yogurtProducts->count() > 0)
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                @foreach($yogurtProducts as $product)
-                    <div class="p-4 border rounded-lg">
-                        <div class="flex justify-between items-start mb-2">
-                            <div class="font-medium text-gray-900">{{ $product->name ?? 'Product' }}</div>
-                            <span class="px-2 py-1 text-xs rounded-full {{ ($product->stock ?? 0) > 10 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                {{ ($product->stock ?? 0) > 10 ? 'In Stock' : 'Low Stock' }}
-                            </span>
-                        </div>
-                        <div class="text-sm text-gray-600">
-                            <div>Stock: {{ $product->stock ?? 0 }} units</div>
-                            <div>Type: {{ $product->type ?? 'N/A' }}</div>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-        @else
-            <p class="text-gray-500 text-center py-4">No product data available</p>
-        @endif
-    </div>
-
     <!-- Vendor Information -->
     @if($employee->vendor)
         <div class="bg-white rounded-lg shadow-sm p-6">
@@ -247,4 +222,23 @@
         </div>
     @endif
 </div>
+<script>
+function updateWarehouseSummaryCards(data) {
+    if (data.totalOrders !== undefined) document.getElementById('ws-total-orders').textContent = data.totalOrders;
+    if (data.pendingOrders !== undefined) document.getElementById('ws-pending-orders').textContent = data.pendingOrders;
+    if (data.processingOrders !== undefined) document.getElementById('ws-processing-orders').textContent = data.processingOrders;
+    if (data.shippedOrders !== undefined) document.getElementById('ws-shipped-orders').textContent = data.shippedOrders;
+    if (data.deliveredOrders !== undefined) document.getElementById('ws-delivered-orders').textContent = data.deliveredOrders;
+    if (data.totalDeliveries !== undefined) document.getElementById('ws-total-deliveries').textContent = data.totalDeliveries;
+}
+function fetchWarehouseSummaryStats() {
+    fetch('/api/warehouse-summary-stats')
+        .then(res => res.json())
+        .then(data => updateWarehouseSummaryCards(data));
+}
+document.addEventListener('DOMContentLoaded', function() {
+    fetchWarehouseSummaryStats();
+    setInterval(fetchWarehouseSummaryStats, 30000);
+});
+</script>
 @endsection 

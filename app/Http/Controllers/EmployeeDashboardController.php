@@ -71,36 +71,36 @@ class EmployeeDashboardController extends Controller
     
     public function warehouseStaffDashboard($employee)
     {
-        // Get inventory-related data - use facility_id from employee's vendor
-        $facilityId = $employee->vendor ? $employee->vendor->id : null;
+        // Get inventory-related data - use distribution_center_id from employee
+        $distributionCenterId = $employee->distribution_center_id ?? null;
         try {
-            $inventory = $facilityId 
-                ? \App\Models\Inventory::where('facility_id', $facilityId)->get()
+            $inventory = $distributionCenterId 
+                ? \App\Models\Inventory::where('distribution_center_id', $distributionCenterId)->get()
                 : collect([]);
-            $yogurtProducts = $facilityId 
-                ? \App\Models\YogurtProduct::where('facility_id', $facilityId)->get()
+            $yogurtProducts = $distributionCenterId 
+                ? \App\Models\YogurtProduct::where('distribution_center_id', $distributionCenterId)->get()
                 : collect([]);
-            $recentDeliveries = $facilityId 
-                ? \App\Models\Delivery::where('facility_id', $facilityId)->latest()->take(5)->get()
+            $recentDeliveries = $distributionCenterId 
+                ? \App\Models\Delivery::where('distribution_center_id', $distributionCenterId)->latest()->take(5)->get()
                 : collect([]);
             // Order and delivery stats
-            $totalOrders = $facilityId 
-                ? \App\Models\Order::where('distribution_center_id', $facilityId)->count()
+            $totalOrders = $distributionCenterId 
+                ? \App\Models\Order::where('distribution_center_id', $distributionCenterId)->count()
                 : 0;
-            $pendingOrders = $facilityId 
-                ? \App\Models\Order::where('distribution_center_id', $facilityId)->where('order_status', 'pending')->count()
+            $pendingOrders = $distributionCenterId 
+                ? \App\Models\Order::where('distribution_center_id', $distributionCenterId)->where('order_status', 'pending')->count()
                 : 0;
-            $processingOrders = $facilityId 
-                ? \App\Models\Order::where('distribution_center_id', $facilityId)->where('order_status', 'processing')->count()
+            $processingOrders = $distributionCenterId 
+                ? \App\Models\Order::where('distribution_center_id', $distributionCenterId)->where('order_status', 'processing')->count()
                 : 0;
-            $shippedOrders = $facilityId 
-                ? \App\Models\Order::where('distribution_center_id', $facilityId)->where('order_status', 'shipped')->count()
+            $shippedOrders = $distributionCenterId 
+                ? \App\Models\Order::where('distribution_center_id', $distributionCenterId)->where('order_status', 'shipped')->count()
                 : 0;
-            $deliveredOrders = $facilityId 
-                ? \App\Models\Order::where('distribution_center_id', $facilityId)->where('order_status', 'delivered')->count()
+            $deliveredOrders = $distributionCenterId 
+                ? \App\Models\Order::where('distribution_center_id', $distributionCenterId)->where('order_status', 'delivered')->count()
                 : 0;
-            $totalDeliveries = $facilityId 
-                ? \App\Models\Delivery::where('facility_id', $facilityId)->count()
+            $totalDeliveries = $distributionCenterId 
+                ? \App\Models\Delivery::where('distribution_center_id', $distributionCenterId)->count()
                 : 0;
         } catch (\Exception $e) {
             $inventory = collect([]);
@@ -338,5 +338,42 @@ class EmployeeDashboardController extends Controller
         $delivery->save();
         // Optionally: notify customer or admin here
         return redirect()->back()->with('success', 'Delivery marked as delivered.');
+    }
+
+    // API endpoint for real-time warehouse staff summary stats
+    public function warehouseSummaryStats(Request $request)
+    {
+        $user = Auth::user();
+        $employee = $user->employee;
+        if (!$employee || $employee->role !== 'Warehouse Staff') {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+        $distributionCenterId = $employee->distribution_center_id ?? null;
+        $totalOrders = $distributionCenterId 
+            ? \App\Models\Order::where('distribution_center_id', $distributionCenterId)->count()
+            : 0;
+        $pendingOrders = $distributionCenterId 
+            ? \App\Models\Order::where('distribution_center_id', $distributionCenterId)->where('order_status', 'pending')->count()
+            : 0;
+        $processingOrders = $distributionCenterId 
+            ? \App\Models\Order::where('distribution_center_id', $distributionCenterId)->where('order_status', 'processing')->count()
+            : 0;
+        $shippedOrders = $distributionCenterId 
+            ? \App\Models\Order::where('distribution_center_id', $distributionCenterId)->where('order_status', 'shipped')->count()
+            : 0;
+        $deliveredOrders = $distributionCenterId 
+            ? \App\Models\Order::where('distribution_center_id', $distributionCenterId)->where('order_status', 'delivered')->count()
+            : 0;
+        $totalDeliveries = $distributionCenterId 
+            ? \App\Models\Delivery::where('distribution_center_id', $distributionCenterId)->count()
+            : 0;
+        return response()->json([
+            'totalOrders' => $totalOrders,
+            'pendingOrders' => $pendingOrders,
+            'processingOrders' => $processingOrders,
+            'shippedOrders' => $shippedOrders,
+            'deliveredOrders' => $deliveredOrders,
+            'totalDeliveries' => $totalDeliveries,
+        ]);
     }
 }

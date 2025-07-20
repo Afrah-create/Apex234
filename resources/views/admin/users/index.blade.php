@@ -24,43 +24,5 @@
             @include('admin.users.partials.delivery-table', ['deliveries' => $deliveries])
         </div>
     </div>
-
-    {{-- Vendor Applicants Awaiting Approval --}}
-    @if(isset($vendorApplicants) && $vendorApplicants->count())
-    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 class="text-xl font-semibold mb-4">Vendor Applicants Awaiting Approval</h2>
-        <div class="overflow-x-auto rounded-lg border border-gray-200">
-            <table class="min-w-full divide-y divide-gray-200 rounded-lg overflow-hidden">
-                <thead class="bg-gray-100">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Email</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Phone</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Company</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Action</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-100">
-                    @foreach($vendorApplicants as $applicant)
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">{{ $applicant->name }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $applicant->email }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $applicant->phone }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $applicant->company_name }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ ucfirst($applicant->status) }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm">
-                            <form method="POST" action="{{ route('admin.vendor-applicants.approve', $applicant->id) }}">
-                                @csrf
-                                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Confirm</button>
-                            </form>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
-    @endif
 </div>
 @endsection 

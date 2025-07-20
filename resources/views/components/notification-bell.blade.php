@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Load notifications
     function loadNotifications() {
-        fetch('/api/notifications')
+        fetch('/notifications/fetch')
             .then(response => response.json())
             .then(data => {
                 notificationList.innerHTML = '';

@@ -70,6 +70,7 @@ class OrderStatusUpdate extends Notification implements ShouldQueue
      */
     public function toArray(object $notifiable): array
     {
+        $delivery = $this->order->delivery;
         return [
             'order_id' => $this->order->id,
             'order_number' => $this->order->order_number,
@@ -77,6 +78,18 @@ class OrderStatusUpdate extends Notification implements ShouldQueue
             'new_status' => $this->newStatus,
             'message' => 'Order status updated from ' . ucfirst($this->oldStatus) . ' to ' . ucfirst($this->newStatus),
             'type' => 'order_status_update',
+            'delivery' => $delivery ? [
+                'delivery_id' => $delivery->id,
+                'delivery_number' => $delivery->delivery_number,
+                'scheduled_delivery_date' => $delivery->scheduled_delivery_date,
+                'scheduled_delivery_time' => $delivery->scheduled_delivery_time,
+                'status' => $delivery->delivery_status,
+                'driver_name' => $delivery->driver_name,
+                'vehicle_number' => $delivery->vehicle_number,
+                'delivery_address' => $delivery->delivery_address,
+                'recipient_name' => $delivery->recipient_name,
+                'recipient_phone' => $delivery->recipient_phone,
+            ] : null,
         ];
     }
 } 

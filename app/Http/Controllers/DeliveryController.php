@@ -68,7 +68,14 @@ class DeliveryController extends Controller
 
         // Notify the driver in their dashboard
         $order = \App\Models\Order::find($validated['order_id']);
-        $driver->notify(new OrderStatusUpdate($delivery, $order));
+        $oldStatus = $delivery->getOriginal('delivery_status') ?? 'scheduled';
+        $newStatus = $delivery->delivery_status;
+        $driver->notify(new OrderStatusUpdate($order, $oldStatus, $newStatus));
+
+        // Notify the customer about the delivery
+        if ($order && $order->customer) {
+            $order->customer->notify(new \App\Notifications\DeliveryNoteNotification($delivery));
+        }
 
         return response()->json(['success' => true, 'delivery' => $delivery]);
     }
