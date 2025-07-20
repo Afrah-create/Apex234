@@ -73,49 +73,75 @@ class EmployeeDashboardController extends Controller
     {
         // Get inventory-related data - use facility_id from employee's vendor
         $facilityId = $employee->vendor ? $employee->vendor->id : null;
-        
         try {
             $inventory = $facilityId 
                 ? \App\Models\Inventory::where('facility_id', $facilityId)->get()
                 : collect([]);
-                
             $yogurtProducts = $facilityId 
                 ? \App\Models\YogurtProduct::where('facility_id', $facilityId)->get()
                 : collect([]);
-                
             $recentDeliveries = $facilityId 
                 ? \App\Models\Delivery::where('facility_id', $facilityId)->latest()->take(5)->get()
                 : collect([]);
+            // Order and delivery stats
+            $totalOrders = $facilityId 
+                ? \App\Models\Order::where('distribution_center_id', $facilityId)->count()
+                : 0;
+            $pendingOrders = $facilityId 
+                ? \App\Models\Order::where('distribution_center_id', $facilityId)->where('order_status', 'pending')->count()
+                : 0;
+            $processingOrders = $facilityId 
+                ? \App\Models\Order::where('distribution_center_id', $facilityId)->where('order_status', 'processing')->count()
+                : 0;
+            $shippedOrders = $facilityId 
+                ? \App\Models\Order::where('distribution_center_id', $facilityId)->where('order_status', 'shipped')->count()
+                : 0;
+            $deliveredOrders = $facilityId 
+                ? \App\Models\Order::where('distribution_center_id', $facilityId)->where('order_status', 'delivered')->count()
+                : 0;
+            $totalDeliveries = $facilityId 
+                ? \App\Models\Delivery::where('facility_id', $facilityId)->count()
+                : 0;
         } catch (\Exception $e) {
-            // Fallback if tables don't exist or have issues
             $inventory = collect([]);
             $yogurtProducts = collect([]);
             $recentDeliveries = collect([]);
+            $totalOrders = 0;
+            $pendingOrders = 0;
+            $processingOrders = 0;
+            $shippedOrders = 0;
+            $deliveredOrders = 0;
+            $totalDeliveries = 0;
         }
-        
-        return view('employee.warehouse-staff.dashboard', compact('employee', 'inventory', 'yogurtProducts', 'recentDeliveries'));
+        return view('employee.warehouse-staff.dashboard', compact(
+            'employee', 'inventory', 'yogurtProducts', 'recentDeliveries',
+            'totalOrders', 'pendingOrders', 'processingOrders', 'shippedOrders', 'deliveredOrders', 'totalDeliveries'
+        ));
     }
     
     public function driverDashboard($employee)
     {
         // Get delivery-related data for this driver (employee)
         try {
-            $driver = \App\Models\Driver::where('employee_id', $employee->id)->first();
-            $assignedDeliveries = $driver
-                ? \App\Models\Delivery::where('driver_id', $driver->id)->latest()->take(10)->get()
-                : collect([]);
-            $completedDeliveries = $driver
-                ? \App\Models\Delivery::where('driver_id', $driver->id)->where('delivery_status', 'delivered')->count()
-                : 0;
-            $pendingDeliveries = $driver
-                ? \App\Models\Delivery::where('driver_id', $driver->id)->where('delivery_status', 'scheduled')->count()
-                : 0;
+            $assignedDeliveries = \App\Models\Delivery::where('driver_id', $employee->id)
+                ->latest()->take(10)->get();
+            $completedDeliveries = \App\Models\Delivery::where('driver_id', $employee->id)
+                ->where('delivery_status', 'delivered')->count();
+            $pendingDeliveries = \App\Models\Delivery::where('driver_id', $employee->id)
+                ->where('delivery_status', 'scheduled')->count();
+            $totalOrders = \App\Models\Order::where('driver_id', $employee->id)->count();
+            $deliveredOrders = \App\Models\Order::where('driver_id', $employee->id)
+                ->where('order_status', 'delivered')->count();
         } catch (\Exception $e) {
             $assignedDeliveries = collect([]);
             $completedDeliveries = 0;
             $pendingDeliveries = 0;
+            $totalOrders = 0;
+            $deliveredOrders = 0;
         }
-        return view('employee.driver.dashboard', compact('employee', 'assignedDeliveries', 'completedDeliveries', 'pendingDeliveries'));
+        return view('employee.driver.dashboard', compact(
+            'employee', 'assignedDeliveries', 'completedDeliveries', 'pendingDeliveries', 'totalOrders', 'deliveredOrders'
+        ));
     }
     
     public function salesManagerDashboard($employee)

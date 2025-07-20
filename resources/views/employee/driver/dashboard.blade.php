@@ -18,43 +18,34 @@
         </div>
     </div>
 
-    <!-- Notifications Section -->
-    @php $notifications = auth()->user()->notifications; @endphp
-    @if($notifications->count())
-        <div class="employee-card">
-            <h3>Recent Notifications</h3>
-            <div>
-                @foreach($notifications->take(3) as $notification)
-                    <div class="notification-item">
-                        <div class="notification-message">{{ $notification->data['message'] ?? 'You have a new notification.' }}</div>
-                        <div class="notification-time">{{ $notification->created_at->diffForHumans() }}</div>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    @endif
-
     <!-- Delivery Statistics -->
-    <div class="stats-grid">
+    <div class="stats-grid mb-6">
         <div class="stat-card">
-            <div class="stat-icon stat-blue">🚚</div>
+            <div class="stat-icon stat-blue">📦</div>
             <div class="stat-content">
-                <p class="stat-label">Total Deliveries</p>
-                <p class="stat-value">{{ $assignedDeliveries->count() }}</p>
+                <p class="stat-label">Total Orders</p>
+                <p class="stat-value">{{ $totalOrders }}</p>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon stat-green">✅</div>
             <div class="stat-content">
-                <p class="stat-label">Completed</p>
-                <p class="stat-value">{{ $completedDeliveries }}</p>
+                <p class="stat-label">Delivered Orders</p>
+                <p class="stat-value">{{ $deliveredOrders }}</p>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon stat-yellow">⏳</div>
             <div class="stat-content">
-                <p class="stat-label">Pending</p>
+                <p class="stat-label">Pending Deliveries</p>
                 <p class="stat-value">{{ $pendingDeliveries }}</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-green">🚚</div>
+            <div class="stat-content">
+                <p class="stat-label">Completed Deliveries</p>
+                <p class="stat-value">{{ $completedDeliveries }}</p>
             </div>
         </div>
     </div>
@@ -63,16 +54,7 @@
     <div class="employee-card">
         <h3>Quick Actions</h3>
         <div class="quick-actions-grid">
-            <button class="quick-action-btn action-green">
-                <span class="quick-action-icon">📋</span>
-                <div class="quick-action-title">Start Delivery</div>
-                <div class="quick-action-desc">Begin delivery route</div>
-            </button>
-            <button class="quick-action-btn action-blue">
-                <span class="quick-action-icon">✅</span>
-                <div class="quick-action-title">Complete Delivery</div>
-                <div class="quick-action-desc">Mark delivery complete</div>
-            </button>
+            <!-- Remove Start Delivery and Complete Delivery buttons -->
             <button class="quick-action-btn action-yellow">
                 <span class="quick-action-icon">⚠️</span>
                 <div class="quick-action-title">Report Issue</div>
@@ -267,4 +249,11 @@ function fetchDeliveries() {
 }
 fetchDeliveries();
 setInterval(fetchDeliveries, 30000);
+
+function toggleOrderDetails(id) {
+    const row = document.getElementById('order-details-' + id);
+    if (row) {
+        row.style.display = (row.style.display === 'none' || row.style.display === '') ? 'table-row' : 'none';
+    }
+}
 </script> 

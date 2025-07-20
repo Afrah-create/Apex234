@@ -18,21 +18,50 @@
         </div>
     </div>
 
-    <!-- Notifications Section -->
-    @php $notifications = auth()->user()->notifications; @endphp
-    @if($notifications->count())
-        <div class="employee-card">
-            <h3>Recent Notifications</h3>
-            <div>
-                @foreach($notifications->take(3) as $notification)
-                    <div class="notification-item">
-                        <div class="notification-message">{{ $notification->data['message'] ?? 'You have a new notification.' }}</div>
-                        <div class="notification-time">{{ $notification->created_at->diffForHumans() }}</div>
-                    </div>
-                @endforeach
+    <div class="stats-grid mb-6">
+        <div class="stat-card">
+            <div class="stat-icon stat-blue">📦</div>
+            <div class="stat-content">
+                <p class="stat-label">Total Orders</p>
+                <p class="stat-value">{{ $totalOrders }}</p>
             </div>
         </div>
-    @endif
+        <div class="stat-card">
+            <div class="stat-icon stat-yellow">⏳</div>
+            <div class="stat-content">
+                <p class="stat-label">Pending</p>
+                <p class="stat-value">{{ $pendingOrders }}</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-purple">🔄</div>
+            <div class="stat-content">
+                <p class="stat-label">Processing</p>
+                <p class="stat-value">{{ $processingOrders }}</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-green">🚚</div>
+            <div class="stat-content">
+                <p class="stat-label">Shipped</p>
+                <p class="stat-value">{{ $shippedOrders }}</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-green">✅</div>
+            <div class="stat-content">
+                <p class="stat-label">Delivered</p>
+                <p class="stat-value">{{ $deliveredOrders }}</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-blue">📦</div>
+            <div class="stat-content">
+                <p class="stat-label">Total Deliveries</p>
+                <p class="stat-value">{{ $totalDeliveries }}</p>
+            </div>
+        </div>
+    </div>
 
     <!-- Quick Actions -->
     <div class="employee-card">

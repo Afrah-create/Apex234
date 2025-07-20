@@ -13,7 +13,7 @@
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                     </svg>
-                    <span id="notificationDot" class="absolute top-2 right-2 block h-5 w-5 rounded-full bg-red-500 text-xs text-white flex items-center justify-center font-bold hidden">0</span>
+                    <span id="notificationDot" style="position:absolute; top:2px; right:2px; min-width:18px; height:18px; padding:0 4px; border-radius:9999px; background:#ef4444; color:#fff; font-size:12px; font-weight:bold; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 4px rgba(0,0,0,0.12); pointer-events:none; z-index:2;">0</span>
                 </button>
                 <div id="notificationDropdown" class="hidden absolute right-0 mt-2 w-96 max-w-xs sm:max-w-md bg-white rounded-lg shadow-lg z-50 border border-gray-200" style="min-width: 320px;">
                     <div class="flex items-center justify-between p-4 border-b">
