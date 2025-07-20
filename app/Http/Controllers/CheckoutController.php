@@ -223,7 +223,7 @@ class CheckoutController extends Controller
             $this->notifyAdminNewOrder($order);
 
             // Process the order automatically
-            $orderProcessingService = new OrderProcessingService();
+            $orderProcessingService = new \App\Services\OrderProcessingService();
             $orderProcessingService->processCustomerOrder($order);
 
             // --- Append new order data to CSV ---

@@ -4,193 +4,233 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Employee;
-use App\Models\Vendor;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Facades\Auth;
+use App\Models\DistributionCenter;
 use App\Models\Delivery;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 
 class AdminUserController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        $priority = ['admin', 'supplier', 'vendor', 'retailer'];
-        $query = User::with('roles');
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
-        $users = $query->get()->sortBy(function($user) use ($priority) {
-            $userRoles = $user->roles->pluck('name')->toArray();
-            foreach ($priority as $index => $role) {
-                if (in_array($role, $userRoles)) {
-                    return $index;
-                }
-            }
-            return count($priority);
-        })->values();
-        $perPage = 10;
-        $page = $request->input('page', 1);
-        $paginatedUsers = new \Illuminate\Pagination\LengthAwarePaginator(
-            $users->forPage($page, $perPage),
-            $users->count(),
-            $perPage,
-            $page,
-            ['path' => $request->url(), 'query' => $request->query()]
-        );
-        $employees = Employee::all();
-        $vendors = Vendor::where('status', 'approved')->get();
-        $vendorApplicants = \App\Models\VendorApplicant::whereIn('status', ['validated', 'pending'])->get();
-        $deliveries = \App\Models\Delivery::with(['order.customer', 'order.orderItems.yogurtProduct', 'retailer'])
-            ->latest()
-            ->get();
-        return view('admin.users.index', ['users' => $paginatedUsers, 'employees' => $employees, 'vendors' => $vendors, 'vendorApplicants' => $vendorApplicants, 'deliveries' => $deliveries]);
+        $users = User::paginate(10);
+        $employees = Employee::with('user')->paginate(10);
+        $distributionCenters = DistributionCenter::paginate(10);
+        $deliveries = Delivery::with(['driver', 'distributionCenter'])->paginate(10);
+        
+        return view('admin.admin-dashboard', compact('users', 'employees', 'distributionCenters', 'deliveries'));
     }
-
-    public function create()
+    
+    // AJAX methods for tab content reloading
+    public function getUsersContent()
     {
-        return view('admin.users.create');
+        $users = User::paginate(10);
+        return view('admin.users.partials.users-list', compact('users'))->render();
     }
-
-    public function store(Request $request)
+    
+    public function getWorkforceContent()
     {
-        $validated = $request->validate([
+        $employees = Employee::with('user')->paginate(10);
+        return view('admin.users.partials.workforce-list', compact('employees'))->render();
+    }
+    
+    public function getDistributionCentersContent()
+    {
+        $distributionCenters = DistributionCenter::paginate(10);
+        return view('admin.users.partials.distribution-centers-list', compact('distributionCenters'))->render();
+    }
+    
+    public function getDeliveriesContent()
+    {
+        $deliveries = Delivery::with(['driver', 'distributionCenter'])->paginate(10);
+        return view('admin.users.partials.deliveries-list', compact('deliveries'))->render();
+    }
+    
+    // AJAX form submission methods
+    public function store(Request $request): JsonResponse
+    {
+        $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
+            'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
-            'mobile' => 'nullable|string|max:20',
-            'is_active' => 'boolean',
-            'photo_url' => 'nullable|url',
+            'role' => 'required|string|in:admin,employee,vendor,customer',
         ]);
-        $validated['is_active'] = $request->has('is_active');
-        $validated['password'] = bcrypt($validated['password']);
-        User::create($validated);
-        return Redirect::route('admin.users.index')->with('status', 'User created!');
+        
+        try {
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => bcrypt($request->password),
+                'role' => $request->role,
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'User created successfully',
+                'user' => $user
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create user: ' . $e->getMessage()
+            ], 500);
+        }
     }
-
-    public function edit($id)
+    
+    public function update(Request $request, User $user): JsonResponse
     {
-        $user = User::findOrFail($id);
-        $roles = \App\Models\Role::all();
-        return view('admin.users.edit', compact('user', 'roles'));
-    }
-
-    public function update(Request $request, $id)
-    {
-        $user = User::findOrFail($id);
-        $validated = $request->validate([
+        $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->id,
-            'mobile' => 'nullable|string|max:20',
-            'is_active' => 'boolean',
-            'photo_url' => 'nullable|url',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'role' => 'required|string|in:admin,employee,vendor,customer',
         ]);
-        $validated['is_active'] = $request->has('is_active');
-        $user->update($validated);
-        if ($request->has('role')) {
-            $roleId = $request->input('role');
-            $user->roles()->sync([$roleId]);
-
-            // Get the role name
-            $roleName = \App\Models\Role::find($roleId)->name;
-
-            // Auto-create profile for the assigned role if missing
-            if ($roleName === 'supplier' && !$user->supplier) {
-                \App\Models\Supplier::create([
-                    'user_id' => $user->id,
-                    'company_name' => $user->name . " Company",
-                    'registration_number' => 'REG-' . strtoupper(uniqid()),
-                    'business_address' => 'TBD',
-                    'contact_person' => $user->name,
-                    'contact_phone' => 'TBD',
-                    'contact_email' => $user->email,
-                    'supplier_type' => 'dairy_farm',
-                    'status' => 'pending',
-                    'rating' => 0,
-                    'certifications' => json_encode([]),
-                    'verification_date' => null,
-                    'contract_start_date' => null,
-                    'contract_end_date' => null,
-                    'credit_limit' => 0,
-                    'payment_terms_days' => 30,
-                    'notes' => null,
-                ]);
-            } elseif ($roleName === 'vendor' && !$user->vendor) {
-                \App\Models\Vendor::create([
-                    'user_id' => $user->id,
-                ]);
-            } elseif ($roleName === 'retailer' && !$user->retailer) {
-                \App\Models\Retailer::create([
-                    'user_id' => $user->id,
-                    'store_name' => $user->name . " Store",
-                    'store_code' => 'STORE-' . strtoupper(uniqid()),
-                    'store_address' => 'TBD',
-                    'store_phone' => 'TBD',
-                    'store_email' => $user->email,
-                    'store_manager' => $user->name,
-                    'manager_phone' => 'TBD',
-                    'manager_email' => $user->email,
-                    'store_type' => 'supermarket',
-                    'store_size' => 'small',
-                    'daily_customer_traffic' => null,
-                    'monthly_sales_volume' => null,
-                    'payment_methods' => json_encode([]),
-                    'store_hours' => json_encode([]),
-                    'certification_status' => 'pending',
-                    'certifications' => json_encode([]),
-                    'last_inspection_date' => null,
-                    'next_inspection_date' => null,
-                    'customer_rating' => 0,
-                    'status' => 'active',
-                    'notes' => null,
-                ]);
-            } elseif ($roleName === 'employee' && !$user->employee) {
-                \App\Models\Employee::create([
-                    'user_id' => $user->id,
-                    'name' => $user->name,
-                    'role' => 'Production Worker',
-                    'status' => 'active',
-                ]);
+        
+        try {
+            $user->update([
+                'name' => $request->name,
+                'email' => $request->email,
+                'role' => $request->role,
+            ]);
+            
+            if ($request->filled('password')) {
+                $user->update(['password' => bcrypt($request->password)]);
             }
-        } else {
-            $user->roles()->detach();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'User updated successfully',
+                'user' => $user
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update user: ' . $e->getMessage()
+            ], 500);
         }
-
-        // If the updated user is the currently logged-in user, redirect to their new dashboard
-        if (auth()->id() === $user->id) {
-            switch ($roleName ?? $user->getPrimaryRoleName()) {
-                case 'supplier':
-                    return redirect()->route('dashboard.supplier')->with('status', 'User updated!');
-                case 'vendor':
-                    return redirect()->route('vendor.dashboard')->with('status', 'User updated!');
-                case 'retailer':
-                    return redirect()->route('retailer.dashboard')->with('status', 'User updated!');
-                case 'employee':
-                    return redirect()->route('employee.dashboard')->with('status', 'User updated!');
-                case 'admin':
-                    return redirect()->route('dashboard')->with('status', 'User updated!');
-                default:
-                    return redirect()->route('dashboard')->with('status', 'User updated!');
-            }
+    }
+    
+    public function destroy(User $user): JsonResponse
+    {
+        try {
+            $user->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'User deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete user: ' . $e->getMessage()
+            ], 500);
         }
-
-        return Redirect::route('admin.users.index')->with('status', 'User updated!');
     }
-
-    public function destroy($id)
+    
+    // Workforce management methods
+    public function storeEmployee(Request $request): JsonResponse
     {
-        $user = User::findOrFail($id);
-        $user->delete();
-        return Redirect::route('admin.users.index')->with('status', 'User deleted!');
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'position' => 'required|string|max:255',
+            'department' => 'required|string|max:255',
+            'hire_date' => 'required|date',
+        ]);
+        
+        try {
+            $employee = Employee::create($request->all());
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Employee added successfully',
+                'employee' => $employee
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to add employee: ' . $e->getMessage()
+            ], 500);
+        }
     }
-
-    public function loginAs($id)
+    
+    public function destroyEmployee(Employee $employee): JsonResponse
     {
-        $user = User::findOrFail($id);
-        Auth::login($user);
-        return redirect('/dashboard');
+        try {
+            $employee->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Employee removed successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to remove employee: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    // Distribution center management methods
+    public function storeDistributionCenter(Request $request): JsonResponse
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'address' => 'required|string|max:500',
+            'capacity' => 'required|integer|min:1',
+        ]);
+        
+        try {
+            $distributionCenter = DistributionCenter::create($request->all());
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Distribution center created successfully',
+                'distribution_center' => $distributionCenter
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create distribution center: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    public function destroyDistributionCenter(DistributionCenter $distributionCenter): JsonResponse
+    {
+        try {
+            $distributionCenter->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Distribution center deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete distribution center: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    // Delivery management methods
+    public function updateDeliveryStatus(Request $request, Delivery $delivery): JsonResponse
+    {
+        $request->validate([
+            'status' => 'required|string|in:pending,in_transit,delivered,cancelled',
+        ]);
+        
+        try {
+            $delivery->update(['status' => $request->status]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Delivery status updated successfully',
+                'delivery' => $delivery
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update delivery status: ' . $e->getMessage()
+            ], 500);
+        }
     }
 } 

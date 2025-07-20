@@ -580,3 +580,31 @@ Route::middleware(['auth'])->group(function () {
 });
 
 Broadcast::routes();
+
+// Admin User Management Routes with AJAX support
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    // Main user management page
+    Route::get('/user-management', [App\Http\Controllers\AdminUserController::class, 'index'])->name('user-management.index');
+    
+    // AJAX routes for tab content reloading
+    Route::get('/user-management/users/content', [App\Http\Controllers\AdminUserController::class, 'getUsersContent'])->name('user-management.users.content');
+    Route::get('/user-management/workforce/content', [App\Http\Controllers\AdminUserController::class, 'getWorkforceContent'])->name('user-management.workforce.content');
+    Route::get('/user-management/distribution-centers/content', [App\Http\Controllers\AdminUserController::class, 'getDistributionCentersContent'])->name('user-management.distribution-centers.content');
+    Route::get('/user-management/deliveries/content', [App\Http\Controllers\AdminUserController::class, 'getDeliveriesContent'])->name('user-management.deliveries.content');
+    
+    // AJAX CRUD routes for users
+    Route::post('/users', [App\Http\Controllers\AdminUserController::class, 'store'])->name('users.store');
+    Route::put('/users/{user}', [App\Http\Controllers\AdminUserController::class, 'update'])->name('users.update');
+    Route::delete('/users/{user}', [App\Http\Controllers\AdminUserController::class, 'destroy'])->name('users.destroy');
+    
+    // AJAX CRUD routes for workforce
+    Route::post('/employees', [App\Http\Controllers\AdminUserController::class, 'storeEmployee'])->name('employees.store');
+    Route::delete('/employees/{employee}', [App\Http\Controllers\AdminUserController::class, 'destroyEmployee'])->name('employees.destroy');
+    
+    // AJAX CRUD routes for distribution centers
+    Route::post('/distribution-centers', [App\Http\Controllers\AdminUserController::class, 'storeDistributionCenter'])->name('distribution-centers.store');
+    Route::delete('/distribution-centers/{distributionCenter}', [App\Http\Controllers\AdminUserController::class, 'destroyDistributionCenter'])->name('distribution-centers.destroy');
+    
+    // AJAX routes for deliveries
+    Route::put('/deliveries/{delivery}/status', [App\Http\Controllers\AdminUserController::class, 'updateDeliveryStatus'])->name('deliveries.update-status');
+});

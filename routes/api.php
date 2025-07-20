@@ -1,5 +1,6 @@
 <?php
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 use App\Http\Controllers\AnalyticsController;
 
 // Machine Learning Analytics Routes
@@ -23,4 +24,33 @@ Route::get('test', function () {
         'message' => 'API is working!',
         'timestamp' => now()->toISOString()
     ]);
+});
+
+// Notification API routes
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/notifications', function (Request $request) {
+        $user = $request->user();
+        $notifications = $user->notifications()->latest()->take(20)->get();
+        $unreadCount = $user->unreadNotifications()->count();
+        return response()->json([
+            'notifications' => $notifications,
+            'unread_count' => $unreadCount,
+        ]);
+    });
+
+    Route::post('/notifications/{id}/mark-read', function (Request $request, $id) {
+        $user = $request->user();
+        $notification = $user->notifications()->where('id', $id)->first();
+        if ($notification) {
+            $notification->markAsRead();
+            return response()->json(['success' => true]);
+        }
+        return response()->json(['success' => false], 404);
+    });
+
+    Route::post('/notifications/mark-all-read', function (Request $request) {
+        $user = $request->user();
+        $user->unreadNotifications->markAsRead();
+        return response()->json(['success' => true]);
+    });
 }); 

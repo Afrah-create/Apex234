@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Checkout - Caramel Yoghurt</title>
     <style>
         body {
@@ -319,8 +320,10 @@
 </head>
 <body>
     <div class="header-orange-bar"></div>
-    <div class="header-topbar">
+    <div class="header-topbar" style="position: relative;">
         <div>Enjoy Caramel Yoghurt</div>
+        <!-- Notification Bell -->
+        @include('components.notification-bell')
         <div class="caramel-mini">
             <span style="color:#222; font-weight:bold;">CARAMEL</span>
             <span style="color:#bfa76a; font-size:1em; font-weight:normal;">FRESH</span>
@@ -631,5 +634,15 @@
             text-align: center;
         }
     </style>
+    
+    <!-- Laravel Echo and Pusher for Real-time Notifications -->
+    <script src="https://js.pusher.com/8.4.0/pusher.min.js"></script>
+    <script src="{{ asset('js/app.js') }}"></script>
+    <script>
+        // Initialize Laravel Echo for real-time notifications
+        window.Laravel = {!! json_encode([
+            'userId' => auth()->check() ? auth()->user()->id : null,
+        ]) !!};
+    </script>
 </body>
 </html> 

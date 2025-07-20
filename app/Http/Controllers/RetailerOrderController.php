@@ -77,6 +77,10 @@ class RetailerOrderController extends Controller
 
             DB::commit();
 
+            // Process the order automatically
+            $orderProcessingService = new \App\Services\OrderProcessingService();
+            $orderProcessingService->processRetailerOrder($order);
+
             // --- Automatic Vendor Assignment ---
             $order->refresh();
             $orderItems = $order->orderItems()->with('yogurtProduct')->get();
