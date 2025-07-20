@@ -394,7 +394,7 @@
                     <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">@csrf</form>
                 </div>
             </div>
-            <a class="header-action" href="{{ route('help.index') }}">
+            <a class="header-action" href="#">
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-size="12" fill="#222">?</text></svg>
                 Help <svg class="dropdown" width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left:2px;vertical-align:middle;"><path d="M6 8L10 12L14 8" stroke="#222" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </a>
@@ -502,7 +502,7 @@
                 <a href="/dashboard/customer">Home</a>
                 <a href="/dashboard/customer">Shop</a>
                 <a href="{{ route('customer.orders.index') }}">Orders</a>
-                <a href="{{ route('help.index') }}">Help</a>
+                <a href="#">Help</a>
                 <a href="{{ route('privacy.policy') }}">Privacy Policy</a>
                 <a href="#">Terms</a>
                 <a href="#">Contact</a>
@@ -564,6 +564,27 @@ if (accountAction && accountDropdown) {
         }
     });
 }
+ // Chat badge logic: fetch unread count from backend
+(function(){
+    function updateChatBadge() {
+        fetch('/chat/unread-total')
+            .then(res => res.json())
+            .then(data => {
+                var badge = document.getElementById('chat-badge');
+                if (badge) {
+                    var count = data.unread_count || 0;
+                    if (count > 0) {
+                        badge.textContent = count > 99 ? '99+' : count;
+                        badge.style.display = '';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+            });
+    }
+    setInterval(updateChatBadge, 5000);
+    document.addEventListener('DOMContentLoaded', updateChatBadge);
+})();
 </script>
 </body>
 </html> 

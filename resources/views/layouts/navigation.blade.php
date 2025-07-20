@@ -13,7 +13,7 @@
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                     </svg>
-                    <span id="notificationDot" class="absolute top-2 right-2 block h-5 w-5 rounded-full bg-red-500 text-xs text-white flex items-center justify-center font-bold hidden"></span>
+                    <span id="notificationDot" style="position:absolute;bottom:-6px;right:-6px;min-width:16px;height:16px;padding:0 4px;background:#e3342f;color:#fff;font-size:0.75em;font-weight:bold;border-radius:8px;line-height:16px;text-align:center;z-index:10;box-shadow:0 1px 4px rgba(0,0,0,0.12);display:none;pointer-events:none;" class="flex items-center justify-center font-bold"></span>
                 </button>
                 <div id="notificationDropdown" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg z-50 border border-gray-200" style="min-width: 280px;">
                     <div class="p-4 border-b font-semibold">Unread Messages</div>
@@ -33,11 +33,11 @@
                 </div>
             </div>
             <!-- Chat Icon Button (link to /chat) -->
-            <a href="/chat" class="relative inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-500 hover:bg-blue-600 focus:outline-none transition ease-in-out duration-150 mr-1" title="Chat">
+            <a href="/chat" id="chatIconNav" class="relative inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-500 hover:bg-blue-600 focus:outline-none transition ease-in-out duration-150 mr-1" title="Chat">
                 <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M2 21l1.65-4.95A8.001 8.001 0 1 1 12 20a7.96 7.96 0 0 1-4.95-1.65L2 21zm6-9a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm4 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm4 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
                 </svg>
-                <span id="chatNotificationDot" class="absolute top-2 right-2 block h-5 w-5 rounded-full bg-red-500 text-xs text-white flex items-center justify-center font-bold hidden"></span>
+                <span id="chatNotificationDot" style="position:absolute;bottom:-6px;right:-6px;min-width:16px;height:16px;padding:0 4px;background:#e3342f;color:#fff;font-size:0.75em;font-weight:bold;border-radius:8px;line-height:16px;text-align:center;z-index:10;box-shadow:0 1px 4px rgba(0,0,0,0.12);display:none;pointer-events:none;" class="flex items-center justify-center font-bold"></span>
             </a>
             <!-- Cart Icon Button (only for customers and retailers) -->
             @php $role = auth()->user()->getPrimaryRoleName(); @endphp
@@ -99,39 +99,147 @@
 document.addEventListener('DOMContentLoaded', function () {
     const bellBtn = document.getElementById('notificationBellBtn');
     const dropdown = document.getElementById('notificationDropdown');
+    const notificationDot = document.getElementById('notificationDot');
+    const chatNotificationDot = document.getElementById('chatNotificationDot');
+    const notificationMessages = document.getElementById('notificationMessages');
+
+    // Fetch unread chat count and update badges
+    function updateChatBadges() {
+        fetch('/chat/unread-total')
+            .then(res => res.json())
+            .then(data => {
+                let totalUnread = data.unread_count || 0;
+                // Update chat icon badge
+                if (totalUnread > 0) {
+                    chatNotificationDot.textContent = totalUnread > 99 ? '99+' : totalUnread;
+                    chatNotificationDot.style.display = '';
+                } else {
+                    chatNotificationDot.style.display = 'none';
+                }
+                // Update notification bell badge
+                if (totalUnread > 0) {
+                    notificationDot.textContent = totalUnread > 99 ? '99+' : totalUnread;
+                    notificationDot.style.display = '';
+                } else {
+                    notificationDot.style.display = 'none';
+                }
+            });
+    }
+    updateChatBadges();
+    setInterval(updateChatBadges, 5000); // Poll every 5s for more responsiveness
+
+    // Hide both badges when either icon is clicked
+    const chatIconNav = document.getElementById('chatIconNav');
+    if (chatIconNav) {
+        chatIconNav.addEventListener('click', function() {
+            if (chatNotificationDot) chatNotificationDot.style.display = 'none';
+            if (notificationDot) notificationDot.style.display = 'none';
+            fetch('/chat/mark-all-seen', { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') } });
+        });
+    }
+    if (bellBtn) {
+        bellBtn.addEventListener('click', function() {
+            if (notificationDot) notificationDot.style.display = 'none';
+            if (chatNotificationDot) chatNotificationDot.style.display = 'none';
+            fetch('/chat/mark-all-seen', { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') } });
+        });
+    }
+
+    if (bellBtn && dropdown) {
+        bellBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdown.classList.toggle('hidden');
+            if (!dropdown.classList.contains('hidden')) {
+                // Load unread chat messages grouped by sender
+                fetch('/chat/unread-grouped')
+                    .then(res => res.json())
+                    .then(unreadChats => {
+                        if (!Array.isArray(unreadChats) || unreadChats.length === 0) {
+                            notificationMessages.innerHTML = '<div class="text-gray-500 text-center py-4">No unread chat messages.</div>';
+                            return;
+                        }
+                        notificationMessages.innerHTML = '';
+                        let firstSenderId = null;
+                        unreadChats.forEach((chat, idx) => {
+                            const senderId = chat.sender_id;
+                            if (idx === 0) firstSenderId = senderId;
+                            const senderName = chat.sender_name || 'User #' + senderId;
+                            const senderAvatar = chat.sender_avatar || '/images/default-avatar.png';
+                            const div = document.createElement('div');
+                            div.className = 'mb-2 border-b pb-2 flex items-center gap-2';
+                            div.innerHTML = `
+                                <img src="${senderAvatar}" alt="Profile" class="w-8 h-8 rounded-full object-cover border border-gray-300" />
+                                <span class="font-semibold text-blue-700">${senderName}</span>
+                                <span class="ml-auto bg-red-500 text-white rounded-full px-2 text-xs font-bold">${chat.unread_count}</span>
+                            `;
+                            notificationMessages.appendChild(div);
+                        });
+                        // Add View Messages button at the bottom
+                        const viewBtn = document.createElement('button');
+                        viewBtn.textContent = 'View Messages';
+                        viewBtn.className = 'w-full mt-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded font-semibold';
+                        viewBtn.style.display = 'block';
+                        viewBtn.onclick = function() {
+                            if (firstSenderId) {
+                                window.location.href = `/chat?user_id=${firstSenderId}`;
+                            } else {
+                                window.location.href = '/chat';
+                            }
+                        };
+                        notificationMessages.appendChild(viewBtn);
+                    });
+            }
+        });
+        // Hide dropdown when clicking outside
+        document.addEventListener('click', function (e) {
+            if (!dropdown.contains(e.target) && !bellBtn.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+    }
+});
+    const bellBtn = document.getElementById('notificationBellBtn');
+    const dropdown = document.getElementById('notificationDropdown');
                 const notificationDot = document.getElementById('notificationDot');
     const chatNotificationDot = document.getElementById('chatNotificationDot');
     const notificationMessages = document.getElementById('notificationMessages');
 
     // Fetch unread chat count and update badges
     function updateChatBadges() {
-        fetch('/chat/unread-grouped')
+        fetch('/chat/unread-total')
             .then(res => res.json())
             .then(data => {
-                let totalUnread = 0;
-                if (Array.isArray(data)) {
-                    data.forEach(item => {
-                        totalUnread += item.unread_count;
-                    });
-                }
+                let totalUnread = data.unread_count || 0;
                 // Update chat icon badge
                 if (totalUnread > 0) {
-                    chatNotificationDot.textContent = totalUnread;
+                    chatNotificationDot.textContent = totalUnread > 99 ? '99+' : totalUnread;
                     chatNotificationDot.classList.remove('hidden');
                 } else {
                     chatNotificationDot.classList.add('hidden');
                 }
                 // Update notification bell badge
                 if (totalUnread > 0) {
-                    notificationDot.textContent = totalUnread;
+                    notificationDot.textContent = totalUnread > 99 ? '99+' : totalUnread;
                     notificationDot.classList.remove('hidden');
                 } else {
                     notificationDot.classList.add('hidden');
                 }
             });
-        }
+    }
     updateChatBadges();
-    setInterval(updateChatBadges, 15000); // Poll every 15s
+    setInterval(updateChatBadges, 5000); // Poll every 5s for more responsiveness
+
+    // Hide chat badge immediately when chat icon is clicked
+    const chatIconNav = document.getElementById('chatIconNav');
+    if (chatIconNav) {
+        chatIconNav.addEventListener('click', function() {
+            if (chatNotificationDot) {
+                chatNotificationDot.classList.add('hidden');
+            }
+            // Optionally, mark all as seen for the icon
+            fetch('/chat/mark-all-seen', { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') } });
+        });
+    }
 
     if (bellBtn && dropdown) {
         bellBtn.addEventListener('click', function(e) {

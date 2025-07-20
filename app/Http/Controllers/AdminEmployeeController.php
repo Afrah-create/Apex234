@@ -38,10 +38,27 @@ class AdminEmployeeController extends Controller
                 try {
                     $user->notify(new \App\Notifications\EmployeeAssignedToVendor($employee->role, $vendor));
                 } catch (\Exception $e) {
-                    // Log the error but don't break the flow
                     Log::error('Failed to send notification: ' . $e->getMessage());
                     return back()->with('warning', 'Vendor assignment updated, but notification failed to send.');
                 }
+                // --- Send chat message to employee ---
+                $admin = auth()->user();
+                $distCenter = $employee->distribution_center_id ? \App\Models\DistributionCenter::find($employee->distribution_center_id) : null;
+                $chatMsg = "Hello {$user->name},\n" .
+                    "You have been assigned a new task by Admin: {$admin->name}.\n" .
+                    "Role/Position: {$employee->role}\n" .
+                    ($vendor ? "Vendor: {$vendor->name}\n" : "") .
+                    ($distCenter ? "Distribution Center: {$distCenter->center_name}\n" : "") .
+                    (isset($employee->status) ? "Status: {$employee->status}\n" : "") .
+                    (request('deadline') ? "Deadline: " . request('deadline') . "\n" : "") .
+                    "Thank you for your dedication!";
+                \App\Models\ChatMessage::create([
+                    'sender_id' => $admin->id,
+                    'receiver_id' => $user->id,
+                    'message' => $chatMsg,
+                    'is_read' => false
+                ]);
+                // --- End chat message ---
             }
         }
 
