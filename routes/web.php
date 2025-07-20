@@ -607,3 +607,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // AJAX routes for deliveries
     Route::put('/deliveries/{delivery}/status', [App\Http\Controllers\AdminUserController::class, 'updateDeliveryStatus'])->name('deliveries.update-status');
 });
+
+Route::middleware(['auth', 'verified'])->get('/supplier/raw-material-orders/{id}', [\App\Http\Controllers\SupplierOrderController::class, 'show'])->name('supplier.raw-material-orders.show');
+Route::middleware(['auth', 'verified'])->patch('/supplier/raw-material-orders/{id}/update-payment-status', [\App\Http\Controllers\SupplierOrderController::class, 'updatePaymentStatus'])->name('supplier.raw-material-orders.updatePaymentStatus');

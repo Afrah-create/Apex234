@@ -103,6 +103,7 @@
             <script>
                 window.Laravel = {!! json_encode([
                     'userId' => auth()->check() ? auth()->user()->id : null,
+                    'userRole' => auth()->check() ? auth()->user()->getPrimaryRoleName() : null,
                 ]) !!};
                 const chatbotToggle = document.getElementById('chatbot-toggle');
                 const chatbotWindow = document.getElementById('chatbot-window');

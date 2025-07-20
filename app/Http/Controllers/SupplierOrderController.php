@@ -217,7 +217,7 @@ class SupplierOrderController extends Controller
             $remaining -= $deduct;
         }
 
-        // Add to vendor's inventory (create or increment)
+        // Add to vendor's inventory (update or create)
         $vendorId = $order->vendor_id;
         $vendorInventory = \App\Models\RawMaterial::where('vendor_id', $vendorId)
             ->where('material_type', $order->material_type)
@@ -225,7 +225,6 @@ class SupplierOrderController extends Controller
             ->first();
         $unitPrice = $order->unit_price ?? 0;
         $totalCost = $unitPrice * $order->quantity;
-        // Use the first supplier batch for field values
         $supplierBatch = $batches->first();
         if ($vendorInventory) {
             $vendorInventory->quantity += $order->quantity;
@@ -273,7 +272,18 @@ class SupplierOrderController extends Controller
             'notes' => $order->notes . ' [Delivered to vendor]'
         ]);
 
-        return response()->json(['success' => true, 'message' => 'Order marked as delivered and inventories updated.']);
+        // Notify the vendor's user
+        $vendorUser = $order->vendor;
+        if ($vendorUser) {
+            $vendorUser->notify(new \App\Notifications\RawMaterialOrderDeliveredNotification($order));
+        }
+        // Notify all admins
+        $admins = \App\Models\User::whereHas('roles', function($q) { $q->where('name', 'admin'); })->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new \App\Notifications\RawMaterialOrderDeliveredNotification($order));
+        }
+
+        return response()->json(['success' => true, 'message' => 'Order marked as delivered, inventory updated, and vendor notified.']);
     }
 
     // Reject/cancel an order
@@ -426,9 +436,140 @@ class SupplierOrderController extends Controller
         }
         // Optionally, check for valid status transitions here
         foreach ($orders as $order) {
+            $oldStatus = $order->status;
             $order->status = $request->status;
             $order->save();
+
+            // If marking as delivered and it wasn't already delivered, update inventory and notify vendor
+            if ($oldStatus !== 'delivered' && $request->status === 'delivered') {
+                // Deduct from supplier's inventory (FIFO)
+                $remaining = $order->quantity;
+                $supplier = $user->supplier;
+                $batches = \App\Models\RawMaterial::whereHas('dairyFarm', function($query) use ($supplier) {
+                        $query->where('supplier_id', $supplier->id);
+                    })
+                    ->where('material_type', $order->material_type)
+                    ->where('status', 'available')
+                    ->where('quantity', '>', 0)
+                    ->orderBy('expiry_date')
+                    ->get();
+                foreach ($batches as $batch) {
+                    if ($remaining <= 0) break;
+                    $deduct = min($batch->quantity, $remaining);
+                    $batch->quantity -= $deduct;
+                    if ($batch->quantity == 0) {
+                        $batch->status = 'in_use';
+                    }
+                    $batch->save();
+                    $remaining -= $deduct;
+                }
+                // Add to vendor's inventory (update or create)
+                $vendorId = $order->vendor_id;
+                $vendorInventory = \App\Models\RawMaterial::where('vendor_id', $vendorId)
+                    ->where('material_type', $order->material_type)
+                    ->where('unit_of_measure', $order->unit_of_measure)
+                    ->first();
+                $unitPrice = $order->unit_price ?? 0;
+                $totalCost = $unitPrice * $order->quantity;
+                $supplierBatch = $batches->first();
+                if ($vendorInventory) {
+                    $vendorInventory->quantity += $order->quantity;
+                    $vendorInventory->unit_price = $unitPrice;
+                    $vendorInventory->total_cost = $vendorInventory->quantity * $unitPrice;
+                    $vendorInventory->status = 'available';
+                    if ($supplierBatch) {
+                        $vendorInventory->harvest_date = $supplierBatch->harvest_date;
+                        $vendorInventory->expiry_date = $supplierBatch->expiry_date;
+                        $vendorInventory->quality_grade = $supplierBatch->quality_grade;
+                        $vendorInventory->temperature = $supplierBatch->temperature;
+                        $vendorInventory->ph_level = $supplierBatch->ph_level;
+                        $vendorInventory->fat_content = $supplierBatch->fat_content;
+                        $vendorInventory->protein_content = $supplierBatch->protein_content;
+                        $vendorInventory->description = $supplierBatch->description;
+                        $vendorInventory->quality_notes = $supplierBatch->quality_notes;
+                    }
+                    $vendorInventory->save();
+                } else {
+                    \App\Models\RawMaterial::create([
+                        'vendor_id' => $vendorId,
+                        'material_type' => $order->material_type,
+                        'material_name' => $order->material_name,
+                        'quantity' => $order->quantity,
+                        'unit_of_measure' => $order->unit_of_measure,
+                        'unit_price' => $unitPrice,
+                        'total_cost' => $totalCost,
+                        'harvest_date' => $supplierBatch ? $supplierBatch->harvest_date : now(),
+                        'expiry_date' => $supplierBatch ? $supplierBatch->expiry_date : now()->addMonth(),
+                        'quality_grade' => $supplierBatch ? $supplierBatch->quality_grade : 'A',
+                        'temperature' => $supplierBatch ? $supplierBatch->temperature : null,
+                        'ph_level' => $supplierBatch ? $supplierBatch->ph_level : null,
+                        'fat_content' => $supplierBatch ? $supplierBatch->fat_content : null,
+                        'protein_content' => $supplierBatch ? $supplierBatch->protein_content : null,
+                        'description' => $supplierBatch ? $supplierBatch->description : null,
+                        'quality_notes' => $supplierBatch ? $supplierBatch->quality_notes : null,
+                        'status' => 'available',
+                        'material_code' => uniqid('vendor_'),
+                    ]);
+                }
+                $order->actual_delivery_date = now();
+                $order->notes = ($order->notes ?? '') . ' [Delivered to vendor]';
+                $order->save();
+                // Notify the vendor's user
+                $vendorUser = $order->vendor;
+                if ($vendorUser) {
+                    $vendorUser->notify(new \App\Notifications\RawMaterialOrderDeliveredNotification($order));
+                }
+                // Notify all admins
+                $admins = \App\Models\User::whereHas('roles', function($q) { $q->where('name', 'admin'); })->get();
+                foreach ($admins as $admin) {
+                    $admin->notify(new \App\Notifications\RawMaterialOrderDeliveredNotification($order));
+                }
+            }
+            // Notify the vendor's user of any status change
+            $vendorUser = $order->vendor;
+            if ($vendorUser) {
+                $vendorUser->notify(new \App\Notifications\RawMaterialOrderStatusUpdatedNotification($order, $oldStatus, $request->status));
+            }
         }
         return response()->json(['success' => true, 'updated' => $orders->count()]);
+    }
+
+    public function show($id)
+    {
+        $user = Auth::user();
+        $supplier = $user->supplier;
+
+        if (!$supplier) {
+            abort(403, 'Unauthorized');
+        }
+
+        $order = \App\Models\RawMaterialOrder::where('supplier_id', $supplier->id)
+            ->where('id', $id)
+            ->firstOrFail();
+
+        return view('supplier.raw-material-orders.show', compact('order'));
+    }
+
+    public function updatePaymentStatus(Request $request, $id)
+    {
+        $request->validate([
+            'payment_status' => 'required|in:pending,paid,failed',
+        ]);
+        $user = Auth::user();
+        $supplier = $user->supplier;
+        if (!$supplier) {
+            abort(403, 'Unauthorized');
+        }
+        $order = \App\Models\RawMaterialOrder::where('supplier_id', $supplier->id)
+            ->where('id', $id)
+            ->firstOrFail();
+        $order->payment_status = $request->payment_status;
+        $order->save();
+        // Notify admin(s)
+        $admins = \App\Models\User::whereHas('roles', function($q) { $q->where('name', 'admin'); })->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new \App\Notifications\RawMaterialOrderPaymentStatusUpdatedNotification($order, $supplier));
+        }
+        return redirect()->back()->with('success', 'Payment status updated successfully.');
     }
 } 

@@ -141,6 +141,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         li.onmouseover = () => li.style.background = '#f9fafb';
                         li.onmouseout = () => li.style.background = 'transparent';
                         
+                        // Main message
                         li.innerHTML = `
                             <div style="font-size: 14px; color: #1f2937; margin-bottom: 4px;">
                                 ${notification.data.title || notification.data.message || 'New notification'}
@@ -148,12 +149,29 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div style="font-size: 12px; color: #6b7280;">
                                 ${new Date(notification.created_at).toLocaleString()}
                             </div>
+                            <div class="notification-details" style="display:none; margin-top:8px; font-size:13px; color:#374151;"></div>
                         `;
                         
-                        li.addEventListener('click', () => {
+                        li.addEventListener('click', function() {
                             markAsRead(notification.id);
-                            if (notification.data.url) {
+                            // Only redirect if admin (url present and user is admin), else expand details
+                            const userRole = window.Laravel && window.Laravel.userRole;
+                            if (notification.data.url && userRole === 'admin') {
                                 window.location.href = notification.data.url;
+                            } else {
+                                // Expand/collapse details
+                                const detailsDiv = li.querySelector('.notification-details');
+                                if (detailsDiv.style.display === 'none') {
+                                    let detailsHtml = '';
+                                    for (const [key, value] of Object.entries(notification.data)) {
+                                        if (['title','message','url'].includes(key)) continue;
+                                        detailsHtml += `<div><strong>${key.replace(/_/g,' ')}:</strong> ${typeof value === 'object' ? JSON.stringify(value) : value}</div>`;
+                                    }
+                                    detailsDiv.innerHTML = detailsHtml || '<em>No additional details.</em>';
+                                    detailsDiv.style.display = 'block';
+                                } else {
+                                    detailsDiv.style.display = 'none';
+                                }
                             }
                         });
                         
