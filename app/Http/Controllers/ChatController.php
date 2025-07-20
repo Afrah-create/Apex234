@@ -96,10 +96,30 @@ class ChatController extends Controller
             ->get();
 
         // Mark messages as read
+        $unreadMessages = ChatMessage::where('sender_id', $withUserId)
+            ->where('receiver_id', $userId)
+            ->where('is_read', false)
+            ->get();
         ChatMessage::where('sender_id', $withUserId)
             ->where('receiver_id', $userId)
             ->where('is_read', false)
             ->update(['is_read' => true]);
+
+        // If vendor is reading customer order messages, send confirmation
+        $currentUser = Auth::user();
+        $otherUser = User::find($withUserId);
+        if ($currentUser && $otherUser && $currentUser->getPrimaryRoleName() === 'vendor' && $otherUser->getPrimaryRoleName() === 'customer') {
+            // Only send confirmation if there were unread messages just now
+            if ($unreadMessages->count() > 0) {
+                $confirmationMsg = "Thank you for your order! We have received it and are working on it. You will be notified once it is processed.";
+                ChatMessage::create([
+                    'sender_id' => $currentUser->id,
+                    'receiver_id' => $otherUser->id,
+                    'message' => $confirmationMsg,
+                    'is_read' => false
+                ]);
+            }
+        }
 
         return response()->json($messages);
     }

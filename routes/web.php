@@ -15,9 +15,6 @@ use App\Models\YogurtProduct;
 use App\Http\Controllers\CartController;
 
 Route::get('/', function () {
-    if (Auth::check()) {
-        return redirect()->route('dashboard');
-    }
     return view('welcome');
 });
 

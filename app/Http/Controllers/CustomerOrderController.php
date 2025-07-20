@@ -98,10 +98,66 @@ class CustomerOrderController extends Controller
             $order->save();
             // Notify the vendor
             $selectedVendor->notify(new \App\Notifications\VendorAssignedOrderNotification($order));
+
+            // --- Send chat message to vendor with order details ---
+            $customer = \Auth::user();
+            $orderItems = $order->orderItems()->with('yogurtProduct')->get();
+            $productLines = $orderItems->map(function($item) {
+                return $item->yogurtProduct->product_name . ' x ' . $item->quantity;
+            })->implode("\n");
+            $chatMsg = "New order from {$customer->name}:\n" .
+                "Order #: {$order->order_number}\n" .
+                "Phone: {$order->delivery_phone}\n" .
+                "Address: {$order->delivery_address}\n" .
+                "Contact: {$order->delivery_contact}\n" .
+                "Products:\n{$productLines}\n" .
+                "Total: {$order->total_amount}";
+            
+            \App\Models\ChatMessage::create([
+                'sender_id' => $customer->id,
+                'receiver_id' => $selectedVendor->user_id,
+                'message' => $chatMsg,
+                'is_read' => false
+            ]);
+            // --- End chat message ---
         } else {
             // Optionally: handle no eligible vendor (e.g., notify admin, mark as unassigned, etc.)
         }
         // --- End Automatic Vendor Assignment ---
+
+        // --- Send chat message to all admins with order details ---
+        $customer = \Auth::user();
+        $orderItems = $order->orderItems()->with('yogurtProduct')->get();
+        $productLines = $orderItems->map(function($item) {
+            return $item->yogurtProduct->product_name . ' x ' . $item->quantity;
+        })->implode("\n");
+        $adminMsg = "New customer order from {$customer->name}:\n" .
+            "Order #: {$order->order_number}\n" .
+            "Phone: {$order->delivery_phone}\n" .
+            "Address: {$order->delivery_address}\n" .
+            "Contact: {$order->delivery_contact}\n" .
+            "Products:\n{$productLines}\n" .
+            "Total: {$order->total_amount}";
+        $admins = \App\Models\User::whereHas('roles', function($q) { $q->where('name', 'admin'); })->get();
+        foreach ($admins as $admin) {
+            \App\Models\ChatMessage::create([
+                'sender_id' => $customer->id,
+                'receiver_id' => $admin->id,
+                'message' => $adminMsg,
+                'is_read' => false
+            ]);
+        }
+        // --- End admin chat message ---
+
+        // --- Send confirmation message to customer ---
+        $confirmationMsg = "Thank you for your order! Your order #{$order->order_number} has been received and is being processed.";
+        \App\Models\ChatMessage::create([
+            'sender_id' => $admins->first()->id ?? 1, // Use first admin as sender, fallback to 1
+            'receiver_id' => $customer->id,
+            'message' => $confirmationMsg,
+            'is_read' => false
+        ]);
+        // --- End confirmation message ---
 
         // Process the order (deduct inventory, confirm, assign distribution center)
         $this->orderProcessingService->processCustomerOrder($order);
