@@ -24,7 +24,7 @@ class RawMaterialOrderPlacedNotification extends Notification implements ShouldQ
 
     public function via($notifiable)
     {
-        return ['database', 'broadcast'];
+        return ['database'];
     }
 
     public function toArray($notifiable)

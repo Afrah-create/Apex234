@@ -200,7 +200,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Mark all as read
     markAllReadBtn.addEventListener('click', function() {
-        fetch('/api/notifications/mark-all-read', {
+        fetch('/notifications/mark-all-read', {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),

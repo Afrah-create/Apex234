@@ -336,7 +336,24 @@ class EmployeeDashboardController extends Controller
         $delivery->delivery_status = 'delivered';
         $delivery->actual_delivery_time = now();
         $delivery->save();
-        // Optionally: notify customer or admin here
+        // Update the related order's status to delivered
+        $order = $delivery->order;
+        if ($order && $order->order_status !== 'delivered') {
+            $oldStatus = $order->order_status;
+            $order->order_status = 'delivered';
+            $order->save();
+            // Notify the customer
+            if ($order->customer) {
+                $order->customer->notify(new \App\Notifications\OrderStatusUpdate($order, $oldStatus ?? 'shipped', 'delivered'));
+            }
+            // Notify all admins
+            $admins = \App\Models\User::whereHas('roles', function($query) {
+                $query->where('name', 'admin');
+            })->get();
+            foreach ($admins as $admin) {
+                $admin->notify(new \App\Notifications\OrderStatusUpdate($order, $oldStatus ?? 'shipped', 'delivered'));
+            }
+        }
         return redirect()->back()->with('success', 'Delivery marked as delivered.');
     }
 
