@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Order;
+use App\Models\YogurtProduct;
+use App\Models\OrderItem;
+use App\Models\Vendor;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Services\OrderProcessingService;
 
 class CustomerOrderController extends Controller
@@ -17,25 +21,21 @@ class CustomerOrderController extends Controller
         $this->orderProcessingService = $orderProcessingService;
     }
 
-    // List all orders for the authenticated customer
     public function index()
     {
         $orders = Auth::user()->orders()->latest()->get();
-        // Group orders by order_date (date only)
         $ordersByDate = $orders->groupBy(function($order) {
             return optional($order->order_date)->format('Y-m-d');
         });
         return view('customer.orders.index', compact('ordersByDate'));
     }
 
-    // Show a specific order for the authenticated customer
     public function show($id)
     {
         $order = Auth::user()->orders()->findOrFail($id);
         return view('customer.orders.show', compact('order'));
     }
 
-    // Store a new order for the authenticated customer
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -45,12 +45,10 @@ class CustomerOrderController extends Controller
             'products' => 'required|array',
         ]);
 
-        $order = null;
-        \DB::beginTransaction();
+        DB::beginTransaction();
         try {
-            // Create the order
-            $order = \App\Models\Order::create([
-                'user_id' => \Auth::id(),
+            $order = Order::create([
+                'user_id' => Auth::id(),
                 'order_type' => 'customer',
                 'order_number' => 'ORD' . now()->format('YmdHis') . strtoupper(uniqid()),
                 'order_date' => now(),
@@ -61,16 +59,16 @@ class CustomerOrderController extends Controller
             ]);
 
             $total = 0;
-            foreach ($request->input('products', []) as $productData) {
+            foreach ($validated['products'] as $productData) {
                 $quantity = intval($productData['quantity'] ?? 0);
                 $productId = $productData['product_id'] ?? null;
                 if ($quantity > 0 && $productId) {
-                    $product = \App\Models\YogurtProduct::find($productId);
+                    $product = YogurtProduct::find($productId);
                     if ($product) {
                         $unitPrice = $product->selling_price;
                         $subtotal = $unitPrice * $quantity;
                         $total += $subtotal;
-                        \App\Models\OrderItem::create([
+                        OrderItem::create([
                             'order_id' => $order->id,
                             'yogurt_product_id' => $product->id,
                             'quantity' => $quantity,
@@ -87,10 +85,9 @@ class CustomerOrderController extends Controller
             $order->total_amount = $total;
             $order->save();
 
-            // --- Automatic Vendor Assignment ---
             $order->refresh();
             $orderItems = $order->orderItems()->with('yogurtProduct')->get();
-            $eligibleVendors = \App\Models\Vendor::where('status', 'approved')->get()->filter(function($vendor) use ($orderItems) {
+            $eligibleVendors = Vendor::where('status', 'approved')->get()->filter(function($vendor) use ($orderItems) {
                 foreach ($orderItems as $item) {
                     $product = $item->yogurtProduct;
                     if (!$product || $product->vendor_id != $vendor->id || $product->stock < $item->quantity) {
@@ -103,36 +100,27 @@ class CustomerOrderController extends Controller
                 $selectedVendor = $eligibleVendors->random();
                 $order->vendor_id = $selectedVendor->id;
                 $order->save();
-                // Notify the vendor
                 $selectedVendor->notify(new \App\Notifications\VendorAssignedOrderNotification($order));
-            } else {
-                // Optionally: handle no eligible vendor (e.g., notify admin, mark as unassigned, etc.)
             }
-            // --- End Automatic Vendor Assignment ---
 
-            // Ensure order items are loaded before processing
             $order->load('orderItems.yogurtProduct');
 
-            // Process the order (deduct inventory, confirm, assign distribution center)
             $result = $this->orderProcessingService->processCustomerOrder($order);
             if (!$result) {
-                // Inventory deduction or confirmation failed
-                \DB::rollBack();
+                DB::rollBack();
                 return redirect()->route('cart.index')->with('error', 'Sorry, your order could not be placed due to insufficient inventory. Please try again.');
             }
-            \DB::commit();
+            DB::commit();
             return redirect()->route('customer.orders.show', $order->id)
                 ->with('success', 'Order placed successfully!');
         } catch (\Exception $e) {
-            \DB::rollBack();
-            \Log::error('Order creation failed', [
-                'user_id' => \Auth::id(),
+            DB::rollBack();
+            Log::error('Order creation failed', [
+                'user_id' => Auth::id(),
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
             return back()->with('error', 'Failed to place order: ' . $e->getMessage());
         }
     }
-
-
 }

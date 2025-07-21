@@ -16,7 +16,7 @@ class EmployeeDashboardController extends Controller
         if (!$employee) {
             $employee = \App\Models\Employee::create([
                 'name' => $user->name,
-                'role' => 'Production Worker',
+                'role' => 'Warehouse Staff', // Only valid default
                 'user_id' => $user->id,
                 'status' => 'active',
             ]);
@@ -29,14 +29,10 @@ class EmployeeDashboardController extends Controller
     private function routeToRoleDashboard($employee)
     {
         switch ($employee->role) {
-            case 'Production Worker':
-                return $this->productionWorkerDashboard($employee);
             case 'Warehouse Staff':
                 return $this->warehouseStaffDashboard($employee);
             case 'Driver':
                 return $this->driverDashboard($employee);
-            case 'Sales Manager':
-                return $this->salesManagerDashboard($employee);
             default:
                 return view('employee.dashboard', compact('employee'));
         }
