@@ -3,5 +3,9 @@
 <hr>
 <div>
     <strong>Report Data:</strong>
-    <pre>{{ $reportData }}</pre>
+    @if(is_array($reportData))
+        <pre>{{ json_encode($reportData, JSON_PRETTY_PRINT) }}</pre>
+    @else
+        <pre>{{ $reportData }}</pre>
+    @endif
 </div> 

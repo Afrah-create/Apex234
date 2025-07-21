@@ -995,11 +995,14 @@ class AdminReportController extends Controller
                 'timezone' => 'required|string',
                 'recipients' => 'required|string',
                 'format' => 'required|string',
-                // 'is_active' => 'nullable|boolean', // Removed to fix checkbox issue
             ]);
             $validated['recipients'] = array_map('trim', explode(',', $validated['recipients']));
             $validated['is_active'] = $request->has('is_active');
             $validated['created_by'] = auth()->id();
+            // Ensure time is in H:i:s format
+            if (preg_match('/^\d{2}:\d{2}$/', $validated['time'])) {
+                $validated['time'] .= ':00';
+            }
             // Store report_config as array for dynamic runtime use
             $validated['report_config'] = [
                 'filters' => [],

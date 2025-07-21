@@ -6,21 +6,22 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Support\Facades\Storage;
 
 class ScheduledReportMail extends Mailable
 {
     use Queueable, SerializesModels;
 
     public $scheduledReport;
-    public $reportData;
+    public $reportLog;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($scheduledReport, $reportData)
+    public function __construct($scheduledReport, $reportLog)
     {
         $this->scheduledReport = $scheduledReport;
-        $this->reportData = $reportData;
+        $this->reportLog = $reportLog;
     }
 
     /**
@@ -28,11 +29,17 @@ class ScheduledReportMail extends Mailable
      */
     public function build()
     {
-        return $this->subject('Scheduled Report: ' . $this->scheduledReport->name)
+        $email = $this->subject('Scheduled Report: ' . $this->scheduledReport->name)
             ->view('emails.scheduled-report')
             ->with([
                 'scheduledReport' => $this->scheduledReport,
-                'reportData' => $this->reportData,
+                'reportData' => $this->reportLog->report_config,
             ]);
+        if ($this->reportLog->file_path && Storage::disk('public')->exists($this->reportLog->file_path)) {
+            $email->attach(
+                storage_path('app/public/' . $this->reportLog->file_path)
+            );
+        }
+        return $email;
     }
 } 

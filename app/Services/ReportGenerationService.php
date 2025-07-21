@@ -289,27 +289,8 @@ class ReportGenerationService
      */
     protected function sendReportEmail(string $email, ScheduledReport $report, ReportLog $reportLog): void
     {
-        // For now, just log the email sending
-        // In production, you'd use Laravel's Mail facade with a proper email template
-        Log::info('Report email would be sent', [
-            'to' => $email,
-            'report_name' => $report->name,
-            'report_type' => $report->report_type,
-            'format' => $report->format,
-            'file_path' => $reportLog->file_path
-        ]);
-
-        // Example of how you'd send the email:
-        /*
-        Mail::send('emails.scheduled-report', [
-            'report' => $report,
-            'reportLog' => $reportLog
-        ], function ($message) use ($email, $report, $reportLog) {
-            $message->to($email)
-                   ->subject('Scheduled Report: ' . $report->name)
-                   ->attach(Storage::path($reportLog->file_path));
-        });
-        */
+        // Actually send the email with the report attached
+        \Mail::to($email)->send(new \App\Mail\ScheduledReportMail($report, $reportLog));
     }
 
     /**
