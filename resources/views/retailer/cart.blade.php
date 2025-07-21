@@ -45,7 +45,7 @@
                             </td>
                             <td class="px-4 py-3 whitespace-nowrap font-bold text-emerald-700">UGX {{ number_format($item['subtotal'], 0) }}</td>
                             <td class="px-4 py-3 whitespace-nowrap">
-                                <form action="{{ route('cart.remove', $item['product']) }}" method="POST">
+                                <form action="{{ route('retailer.cart.remove', $item['product']) }}" method="POST">
                                     @csrf
                                     <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded">Remove</button>
                                 </form>
@@ -59,7 +59,7 @@
                     <span class="text-xl font-semibold">Total: UGX {{ number_format($total, 0) }}</span>
                 </div>
                 <div class="mt-8 flex justify-end gap-6">
-                    <a href="/dashboard-retailer" class="checkout-btn-secondary bg-gray-400 hover:bg-gray-500 text-white px-6 py-3 rounded-lg font-semibold shadow transition">Continue Shopping</a>
+                    <a href="{{ route('dashboard.retailer') }}" class="checkout-btn-secondary bg-gray-400 hover:bg-gray-500 text-white px-6 py-3 rounded-lg font-semibold shadow transition">Continue Shopping</a>
                     <a href="{{ route('retailer.checkout') }}" class="checkout-btn-primary bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold shadow transition">
                         Proceed to Checkout
                     </a>
@@ -68,7 +68,7 @@
                 <div class="text-center text-gray-500 py-12">
                     <svg class="mx-auto mb-4 w-16 h-16 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 014-4h4a4 4 0 014 4v2M3 3h18v6H3V3zm0 8h18v10H3V11z"/></svg>
                     <div class="text-lg font-semibold">Your cart is empty!</div>
-                    <a href="/dashboard-retailer" class="inline-block mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold shadow hover:bg-blue-700 transition">Start Shopping</a>
+                    <a href="{{ route('dashboard.retailer') }}" class="inline-block mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold shadow hover:bg-blue-700 transition">Start Shopping</a>
                 </div>
             @endif
         </div>

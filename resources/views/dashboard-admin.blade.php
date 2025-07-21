@@ -439,9 +439,7 @@
     </svg>
     <span id="chat-badge" style="display:none;position:absolute;top:2px;right:2px;background:#e3342f;color:#fff;font-size:0.85em;font-weight:bold;border-radius:50%;padding:2px 7px;min-width:22px;text-align:center;z-index:10;box-shadow:0 1px 4px rgba(0,0,0,0.12);">0</span>
 </a>
-<<<<<<< HEAD
 
-=======
 <script>
 (function(){
     function updateChatBadge() {
@@ -464,5 +462,5 @@
     document.addEventListener('DOMContentLoaded', updateChatBadge);
 })();
 </script>
->>>>>>> 0d7f5e4d662b3687a3240b12eed621dd0f0f28fc
+
 @endsection 

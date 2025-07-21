@@ -21,6 +21,19 @@ class AdminUserController extends Controller
         return view('admin.admin-dashboard', compact('users', 'employees', 'distributionCenters', 'deliveries'));
     }
     
+    public function create()
+    {
+        // Return the view for the user creation form
+        return view('admin.users.create');
+    }
+    
+    public function edit($id)
+    {
+        $user = User::findOrFail($id);
+        $roles = \App\Models\Role::all();
+        return view('admin.users.edit', compact('user', 'roles'));
+    }
+    
     // AJAX methods for tab content reloading
     public function getUsersContent()
     {
@@ -47,7 +60,7 @@ class AdminUserController extends Controller
     }
     
     // AJAX form submission methods
-    public function store(Request $request): JsonResponse
+    public function store(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
@@ -55,7 +68,7 @@ class AdminUserController extends Controller
             'password' => 'required|string|min:8',
             'role' => 'required|string|in:admin,employee,vendor,customer',
         ]);
-        
+
         try {
             $user = User::create([
                 'name' => $request->name,
@@ -63,17 +76,25 @@ class AdminUserController extends Controller
                 'password' => bcrypt($request->password),
                 'role' => $request->role,
             ]);
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'User created successfully',
-                'user' => $user
-            ]);
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'User created successfully',
+                    'user' => $user
+                ]);
+            } else {
+                return redirect()->route('admin.users.index')->with('success', 'User created successfully');
+            }
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to create user: ' . $e->getMessage()
-            ], 500);
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create user: ' . $e->getMessage()
+                ], 500);
+            } else {
+                return redirect()->back()->withErrors(['error' => 'Failed to create user: ' . $e->getMessage()]);
+            }
         }
     }
     

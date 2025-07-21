@@ -479,17 +479,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/api/warehouse-summary-stats', [\App\Http\Controllers\EmployeeDashboardController::class, 'warehouseSummaryStats'])->name('warehouse.summary.stats');
     Route::get('/retailer/checkout', [\App\Http\Controllers\RetailerCheckoutController::class, 'index'])->name('retailer.checkout');
     Route::post('/retailer/checkout', [\App\Http\Controllers\RetailerCheckoutController::class, 'store'])->name('retailer.checkout.store');
-    Route::get('/retailer/cart', function() {
-        $cartItems = \App\Models\CartItem::with('product')->where('user_id', Auth::id())->get()->map(function ($item) {
-            return [
-                'product' => $item->product,
-                'quantity' => $item->quantity,
-                'subtotal' => $item->quantity * $item->product->selling_price,
-            ];
-        });
-        $total = $cartItems->sum('subtotal');
-        return view('retailer.cart', compact('cartItems', 'total'));
-    })->name('retailer.cart.index');
+    
+    Route::get('/retailer/cart', [\App\Http\Controllers\RetailerCartController::class, 'index'])->name('retailer.cart.index');
+    Route::post('/retailer/cart/remove/{product}', [\App\Http\Controllers\RetailerCartController::class, 'remove'])->name('retailer.cart.remove');
+    Route::get('/retailer/orders/history', [\App\Http\Controllers\RetailerOrderHistoryController::class, 'index'])->name('retailer.orders.history');
 });
 
 // Vendor inventory status ranges
