@@ -16,9 +16,6 @@ use App\Http\Controllers\CartController;
 use Illuminate\Support\Facades\Broadcast;
 
 Route::get('/', function () {
-    if (Auth::check()) {
-        return redirect()->route('dashboard');
-    }
     return view('welcome');
 });
 
@@ -504,7 +501,11 @@ Route::middleware(['auth', 'verified'])->get('/vendor/production', [\App\Http\Co
 
 Route::middleware(['auth'])->get('/chat', [\App\Http\Controllers\ChatController::class, 'index'])->name('chat');
 Route::middleware(['auth'])->get('/chat/recipients', [\App\Http\Controllers\ChatController::class, 'getRecipients']);
+Route::middleware(['auth'])->get('/chat/messages', [\App\Http\Controllers\ChatController::class, 'getMessages']);
+Route::middleware(['auth'])->post('/chat/send', [\App\Http\Controllers\ChatController::class, 'sendMessage']);
 Route::middleware(['auth'])->get('/chat/unread-counts', [\App\Http\Controllers\ChatController::class, 'getUnreadCountsPerUser']);
+Route::middleware(['auth'])->get('/chat/unread-total', [\App\Http\Controllers\ChatController::class, 'getUnreadTotal']);
+Route::middleware(['auth'])->post('/chat/mark-all-seen', [\App\Http\Controllers\ChatController::class, 'markAllAsRead']);
 Route::middleware(['auth'])->get('/chat/unread-grouped', [\App\Http\Controllers\ChatController::class, 'getUnreadMessagesGroupedBySender']);
 Route::middleware(['auth'])->get('/chat/background', [\App\Http\Controllers\ChatController::class, 'getChatBackground']);
 Route::middleware(['auth'])->post('/chat/background', [\App\Http\Controllers\ChatController::class, 'setChatBackground']);

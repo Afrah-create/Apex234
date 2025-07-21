@@ -29,11 +29,11 @@
                 </div>
             </div>
             <!-- Chat Icon Button (link to /chat) -->
-            <a href="/chat" class="relative inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-500 hover:bg-blue-600 focus:outline-none transition ease-in-out duration-150 mr-1" title="Chat">
+            <a href="/chat" id="chatIconNav" class="relative inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-500 hover:bg-blue-600 focus:outline-none transition ease-in-out duration-150 mr-1" title="Chat">
                 <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M2 21l1.65-4.95A8.001 8.001 0 1 1 12 20a7.96 7.96 0 0 1-4.95-1.65L2 21zm6-9a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm4 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm4 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
                 </svg>
-                <span id="chatNotificationDot" class="absolute top-2 right-2 block h-5 w-5 rounded-full bg-red-500 text-xs text-white flex items-center justify-center font-bold hidden"></span>
+                <span id="chatNotificationDot" style="position:absolute;bottom:-6px;right:-6px;min-width:16px;height:16px;padding:0 4px;background:#e3342f;color:#fff;font-size:0.75em;font-weight:bold;border-radius:8px;line-height:16px;text-align:center;z-index:10;box-shadow:0 1px 4px rgba(0,0,0,0.12);display:none;pointer-events:none;" class="flex items-center justify-center font-bold"></span>
             </a>
             <!-- Cart Icon Button (only for customers and retailers) -->
             @php $role = auth()->user()->getPrimaryRoleName(); @endphp

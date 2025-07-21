@@ -99,6 +99,28 @@ class RetailerOrderController extends Controller
                 $order->save();
                 // Notify the vendor
                 $selectedVendor->notify(new \App\Notifications\VendorAssignedOrderNotification($order));
+
+                // --- Send chat message to vendor ---
+                $vendorUser = $selectedVendor->user;
+                if ($vendorUser) {
+                    $orderItemsList = $order->orderItems->map(function($item) {
+                        return $item->yogurtProduct->product_name . ' x' . $item->quantity;
+                    })->implode(", ");
+                    $chatMsg = "New order from {$user->name}:\n" .
+                        "Order #: {$order->order_number}\n" .
+                        "Products: {$orderItemsList}\n" .
+                        "Delivery Address: {$order->delivery_address}\n" .
+                        "Contact: {$order->delivery_contact} ({$order->delivery_phone})\n" .
+                        "Total: {$order->total_amount}";
+                    
+                    \App\Models\ChatMessage::create([
+                        'sender_id' => $user->id,
+                        'receiver_id' => $vendorUser->id,
+                        'message' => $chatMsg,
+                        'is_read' => false
+                    ]);
+                }
+                // --- End chat message ---
             } else {
                 // Optionally: handle no eligible vendor (e.g., notify admin, mark as unassigned, etc.)
             }
