@@ -157,6 +157,10 @@ class ReportGenerationService
         switch ($report->format) {
             case 'pdf':
                 $content = $this->generatePdfContent($reportData, $report);
+                if (empty($content)) {
+                    Log::error('Generated PDF content is empty', ['report_id' => $report->id, 'filepath' => $filepath]);
+                    throw new \Exception('Generated PDF content is empty for report: ' . $report->id);
+                }
                 break;
             case 'excel':
                 $content = $this->generateExcelContent($reportData, $report);
@@ -165,10 +169,17 @@ class ReportGenerationService
                 $content = $this->generateCsvContent($reportData, $report);
                 break;
             default:
-                throw new Exception('Unsupported format: ' . $report->format);
+                throw new \Exception('Unsupported format: ' . $report->format);
         }
 
-        Storage::put($filepath, $content);
+        // Use the public disk explicitly
+        $written = \Storage::disk('public')->put($filepath, $content);
+        if (!$written) {
+            Log::error('Failed to save report file', ['filepath' => $filepath, 'report_id' => $report->id]);
+            throw new \Exception('Failed to save report file: ' . $filepath);
+        } else {
+            Log::info('Report file saved successfully', ['filepath' => $filepath, 'report_id' => $report->id]);
+        }
         return $filepath;
     }
 

@@ -39,7 +39,6 @@ class ScheduledReport extends Model
         'is_active' => 'boolean',
         'last_generated_at' => 'datetime',
         'next_generation_at' => 'datetime',
-        'time' => 'datetime:H:i:s'
     ];
 
     /**
@@ -63,46 +62,41 @@ class ScheduledReport extends Model
      */
     public function calculateNextGenerationTime(): Carbon
     {
-        $now = Carbon::now()->setTimezone($this->timezone);
-        $time = Carbon::parse($this->time)->setTimezone($this->timezone);
-        
+        $now = Carbon::now($this->timezone);
+        // Parse time as H:i in the user's timezone
+        $time = Carbon::createFromFormat('H:i:s', $this->time, $this->timezone);
+
         switch ($this->frequency) {
             case 'daily':
-                $next = $now->copy()->setTime($time->hour, $time->minute, $time->second);
+                $next = $now->copy()->setTime($time->hour, $time->minute, 0);
                 if ($next->lte($now)) {
                     $next->addDay();
                 }
                 break;
-                
             case 'weekly':
-                $next = $now->copy()->next($this->day_of_week)->setTime($time->hour, $time->minute, $time->second);
+                $next = $now->copy()->next($this->day_of_week)->setTime($time->hour, $time->minute, 0);
                 break;
-                
             case 'monthly':
-                $next = $now->copy()->setDay($this->day_of_month)->setTime($time->hour, $time->minute, $time->second);
+                $next = $now->copy()->setDay($this->day_of_month)->setTime($time->hour, $time->minute, 0);
                 if ($next->lte($now)) {
                     $next->addMonth();
                 }
                 break;
-                
             case 'quarterly':
-                $next = $now->copy()->setDay($this->day_of_month)->setTime($time->hour, $time->minute, $time->second);
+                $next = $now->copy()->setDay($this->day_of_month)->setTime($time->hour, $time->minute, 0);
                 while ($next->lte($now) || $next->quarter !== $now->quarter) {
-                    $next->addMonth(3);
+                    $next->addMonths(3);
                 }
                 break;
-                
             case 'yearly':
-                $next = $now->copy()->setDay($this->day_of_month)->setTime($time->hour, $time->minute, $time->second);
+                $next = $now->copy()->setDay($this->day_of_month)->setTime($time->hour, $time->minute, 0);
                 if ($next->lte($now)) {
                     $next->addYear();
                 }
                 break;
-                
             default:
                 $next = $now->copy()->addDay();
         }
-        
         return $next;
     }
 

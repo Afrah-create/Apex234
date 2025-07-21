@@ -147,7 +147,7 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::get('/create', [AdminUserController::class, 'create'])->name('create');
     Route::post('/', [AdminUserController::class, 'store'])->name('store');
     Route::get('/{id}/edit', [AdminUserController::class, 'edit'])->name('edit');
-    Route::post('/{id}/update', [AdminUserController::class, 'update'])->name('update');
+    Route::put('/{id}', [AdminUserController::class, 'update'])->name('update');
     Route::delete('/{id}', [AdminUserController::class, 'destroy'])->name('destroy');
 });
 
@@ -480,6 +480,19 @@ Route::middleware(['auth'])->group(function () {
         ]);
     });
     Route::get('/api/warehouse-summary-stats', [\App\Http\Controllers\EmployeeDashboardController::class, 'warehouseSummaryStats'])->name('warehouse.summary.stats');
+    Route::get('/retailer/checkout', [\App\Http\Controllers\RetailerCheckoutController::class, 'index'])->name('retailer.checkout');
+    Route::post('/retailer/checkout', [\App\Http\Controllers\RetailerCheckoutController::class, 'store'])->name('retailer.checkout.store');
+    Route::get('/retailer/cart', function() {
+        $cartItems = \App\Models\CartItem::with('product')->where('user_id', Auth::id())->get()->map(function ($item) {
+            return [
+                'product' => $item->product,
+                'quantity' => $item->quantity,
+                'subtotal' => $item->quantity * $item->product->selling_price,
+            ];
+        });
+        $total = $cartItems->sum('subtotal');
+        return view('retailer.cart', compact('cartItems', 'total'));
+    })->name('retailer.cart.index');
 });
 
 // Vendor inventory status ranges
