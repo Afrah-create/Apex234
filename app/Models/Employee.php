@@ -12,6 +12,7 @@ class Employee extends Model
         'vendor_id',
         'user_id',
         'status',
+        'distribution_center_id',
     ];
 
     public function vendor()

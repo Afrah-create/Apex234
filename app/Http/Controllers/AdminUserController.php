@@ -67,6 +67,7 @@ class AdminUserController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
             'role' => 'required|string|in:admin,employee,vendor,customer',
+            // Optionally: 'workforce_role' => 'nullable|string|in:Warehouse Staff,Driver',
         ]);
 
         try {
@@ -76,6 +77,24 @@ class AdminUserController extends Controller
                 'password' => bcrypt($request->password),
                 'role' => $request->role,
             ]);
+
+            // Sync roles using the role name
+            $roleModel = \App\Models\Role::where('name', $request->role)->first();
+            if ($roleModel) {
+                $user->roles()->sync([$roleModel->id]);
+            }
+
+            // Automatically create Employee record if role is employee
+            if ($request->role === 'employee') {
+                \App\Models\Employee::firstOrCreate([
+                    'user_id' => $user->id,
+                ], [
+                    'name' => $user->name,
+                    'role' => 'Warehouse Staff',
+                    'status' => 'active',
+                    'distribution_center_id' => null, // Always set this field for new employees
+                ]);
+            }
 
             if ($request->ajax()) {
                 return response()->json([
@@ -100,20 +119,38 @@ class AdminUserController extends Controller
     
     public function update(Request $request, User $user)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'role' => 'required|string|in:admin,employee,vendor,customer',
-        ]);
+        $rules = [];
+        if ($request->has('name')) {
+            $rules['name'] = 'string|max:255';
+        }
+        if ($request->has('email')) {
+            $rules['email'] = 'string|email|max:255|unique:users,email,' . $user->id;
+        }
+        if ($request->has('role')) {
+            $rules['role'] = 'string|in:admin,employee,vendor,customer';
+        }
+        if ($request->has('password') && $request->filled('password')) {
+            $rules['password'] = 'string|min:8|confirmed';
+        }
+        $validated = $request->validate($rules);
         try {
-            $user->update([
-                'name' => $request->name,
-                'email' => $request->email,
-                'role' => $request->role,
-            ]);
-            if ($request->filled('password')) {
-                $user->update(['password' => bcrypt($request->password)]);
+            if (isset($validated['name'])) {
+                $user->name = $validated['name'];
             }
+            if (isset($validated['email'])) {
+                $user->email = $validated['email'];
+            }
+            if (isset($validated['role'])) {
+                $user->role = $validated['role'];
+                $roleModel = \App\Models\Role::where('name', $validated['role'])->first();
+                if ($roleModel) {
+                    $user->roles()->sync([$roleModel->id]);
+                }
+            }
+            if (isset($validated['password'])) {
+                $user->password = bcrypt($validated['password']);
+            }
+            $user->save();
             return redirect()->route('admin.users.index')->with('success', 'User updated successfully');
         } catch (\Exception $e) {
             return redirect()->back()->withErrors(['error' => 'Failed to update user: ' . $e->getMessage()]);
@@ -123,6 +160,10 @@ class AdminUserController extends Controller
     public function destroy(User $user)
     {
         try {
+            // If the user is an employee, delete the corresponding Employee record
+            if ($user->role === 'employee' && $user->employee) {
+                $user->employee->delete();
+            }
             $user->delete();
             return redirect()->route('admin.users.index')->with('success', 'User deleted successfully');
         } catch (\Exception $e) {
