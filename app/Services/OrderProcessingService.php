@@ -67,6 +67,18 @@ class OrderProcessingService
             // 3. Set order status to confirmed (not shipped)
             $order->order_status = 'confirmed';
             $order->driver_id = null;
+            // Assign to warehouse staff with fewest active orders at this distribution center
+            $warehouseStaff = \App\Models\Employee::where('role', 'Warehouse Staff')
+                ->where('distribution_center_id', $distributionCenterId)
+                ->where('status', 'active')
+                ->withCount(['orders as active_orders_count' => function($query) {
+                    $query->whereNotIn('order_status', ['delivered', 'cancelled']);
+                }])
+                ->orderBy('active_orders_count', 'asc')
+                ->first();
+            if ($warehouseStaff) {
+                $order->warehouse_staff_id = $warehouseStaff->id;
+            }
             $order->save();
             // 4. Create delivery record with status 'scheduled', no driver assigned
             $order->delivery()->create([

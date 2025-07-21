@@ -150,7 +150,9 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
 
 // Admin employee store route
 Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin/employees')->name('admin.employees.')->group(function () {
-    Route::post('/', [\App\Http\Controllers\AdminEmployeeController::class, 'store'])->name('store');
+    Route::post('/{employee}/assign-role', [\App\Http\Controllers\AdminEmployeeController::class, 'assignRole'])->name('assignRole');
+    Route::post('/{employee}/assign-vendor', [\App\Http\Controllers\AdminEmployeeController::class, 'assignVendor'])->name('assignVendor');
+    Route::post('/{employee}/assign-distribution-center', [\App\Http\Controllers\AdminEmployeeController::class, 'assignDistributionCenter'])->name('assignDistributionCenter');
     Route::get('/{employee}/edit', [\App\Http\Controllers\AdminEmployeeController::class, 'edit'])->name('edit');
     Route::put('/{employee}', [\App\Http\Controllers\AdminEmployeeController::class, 'update'])->name('update');
     Route::delete('/{employee}', [\App\Http\Controllers\AdminEmployeeController::class, 'destroy'])->name('destroy');

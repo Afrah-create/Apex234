@@ -22,110 +22,62 @@ class AdminEmployeeController extends Controller
         return view('admin.users.index', compact('users', 'employees', 'vendors', 'distributionCenters', 'vendorApplicants', 'deliveries'));
     }
 
-    public function assignVendor(Request $request, Employee $employee)
+    // New: Assign role to employee (and create Driver record if needed)
+    public function assignRole(Request $request, $id)
     {
+        $employee = Employee::findOrFail($id);
         $request->validate([
-            'vendor_id' => 'nullable|exists:vendors,id',
-            'distribution_center_id' => 'nullable|exists:distribution_centers,id',
+            'role' => 'required|in:Warehouse Staff,Driver',
         ]);
-        $employee->vendor_id = $request->vendor_id;
-        $employee->distribution_center_id = $request->distribution_center_id;
+        $oldRole = $employee->role;
+        $employee->role = $request->role;
         $employee->save();
-
-        // Notify the employee's user (if exists)
-        if ($employee->user_id && $employee->vendor_id) {
-            $user = \App\Models\User::find($employee->user_id);
-            $vendor = Vendor::find($employee->vendor_id);
-            if ($user && $vendor) {
-                try {
-                    $user->notify(new \App\Notifications\EmployeeAssignedToVendor($employee->role, $vendor));
-                } catch (\Exception $e) {
-                    Log::error('Failed to send notification: ' . $e->getMessage());
-                    return back()->with('warning', 'Vendor assignment updated, but notification failed to send.');
-                }
-                // --- Send chat message to employee ---
-                $admin = auth()->user();
-                $distCenter = $employee->distribution_center_id ? \App\Models\DistributionCenter::find($employee->distribution_center_id) : null;
-                $chatMsg = "Hello {$user->name},\n" .
-                    "You have been assigned a new task by Admin: {$admin->name}.\n" .
-                    "Role/Position: {$employee->role}\n" .
-                    ($vendor ? "Vendor: {$vendor->name}\n" : "") .
-                    ($distCenter ? "Distribution Center: {$distCenter->center_name}\n" : "") .
-                    (isset($employee->status) ? "Status: {$employee->status}\n" : "") .
-                    (request('deadline') ? "Deadline: " . request('deadline') . "\n" : "") .
-                    "Thank you for your dedication!";
-                \App\Models\ChatMessage::create([
-                    'sender_id' => $admin->id,
-                    'receiver_id' => $user->id,
-                    'message' => $chatMsg,
-                    'is_read' => false
+        // If assigning as Driver, create Driver record if not exists
+        if ($request->role === 'Driver') {
+            $driver = \App\Models\Driver::where('employee_id', $employee->id)->first();
+            if (!$driver) {
+                \App\Models\Driver::create([
+                    'employee_id' => $employee->id,
+                    'name' => $employee->name,
+                    'email' => $employee->user ? $employee->user->email : null,
+                    'phone' => $employee->user ? $employee->user->mobile ?? $employee->user->phone ?? null : null,
+                    'status' => 'active',
                 ]);
-                // --- End chat message ---
             }
         }
-
-        return back()->with('success', 'Assignment updated!');
+        // Optionally: If switching from Driver to Warehouse Staff, you may want to deactivate the driver record
+        if ($oldRole === 'Driver' && $request->role === 'Warehouse Staff') {
+            $driver = \App\Models\Driver::where('employee_id', $employee->id)->first();
+            if ($driver) {
+                $driver->status = 'inactive';
+                $driver->save();
+            }
+        }
+        return back()->with('success', 'Role assigned successfully.');
     }
 
-    public function store(Request $request)
+    // New: Assign vendor to employee
+    public function assignVendor(Request $request, $id)
     {
+        $employee = Employee::findOrFail($id);
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8|confirmed',
-            'role' => 'required',
             'vendor_id' => 'nullable|exists:vendors,id',
+        ]);
+        $employee->vendor_id = $request->vendor_id;
+        $employee->save();
+        return back()->with('success', 'Vendor assigned successfully.');
+    }
+
+    // New: Assign distribution center to employee
+    public function assignDistributionCenter(Request $request, $id)
+    {
+        $employee = Employee::findOrFail($id);
+        $request->validate([
             'distribution_center_id' => 'nullable|exists:distribution_centers,id',
-            'status' => 'required|in:Active,On Leave,Terminated',
-            // Driver fields are optional
-            'license' => 'nullable|string|max:255',
-            'license_expiry' => 'nullable|date',
-            'vehicle_number' => 'nullable|string|max:255',
-            'driver_photo' => 'nullable|file|image|max:2048',
         ]);
-
-        // Create the user
-        $user = \App\Models\User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => bcrypt($request->password),
-        ]);
-        // Always assign the 'employee' system role
-        $employeeRole = \App\Models\Role::where('name', 'employee')->first();
-        if ($employeeRole) {
-            $user->roles()->sync([$employeeRole->id]);
-        }
-
-        // Create the employee record
-        $employee = \App\Models\Employee::create([
-            'name' => $request->name,
-            'role' => $request->role,
-            'vendor_id' => $request->vendor_id,
-            'distribution_center_id' => $request->distribution_center_id,
-            'status' => $request->status,
-            'user_id' => $user->id,
-        ]);
-
-        // If the role is driver, create a Driver record and link it
-        if (strtolower($request->role) === 'driver') {
-            $photoPath = null;
-            if ($request->hasFile('driver_photo')) {
-                $photoPath = $request->file('driver_photo')->store('driver_photos', 'public');
-            }
-            \App\Models\Driver::create([
-                'employee_id' => $employee->id,
-                'name' => $request->name,
-                'phone' => $request->mobile,
-                'email' => $request->email,
-                'license' => $request->license,
-                'license_expiry' => $request->license_expiry,
-                'vehicle_number' => $request->vehicle_number,
-                'photo' => $photoPath,
-                'status' => 'active',
-            ]);
-        }
-
-        return redirect()->route('admin.users.index')->with('success', 'Employee created!');
+        $employee->distribution_center_id = $request->distribution_center_id;
+        $employee->save();
+        return back()->with('success', 'Distribution center assigned successfully.');
     }
 
     public function edit($id)

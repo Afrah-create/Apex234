@@ -11,17 +11,10 @@ class EmployeeDashboardController extends Controller
     {
         $user = Auth::user();
         $employee = $user->employee;
-        
-        // If user doesn't have an employee record, create one
+        // Remove auto-creation of employee record. Only allow access if employee exists.
         if (!$employee) {
-            $employee = \App\Models\Employee::create([
-                'name' => $user->name,
-                'role' => 'Warehouse Staff', // Only valid default
-                'user_id' => $user->id,
-                'status' => 'active',
-            ]);
+            return redirect('/')->with('error', 'Access denied. You are not assigned as an employee.');
         }
-        
         // Route to role-specific dashboard
         return $this->routeToRoleDashboard($employee);
     }
