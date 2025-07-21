@@ -936,4 +936,108 @@ class AdminReportController extends Controller
             'ordersOverTime' => $ordersOverTime,
         ]);
     }
+
+    /**
+     * Display a list of scheduled reports for the admin.
+     */
+    public function scheduledReports()
+    {
+        $scheduledReports = \App\Models\ScheduledReport::orderByDesc('created_at')->get();
+        return view('admin.reports.scheduled', compact('scheduledReports'));
+    }
+
+    /**
+     * Bulk delete scheduled reports by IDs.
+     */
+    public function bulkDeleteScheduledReports(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        if (!empty($ids)) {
+            \App\Models\ScheduledReport::whereIn('id', $ids)->delete();
+            return redirect()->route('admin.reports.scheduled')->with('success', 'Selected scheduled reports deleted successfully.');
+        }
+        return redirect()->route('admin.reports.scheduled')->with('error', 'No reports selected for deletion.');
+    }
+
+    /**
+     * Show the form to schedule a new report.
+     */
+    public function createScheduledReport()
+    {
+        $frequencyOptions = \App\Models\ScheduledReport::getFrequencyOptions();
+        $dayOfWeekOptions = \App\Models\ScheduledReport::getDayOfWeekOptions();
+        $formatOptions = \App\Models\ScheduledReport::getFormatOptions();
+        $reportTypes = [
+            'sales_summary' => 'Sales Summary',
+            'inventory_status' => 'Inventory Status',
+            'supplier_performance' => 'Supplier Performance',
+            'financial_summary' => 'Financial Summary',
+            'user_analysis' => 'User Analysis',
+            'production_metrics' => 'Production Metrics',
+        ];
+        return view('admin.reports.scheduled-create', compact('frequencyOptions', 'dayOfWeekOptions', 'formatOptions', 'reportTypes'));
+    }
+
+    /**
+     * Store a new scheduled report.
+     */
+    public function storeScheduledReport(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'report_type' => 'required|string',
+                'frequency' => 'required|string',
+                'day_of_week' => 'nullable|string',
+                'day_of_month' => 'nullable|integer|min:1|max:31',
+                'time' => 'required|string',
+                'timezone' => 'required|string',
+                'recipients' => 'required|string',
+                'format' => 'required|string',
+                // 'is_active' => 'nullable|boolean', // Removed to fix checkbox issue
+            ]);
+            $validated['recipients'] = array_map('trim', explode(',', $validated['recipients']));
+            $validated['is_active'] = $request->has('is_active');
+            $validated['created_by'] = auth()->id();
+            // Store report_config as array for dynamic runtime use
+            $validated['report_config'] = [
+                'filters' => [],
+                'group_by' => $request->input('group_by', null),
+                'sort_by' => $request->input('sort_by', 'created_at'),
+                'sort_order' => $request->input('sort_order', 'desc'),
+            ];
+            $report = \App\Models\ScheduledReport::create($validated);
+            $report->updateNextGenerationTime();
+            return redirect()->route('admin.reports.scheduled')->with('success', 'Scheduled report created successfully.');
+        } catch (\Throwable $e) {
+            \Log::error('Failed to schedule report', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'input' => $request->all(),
+            ]);
+            return redirect()->back()->withInput()->with('error', 'Failed to schedule report. Please check your input or contact support.');
+        }
+    }
+
+    /**
+     * Run a scheduled report immediately by ID.
+     */
+    public function runScheduledReportNow($id)
+    {
+        try {
+            $report = \App\Models\ScheduledReport::findOrFail($id);
+            $service = app(\App\Services\ReportGenerationService::class);
+            $service->processReport($report);
+            return redirect()->route('admin.reports.scheduled')->with('success', 'Report "' . $report->name . '" has been run successfully.');
+        } catch (\Throwable $e) {
+            \Log::error('Failed to run scheduled report', [
+                'report_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'input' => request()->all(),
+            ]);
+            return redirect()->route('admin.reports.scheduled')->with('error', 'Failed to run report. Please check your input or contact support.');
+        }
+    }
 } 

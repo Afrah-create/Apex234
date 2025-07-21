@@ -181,4 +181,33 @@ class ScheduledReport extends Model
             'csv' => 'CSV'
         ];
     }
+
+    /**
+     * Get a real-time date range for this report based on its frequency.
+     */
+    public function getDynamicDateRange(): array
+    {
+        $now = Carbon::now($this->timezone ?? config('app.timezone', 'UTC'));
+        switch ($this->frequency) {
+            case 'daily':
+                $date_from = $now->copy()->startOfDay()->format('Y-m-d');
+                $date_to = $now->copy()->endOfDay()->format('Y-m-d');
+                break;
+            case 'weekly':
+                $date_from = $now->copy()->startOfWeek()->format('Y-m-d');
+                $date_to = $now->copy()->endOfDay()->format('Y-m-d');
+                break;
+            case 'monthly':
+                $date_from = $now->copy()->startOfMonth()->format('Y-m-d');
+                $date_to = $now->copy()->endOfDay()->format('Y-m-d');
+                break;
+            default:
+                $date_from = $now->copy()->subDays(30)->format('Y-m-d');
+                $date_to = $now->copy()->endOfDay()->format('Y-m-d');
+        }
+        return [
+            'date_from' => $date_from,
+            'date_to' => $date_to
+        ];
+    }
 } 

@@ -124,12 +124,17 @@ class ReportGenerationService
             }
         }
 
+        // Use real-time date range for daily, weekly, monthly
+        $dynamicRange = $report->getDynamicDateRange();
+        $date_from = $dynamicRange['date_from'];
+        $date_to = $dynamicRange['date_to'];
+
         // Create a mock request with the report configuration
         $request = new \Illuminate\Http\Request();
         $request->merge([
             'report_type' => $report->report_type,
-            'date_from' => $config['date_from'] ?? Carbon::now()->subDays(30)->format('Y-m-d'),
-            'date_to' => $config['date_to'] ?? Carbon::now()->format('Y-m-d'),
+            'date_from' => $date_from,
+            'date_to' => $date_to,
             'filters' => $filters,
             'group_by' => $config['group_by'] ?? null,
             'sort_by' => $config['sort_by'] ?? 'created_at',

@@ -47,6 +47,16 @@
             <p class="text-gray-500 mb-4 text-center">Track raw material orders, supplier performance, and procurement spend.</p>
             <a href="{{ route('admin.reports.raw_material_orders') }}" class="mt-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition">View Raw Material Orders Report</a>
         </div>
+        <div class="bg-yellow-100 rounded-xl shadow-lg p-8 flex flex-col items-center hover:shadow-2xl transition cursor-pointer">
+            <div class="bg-yellow-200 rounded-full p-4 mb-4">
+                <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <h2 class="text-xl font-semibold text-gray-800 mb-2">Scheduled Reports</h2>
+            <p class="text-gray-500 mb-4 text-center">View and manage scheduled reports and their delivery.</p>
+            <a href="{{ route('admin.reports.scheduled') }}" class="mt-auto bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-2 rounded-lg font-semibold transition">View Scheduled Reports</a>
+        </div>
         <!-- Add more report cards here in the future -->
     </div>
 </div>
