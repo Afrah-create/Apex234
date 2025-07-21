@@ -157,6 +157,12 @@ class RetailerCheckoutController extends Controller
             CartItem::where('user_id', Auth::id())->delete();
             $orderProcessingService = new OrderProcessingService();
             $orderProcessingService->processRetailerOrder($order);
+
+            // Notify all admins about the new retailer order
+            $admins = \App\Models\User::whereHas('roles', function($q) { $q->where('name', 'admin'); })->get();
+            foreach ($admins as $admin) {
+                $admin->notify(new \App\Notifications\OrderPlacedNotification($order, Auth::user()));
+            }
             DB::commit();
             return redirect()->route('retailer.orders.history')->with('success', 'Order placed successfully!');
         } catch (\Exception $e) {

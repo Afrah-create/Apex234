@@ -11,6 +11,7 @@ class Driver extends Model
 
     protected $fillable = [
         'supplier_id',
+        'employee_id',
         'name',
         'phone',
         'email',
@@ -21,6 +22,7 @@ class Driver extends Model
         'photo',
         'emergency_contact',
         'vehicle_number',
+        'status',
     ];
 
     /**

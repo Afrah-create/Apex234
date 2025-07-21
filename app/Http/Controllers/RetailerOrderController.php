@@ -126,7 +126,7 @@ class RetailerOrderController extends Controller
             }
             // --- End Automatic Vendor Assignment ---
 
-            // Notify all admins about the new order
+            // Notify all admins about the new retailer order
             $admins = \App\Models\User::whereHas('roles', function($q) { $q->where('name', 'admin'); })->get();
             foreach ($admins as $admin) {
                 $admin->notify(new \App\Notifications\OrderPlacedNotification($order, $user));

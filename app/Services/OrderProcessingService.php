@@ -134,6 +134,14 @@ class OrderProcessingService
                 foreach ($inventories as $inventory) {
                     if ($quantityToDeduct <= 0) break;
                     $deduct = min($inventory->quantity_available, $quantityToDeduct);
+                    \Illuminate\Support\Facades\Log::info('Deducting inventory for retailer order', [
+                        'inventory_id' => $inventory->id,
+                        'before' => $inventory->quantity_available,
+                        'deduct' => $deduct,
+                        'order_id' => $order->id,
+                        'product_id' => $product->id,
+                        'distribution_center_id' => $distributionCenterId,
+                    ]);
                     $inventory->quantity_available -= $deduct;
                     // Update status
                     if ($inventory->quantity_available == 0) {
@@ -176,20 +184,10 @@ class OrderProcessingService
                 ]);
                 // 4. Notify vendor and customer (in-app notification)
                 if ($order->vendor && $order->vendor->user) {
-                    $order->vendor->user->notify(new \App\Notifications\OrderStatusUpdate($order, 'processing', 'shipped', [
-                        'warehouse_staff_name' => $warehouseStaff ? $warehouseStaff->name : null
-                    ]));
+                    $order->vendor->user->notify(new \App\Notifications\OrderStatusUpdate($order, 'processing', 'shipped'));
                 }
                 if ($order->customer) {
-                    $order->customer->notify(new \App\Notifications\OrderStatusUpdate($order, 'processing', 'shipped', [
-                        'warehouse_staff_name' => $warehouseStaff ? $warehouseStaff->name : null
-                    ]));
-                }
-                // Notify assigned warehouse staff
-                if ($warehouseStaff && $warehouseStaff->user) {
-                    $warehouseStaff->user->notify(new \App\Notifications\OrderStatusUpdate($order, 'processing', 'assigned', [
-                        'warehouse_staff_name' => $warehouseStaff->name
-                    ]));
+                    $order->customer->notify(new \App\Notifications\OrderStatusUpdate($order, 'processing', 'shipped'));
                 }
             }
             DB::commit();
