@@ -397,7 +397,6 @@
                     <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">@csrf</form>
                 </div>
             </div>
-            {{-- Help link removed to fix RouteNotFoundException --}}
             <a class="header-action header-cart" href="{{ route('cart.index') }}">
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
                 Cart
@@ -523,7 +522,6 @@
                 <a href="/dashboard/customer">Home</a>
                 <a href="/dashboard/customer">Shop</a>
                 <a href="{{ route('customer.orders.index') }}">Orders</a>
-                {{-- Help link removed from footer --}}
                 <a href="{{ route('privacy.policy') }}">Privacy Policy</a>
                 <a href="#">Terms</a>
                 <a href="#">Contact</a>
@@ -592,16 +590,28 @@ if (accountAction && accountDropdown) {
         }
     });
 }
-    </script>
-    
-    <!-- Laravel Echo and Pusher for Real-time Notifications -->
-    <script src="https://js.pusher.com/8.4.0/pusher.min.js"></script>
-    <script src="{{ asset('js/app.js') }}"></script>
-    <script>
-        // Initialize Laravel Echo for real-time notifications
-        window.Laravel = {!! json_encode([
-            'userId' => auth()->check() ? auth()->user()->id : null,
-        ]) !!};
-    </script>
+ // Chat badge logic: fetch unread count from backend
+(function(){
+    function updateChatBadge() {
+        fetch('/chat/unread-total')
+            .then(res => res.json())
+            .then(data => {
+                var badge = document.getElementById('chat-badge');
+                if (badge) {
+                    var count = data.unread_count || 0;
+                    if (count > 0) {
+                        badge.textContent = count > 99 ? '99+' : count;
+                        badge.style.display = '';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+            });
+    }
+    setInterval(updateChatBadge, 5000);
+    document.addEventListener('DOMContentLoaded', updateChatBadge);
+})();
+</script>
+>>>>>>> 0d7f5e4d662b3687a3240b12eed621dd0f0f28fc
 </body>
 </html> 
