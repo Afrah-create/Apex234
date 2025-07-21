@@ -479,12 +479,21 @@
                 </svg>
                 Continue Shopping
             </a>
-            <a href="{{ route('cart.proceedToCheckout') }}" class="checkout-btn-primary">
-                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right:8px;">
-                    <path d="M5 13l4 4L19 7"/>
-                </svg>
-                Proceed to Checkout
-            </a>
+            @if(Auth::check() && Auth::user()->retailer)
+                <a href="{{ route('retailer.checkout') }}" class="checkout-btn-primary">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right:8px;">
+                        <path d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Proceed to Checkout
+                </a>
+            @else
+                <a href="{{ route('cart.proceedToCheckout') }}" class="checkout-btn-primary">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right:8px;">
+                        <path d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Proceed to Checkout
+                </a>
+            @endif
         </div>
         @else
             <div class="cart-empty-outer">
