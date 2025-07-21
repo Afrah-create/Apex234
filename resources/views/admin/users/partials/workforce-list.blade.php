@@ -16,62 +16,61 @@
             <tr>
                 <th>ID</th>
                 <th>Name</th>
+                <th>Email</th>
                 <th>Role</th>
+                <th>Status</th>
                 <th>Vendor</th>
                 <th>Distribution Center</th>
-                <th>Status</th>
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             @foreach($employees as $employee)
             <tr>
-                <td>{{ $employee->id }}</td>
-                <td>{{ $employee->user->name ?? 'N/A' }}</td>
-                <td>
-                    <form method="POST" action="{{ route('admin.employees.assignRole', $employee->id) }}" class="d-inline">
-                        @csrf
-                        <select name="role" onchange="this.form.submit()" class="form-select form-select-sm">
+                <form method="POST" action="{{ route('admin.employees.assignAll', $employee->id) }}" class="d-inline">
+                    @csrf
+                    <td>{{ $employee->id }}</td>
+                    <td>{{ $employee->user->name ?? 'N/A' }}</td>
+                    <td>{{ $employee->user->email ?? 'N/A' }}</td>
+                    <td>
+                        <select name="role" class="form-select form-select-sm">
                             <option value="Warehouse Staff" {{ $employee->role === 'Warehouse Staff' ? 'selected' : '' }}>Warehouse Staff</option>
                             <option value="Driver" {{ $employee->role === 'Driver' ? 'selected' : '' }}>Driver</option>
                         </select>
-                    </form>
-                </td>
-                <td>
-                    <form method="POST" action="{{ route('admin.employees.assignVendor', $employee->id) }}" class="d-inline">
-                        @csrf
-                        <select name="vendor_id" onchange="this.form.submit()" class="form-select form-select-sm">
+                    </td>
+                    <td>
+                        <select name="status" class="form-select form-select-sm">
+                            <option value="active" {{ $employee->status === 'active' ? 'selected' : '' }}>Active</option>
+                            <option value="inactive" {{ $employee->status === 'inactive' ? 'selected' : '' }}>Inactive</option>
+                            <option value="terminated" {{ $employee->status === 'terminated' ? 'selected' : '' }}>Terminated</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select name="vendor_id" class="form-select form-select-sm">
                             <option value="">Unassigned</option>
                             @foreach($vendors as $vendor)
                                 <option value="{{ $vendor->id }}" {{ $employee->vendor_id == $vendor->id ? 'selected' : '' }}>{{ $vendor->business_name }}</option>
                             @endforeach
                         </select>
-                    </form>
-                </td>
-                <td>
-                    <form method="POST" action="{{ route('admin.employees.assignDistributionCenter', $employee->id) }}" class="d-inline">
-                        @csrf
-                        <select name="distribution_center_id" onchange="this.form.submit()" class="form-select form-select-sm">
+                    </td>
+                    <td>
+                        <select name="distribution_center_id" class="form-select form-select-sm">
                             <option value="">Unassigned</option>
                             @foreach($distributionCenters as $dc)
                                 <option value="{{ $dc->id }}" {{ $employee->distribution_center_id == $dc->id ? 'selected' : '' }}>{{ $dc->center_name }}</option>
                             @endforeach
                         </select>
-                    </form>
-                </td>
-                <td>
-                    <span class="badge {{ $employee->status === 'active' ? 'bg-success' : 'bg-danger' }}">
-                        {{ ucfirst($employee->status) }}
-                    </span>
-                </td>
-                <td>
-                    <button class="btn btn-sm btn-primary btn-edit" data-url="{{ route('admin.employees.edit', $employee->id) }}">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-sm btn-danger btn-delete" data-url="{{ route('admin.employees.destroy', $employee->id) }}" data-id="{{ $employee->id }}">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
+                    </td>
+                    <td>
+                        <button type="submit" class="btn btn-primary btn-sm">Assign</button>
+                        <button class="btn btn-sm btn-primary btn-edit" data-url="{{ route('admin.employees.edit', $employee->id) }}" type="button">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger btn-delete" data-url="{{ route('admin.employees.destroy', $employee->id) }}" data-id="{{ $employee->id }}" type="button">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </form>
             </tr>
             @endforeach
         </tbody>

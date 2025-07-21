@@ -79,6 +79,7 @@
                             <option value="admin">Admin</option>
                             <option value="employee">Employee</option>
                             <option value="vendor">Vendor</option>
+                            <option value="retailer">Retailer</option>
                             <option value="customer">Customer</option>
                         </select>
                     </div>

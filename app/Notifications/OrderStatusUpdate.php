@@ -15,15 +15,17 @@ class OrderStatusUpdate extends Notification implements ShouldQueue
     protected $order;
     protected $oldStatus;
     protected $newStatus;
+    protected $extra;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct(Order $order, string $oldStatus, string $newStatus)
+    public function __construct(Order $order, string $oldStatus, string $newStatus, array $extra = [])
     {
         $this->order = $order;
         $this->oldStatus = $oldStatus;
         $this->newStatus = $newStatus;
+        $this->extra = $extra;
     }
 
     /**
@@ -47,20 +49,25 @@ class OrderStatusUpdate extends Notification implements ShouldQueue
             'shipped' => 'Your order has been shipped and is on its way to you.',
             'delivered' => 'Your order has been delivered successfully!',
             'cancelled' => 'Your order has been cancelled.',
+            'assigned' => 'You have been assigned a new order to process.',
         ];
 
         $message = $statusMessages[$this->newStatus] ?? 'Your order status has been updated.';
 
-        return (new MailMessage)
+        $mail = (new MailMessage)
             ->subject('Order Status Update - ' . $this->order->order_number)
             ->greeting('Hello ' . $notifiable->name . ',')
             ->line('Your order status has been updated.')
             ->line('Order Number: ' . $this->order->order_number)
             ->line('Previous Status: ' . ucfirst($this->oldStatus))
             ->line('New Status: ' . ucfirst($this->newStatus))
-            ->line($message)
-            ->action('View Order Details', route('customer.orders.show', $this->order->id))
+            ->line($message);
+        if (!empty($this->extra['warehouse_staff_name'])) {
+            $mail->line('Assigned Warehouse Staff: ' . $this->extra['warehouse_staff_name']);
+        }
+        $mail->action('View Order Details', route('customer.orders.show', $this->order->id))
             ->line('Thank you for choosing our services!');
+        return $mail;
     }
 
     /**
@@ -71,7 +78,7 @@ class OrderStatusUpdate extends Notification implements ShouldQueue
     public function toArray(object $notifiable): array
     {
         $delivery = $this->order->delivery;
-        return [
+        $array = [
             'order_id' => $this->order->id,
             'order_number' => $this->order->order_number,
             'old_status' => $this->oldStatus,
@@ -91,5 +98,9 @@ class OrderStatusUpdate extends Notification implements ShouldQueue
                 'recipient_phone' => $delivery->recipient_phone,
             ] : null,
         ];
+        if (!empty($this->extra['warehouse_staff_name'])) {
+            $array['warehouse_staff_name'] = $this->extra['warehouse_staff_name'];
+        }
+        return $array;
     }
 } 

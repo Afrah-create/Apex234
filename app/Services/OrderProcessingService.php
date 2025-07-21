@@ -176,10 +176,20 @@ class OrderProcessingService
                 ]);
                 // 4. Notify vendor and customer (in-app notification)
                 if ($order->vendor && $order->vendor->user) {
-                    $order->vendor->user->notify(new \App\Notifications\OrderStatusUpdate($order, 'processing', 'shipped'));
+                    $order->vendor->user->notify(new \App\Notifications\OrderStatusUpdate($order, 'processing', 'shipped', [
+                        'warehouse_staff_name' => $warehouseStaff ? $warehouseStaff->name : null
+                    ]));
                 }
                 if ($order->customer) {
-                    $order->customer->notify(new \App\Notifications\OrderStatusUpdate($order, 'processing', 'shipped'));
+                    $order->customer->notify(new \App\Notifications\OrderStatusUpdate($order, 'processing', 'shipped', [
+                        'warehouse_staff_name' => $warehouseStaff ? $warehouseStaff->name : null
+                    ]));
+                }
+                // Notify assigned warehouse staff
+                if ($warehouseStaff && $warehouseStaff->user) {
+                    $warehouseStaff->user->notify(new \App\Notifications\OrderStatusUpdate($order, 'processing', 'assigned', [
+                        'warehouse_staff_name' => $warehouseStaff->name
+                    ]));
                 }
             }
             DB::commit();

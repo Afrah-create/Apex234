@@ -29,7 +29,7 @@
                     <select name="role" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                         <option value="">Select Role</option>
                         @foreach($roles as $role)
-                            <option value="{{ $role->id }}" @if($user->roles->contains($role->id)) selected @endif>{{ $role->name }}</option>
+                            <option value="{{ $role->name }}" @if($user->getPrimaryRoleName() == $role->name) selected @endif>{{ $role->name }}</option>
                         @endforeach
                     </select>
                 </div>

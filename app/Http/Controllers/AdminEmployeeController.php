@@ -80,6 +80,57 @@ class AdminEmployeeController extends Controller
         return back()->with('success', 'Distribution center assigned successfully.');
     }
 
+    // New: Assign status to employee
+    public function assignStatus(Request $request, $id)
+    {
+        $employee = Employee::findOrFail($id);
+        $request->validate([
+            'status' => 'required|in:active,inactive,terminated',
+        ]);
+        $employee->status = $request->status;
+        $employee->save();
+        return back()->with('success', 'Status updated successfully.');
+    }
+
+    // New: Assign all fields (role, status, vendor, distribution center) at once
+    public function assignAll(Request $request, $id)
+    {
+        $employee = Employee::findOrFail($id);
+        $request->validate([
+            'role' => 'required|in:Warehouse Staff,Driver',
+            'status' => 'required|in:active,inactive,terminated',
+            'vendor_id' => 'nullable|exists:vendors,id',
+            'distribution_center_id' => 'nullable|exists:distribution_centers,id',
+        ]);
+        $employee->role = $request->role;
+        $employee->status = $request->status;
+        $employee->vendor_id = $request->vendor_id;
+        $employee->distribution_center_id = $request->distribution_center_id;
+        $employee->save();
+        // If assigning as Driver, create Driver record if not exists
+        if ($request->role === 'Driver') {
+            $driver = \App\Models\Driver::where('employee_id', $employee->id)->first();
+            if (!$driver) {
+                \App\Models\Driver::create([
+                    'employee_id' => $employee->id,
+                    'name' => $employee->name,
+                    'email' => $employee->user ? $employee->user->email : null,
+                    'phone' => $employee->user ? $employee->user->mobile ?? $employee->user->phone ?? null : null,
+                    'status' => 'active',
+                ]);
+            }
+        }
+        // Optionally: If switching from Driver to Warehouse Staff, deactivate driver record
+        if ($employee->role !== 'Driver') {
+            $driver = \App\Models\Driver::where('employee_id', $employee->id)->first();
+            if ($driver) {
+                $driver->status = 'inactive';
+                $driver->save();
+            }
+        }
+        return back()->with('success', 'Employee updated successfully.');
+    }
+
     public function edit($id)
     {
         $employee = \App\Models\Employee::findOrFail($id);

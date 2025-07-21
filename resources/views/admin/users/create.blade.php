@@ -37,14 +37,13 @@
             </div>
             <div>
                 <label for="role" class="block font-semibold mb-1">Role</label>
-                <select id="role" name="role" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select class="form-control" id="role" name="role" required>
                     <option value="">Select Role</option>
-                    <option value="admin">Admin</option>
-                    <option value="employee">Employee</option>
-                    <option value="driver">Driver</option>
-                    <option value="retailer">Retailer</option>
-                    <option value="vendor">Vendor</option>
-                    <option value="supplier">Supplier</option>
+                    <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
+                    <option value="employee" {{ old('role') == 'employee' ? 'selected' : '' }}>Employee</option>
+                    <option value="vendor" {{ old('role') == 'vendor' ? 'selected' : '' }}>Vendor</option>
+                    <option value="retailer" {{ old('role') == 'retailer' ? 'selected' : '' }}>Retailer</option>
+                    <option value="customer" {{ old('role') == 'customer' ? 'selected' : '' }}>Customer</option>
                 </select>
             </div>
             <div id="driver-fields" style="display:none;">

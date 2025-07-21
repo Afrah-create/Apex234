@@ -7,38 +7,6 @@
         </ul>
     </div>
 @endif
-<form method="POST" action="{{ route('admin.employees.store') }}" class="mb-6 bg-white p-4 rounded shadow">
-    @csrf
-    <div class="flex flex-wrap gap-4">
-        <input name="name" placeholder="Name" required class="border rounded px-2 py-1" />
-        <input name="email" type="email" placeholder="Email" required class="border rounded px-2 py-1" />
-        <input name="password" type="password" placeholder="Password" required class="border rounded px-2 py-1" />
-        <input name="password_confirmation" type="password" placeholder="Confirm Password" required class="border rounded px-2 py-1" />
-        <select name="role" required class="border rounded px-2 py-1">
-            <option value="">Select Role</option>
-            <option>Warehouse Staff</option>
-            <option>Driver</option>
-        </select>
-        <select name="vendor_id" class="border rounded px-2 py-1">
-            <option value="">Unassigned</option>
-            @foreach($vendors as $vendor)
-                <option value="{{ $vendor->id }}">{{ $vendor->business_name }}</option>
-            @endforeach
-        </select>
-        <select name="distribution_center_id" class="border rounded px-2 py-1">
-            <option value="">Unassigned DC</option>
-            @foreach($distributionCenters as $dc)
-                <option value="{{ $dc->id }}">{{ $dc->center_name }}</option>
-            @endforeach
-        </select>
-        <select name="status" required class="border rounded px-2 py-1">
-            <option>Active</option>
-            <option>On Leave</option>
-            <option>Terminated</option>
-        </select>
-        <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition">Add Employee</button>
-    </div>
-</form>
 
 <div class="overflow-x-auto w-full">
     <table class="min-w-full divide-y divide-gray-200">

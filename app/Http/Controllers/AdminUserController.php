@@ -98,52 +98,35 @@ class AdminUserController extends Controller
         }
     }
     
-    public function update(Request $request, User $user): JsonResponse
+    public function update(Request $request, User $user)
     {
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'role' => 'required|string|in:admin,employee,vendor,customer',
         ]);
-        
         try {
             $user->update([
                 'name' => $request->name,
                 'email' => $request->email,
                 'role' => $request->role,
             ]);
-            
             if ($request->filled('password')) {
                 $user->update(['password' => bcrypt($request->password)]);
             }
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'User updated successfully',
-                'user' => $user
-            ]);
+            return redirect()->route('admin.users.index')->with('success', 'User updated successfully');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to update user: ' . $e->getMessage()
-            ], 500);
+            return redirect()->back()->withErrors(['error' => 'Failed to update user: ' . $e->getMessage()]);
         }
     }
     
-    public function destroy(User $user): JsonResponse
+    public function destroy(User $user)
     {
         try {
             $user->delete();
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'User deleted successfully'
-            ]);
+            return redirect()->route('admin.users.index')->with('success', 'User deleted successfully');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to delete user: ' . $e->getMessage()
-            ], 500);
+            return redirect()->back()->withErrors(['error' => 'Failed to delete user: ' . $e->getMessage()]);
         }
     }
     
@@ -173,20 +156,13 @@ class AdminUserController extends Controller
         }
     }
     
-    public function destroyEmployee(Employee $employee): JsonResponse
+    public function destroyEmployee(Employee $employee)
     {
         try {
             $employee->delete();
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Employee removed successfully'
-            ]);
+            return redirect()->route('admin.users.index')->with('success', 'Employee removed successfully');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to remove employee: ' . $e->getMessage()
-            ], 500);
+            return redirect()->back()->withErrors(['error' => 'Failed to remove employee: ' . $e->getMessage()]);
         }
     }
     

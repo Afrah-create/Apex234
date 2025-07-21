@@ -213,52 +213,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!confirm('Are you sure you want to delete this item?')) {
             return;
         }
-        
         const url = button.getAttribute('href') || button.dataset.url;
-        const id = button.dataset.id;
-        
-        showLoadingSpinner(currentActiveTab);
-        
-        fetch(url, {
-            method: 'DELETE',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            hideLoadingSpinner(currentActiveTab);
-            
-            if (data.success) {
-                reloadTabContent(currentActiveTab);
-                showToast('Success', data.message || 'Item deleted successfully', 'success');
-            } else {
-                showToast('Error', data.message || 'Failed to delete item', 'error');
-            }
-        })
-        .catch(error => {
-            hideLoadingSpinner(currentActiveTab);
-            showToast('Error', 'An error occurred while deleting the item', 'error');
-            console.error('Error:', error);
-        });
+        window.location.href = url;
     }
     
     function handleEditAction(button) {
         const url = button.getAttribute('href') || button.dataset.url;
-        
-        // Load edit form in modal or inline
-        fetch(url)
-        .then(response => response.text())
-        .then(html => {
-            // You can implement modal or inline editing here
-            // For now, we'll just navigate to the edit page
-            window.location.href = url;
-        })
-        .catch(error => {
-            showToast('Error', 'Failed to load edit form', 'error');
-            console.error('Error:', error);
-        });
+        window.location.href = url;
     }
     
     function reloadTabContent(tabName) {
