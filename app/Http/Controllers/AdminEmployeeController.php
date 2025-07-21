@@ -32,7 +32,7 @@ class AdminEmployeeController extends Controller
         $oldRole = $employee->role;
         $employee->role = $request->role;
         $employee->save();
-        // If assigning as Driver, create Driver record if not exists
+        // If assigning as Driver, create or update Driver record
         if ($request->role === 'Driver') {
             $driver = \App\Models\Driver::where('employee_id', $employee->id)->first();
             if (!$driver) {
@@ -41,7 +41,14 @@ class AdminEmployeeController extends Controller
                     'name' => $employee->name,
                     'email' => $employee->user ? $employee->user->email : null,
                     'phone' => $employee->user ? $employee->user->mobile ?? $employee->user->phone ?? null : null,
-                    'status' => 'active',
+                    'status' => $employee->status === 'active' ? 'active' : 'inactive',
+                ]);
+            } else {
+                $driver->update([
+                    'name' => $employee->name,
+                    'email' => $employee->user ? $employee->user->email : null,
+                    'phone' => $employee->user ? $employee->user->mobile ?? $employee->user->phone ?? null : null,
+                    'status' => $employee->status === 'active' ? 'active' : 'inactive',
                 ]);
             }
         }
@@ -107,7 +114,7 @@ class AdminEmployeeController extends Controller
         $employee->vendor_id = $request->vendor_id;
         $employee->distribution_center_id = $request->distribution_center_id;
         $employee->save();
-        // If assigning as Driver, create Driver record if not exists
+        // If assigning as Driver, create or update Driver record
         if ($request->role === 'Driver') {
             $driver = \App\Models\Driver::where('employee_id', $employee->id)->first();
             if (!$driver) {
@@ -116,7 +123,14 @@ class AdminEmployeeController extends Controller
                     'name' => $employee->name,
                     'email' => $employee->user ? $employee->user->email : null,
                     'phone' => $employee->user ? $employee->user->mobile ?? $employee->user->phone ?? null : null,
-                    'status' => 'active',
+                    'status' => $employee->status === 'active' ? 'active' : 'inactive',
+                ]);
+            } else {
+                $driver->update([
+                    'name' => $employee->name,
+                    'email' => $employee->user ? $employee->user->email : null,
+                    'phone' => $employee->user ? $employee->user->mobile ?? $employee->user->phone ?? null : null,
+                    'status' => $employee->status === 'active' ? 'active' : 'inactive',
                 ]);
             }
         }
