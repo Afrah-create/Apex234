@@ -169,6 +169,33 @@ class AdminEmployeeController extends Controller
             $employee->user->name = $request->name;
             $employee->user->save();
         }
+        // Add driver record logic
+        if ($request->role === 'Driver') {
+            $driver = \App\Models\Driver::where('employee_id', $employee->id)->first();
+            if (!$driver) {
+                \App\Models\Driver::create([
+                    'employee_id' => $employee->id,
+                    'name' => $employee->name,
+                    'email' => $employee->user ? $employee->user->email : null,
+                    'phone' => $employee->user ? $employee->user->mobile ?? $employee->user->phone ?? null : null,
+                    'status' => strtolower($employee->status) === 'active' ? 'active' : 'inactive',
+                ]);
+            } else {
+                $driver->update([
+                    'name' => $employee->name,
+                    'email' => $employee->user ? $employee->user->email : null,
+                    'phone' => $employee->user ? $employee->user->mobile ?? $employee->user->phone ?? null : null,
+                    'status' => strtolower($employee->status) === 'active' ? 'active' : 'inactive',
+                ]);
+            }
+        } else {
+            // If role is changed from Driver to something else, deactivate driver record
+            $driver = \App\Models\Driver::where('employee_id', $employee->id)->first();
+            if ($driver) {
+                $driver->status = 'inactive';
+                $driver->save();
+            }
+        }
         return redirect()->route('admin.users.index')->with('success', 'Employee updated successfully!');
     }
 

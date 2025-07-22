@@ -6,12 +6,12 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up(): void
+    public function up()
     {
-        Schema::table('drivers', function (Blueprint $table) {
-            $table->unsignedBigInteger('supplier_id')->nullable()->after('id');
-            $table->foreign('supplier_id')->references('id')->on('suppliers')->onDelete('set null');
-        });
+        // Schema::table('drivers', function (Blueprint $table) {
+        //     $table->unsignedBigInteger('supplier_id')->nullable()->after('id');
+        //     $table->foreign('supplier_id')->references('id')->on('suppliers')->onDelete('set null');
+        // });
     }
 
     public function down(): void

@@ -6,11 +6,11 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up(): void
+    public function up()
     {
-        Schema::table('drivers', function (Blueprint $table) {
-            $table->string('license')->nullable()->after('phone');
-        });
+        // Schema::table('drivers', function (Blueprint $table) {
+        //     $table->string('license')->nullable()->after('phone');
+        // });
     }
 
     public function down(): void
