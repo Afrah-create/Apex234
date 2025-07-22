@@ -124,7 +124,7 @@ class ReportGenerationService
             }
         }
 
-        // Use real-time date range for daily, weekly, monthly
+        // Always use real-time date range for scheduled reports
         $dynamicRange = $report->getDynamicDateRange();
         $date_from = $dynamicRange['date_from'];
         $date_to = $dynamicRange['date_to'];

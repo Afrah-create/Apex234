@@ -73,14 +73,14 @@
         width: 100%;
         padding: 10px 38px 10px 14px;
         border-radius: 8px;
-        border: 2px solid #22c55e;
+        border: 2px solid #2235c5;
         font-size: 1em;
         outline: none;
         transition: border 0.2s;
     }
     .search-input-wrapper input[type="text"]:focus {
-        border: 2.5px solid #16a34a;
-        box-shadow: 0 0 0 2px #bbf7d0;
+        border: 2.5px solid #1626a3;
+        box-shadow: 0 0 0 2px #758bea;
     }
     .search-icon-btn {
         position: absolute;
@@ -171,7 +171,7 @@
     }
     .chat-header {
         padding: 6px 16px;
-        background: #25D366;
+        background: #392de1;
         color: #fff;
         font-weight: 500;
         font-size: 0.98rem;

@@ -31,7 +31,7 @@
                     <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" class="inline">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="action-btn delete-btn" onclick="return confirm('Are you sure?')">Delete</button>
+                        <button type="submit" class="action-btn delete-btn">Delete</button>
                     </form>
                 </td>
             </tr>
@@ -41,4 +41,17 @@
 </div>
 <div class="flex justify-center mt-4">
     {{ $users->links('pagination::simple-tailwind') }}
-</div> 
+</div>
+@include('components.confirm-modal')
+<script>
+    document.querySelectorAll('.delete-btn').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            showConfirmModal('Are you sure you want to delete this user?', 'Delete User').then(function(confirmed) {
+                if (confirmed) {
+                    btn.closest('form').submit();
+                }
+            });
+        });
+    });
+</script> 

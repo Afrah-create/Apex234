@@ -22,7 +22,7 @@
                     </div>
                 </div>
 
-                <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-yellow-500">
+                <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
                     <div class="flex items-center">
                         <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -36,7 +36,7 @@
                     </div>
                 </div>
 
-                <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+                <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
                     <div class="flex items-center">
                         <div class="p-3 rounded-full bg-green-100 text-green-600">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -50,7 +50,7 @@
                     </div>
                 </div>
 
-                <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-500">
+                <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
                     <div class="flex items-center">
                         <div class="p-3 rounded-full bg-purple-100 text-purple-600">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

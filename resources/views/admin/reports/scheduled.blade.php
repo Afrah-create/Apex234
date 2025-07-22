@@ -20,7 +20,7 @@
             @csrf
             @method('DELETE')
             <div class="mb-4 flex items-center gap-4">
-                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold transition" onclick="return confirm('Are you sure you want to delete the selected scheduled reports?')">Delete Selected</button>
+                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold transition">Delete Selected</button>
             </div>
             <table class="min-w-full text-sm">
                 <thead>
@@ -68,11 +68,22 @@
                 @csrf
             </form>
         @endforeach
+        @include('components.confirm-modal')
         <script>
             document.querySelectorAll('.run-now-btn').forEach(function(btn) {
                 btn.addEventListener('click', function() {
-                    if(confirm('Run this report now?')) {
-                        document.getElementById('run-now-form-' + btn.getAttribute('data-report-id')).submit();
+                    showConfirmModal('Run this report now?', 'Run Report').then(function(confirmed) {
+                        if (confirmed) {
+                            document.getElementById('run-now-form-' + btn.getAttribute('data-report-id')).submit();
+                        }
+                    });
+                });
+            });
+            document.getElementById('bulk-delete-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                showConfirmModal('Are you sure you want to delete the selected scheduled reports?', 'Delete Reports').then(function(confirmed) {
+                    if (confirmed) {
+                        e.target.submit();
                     }
                 });
             });
